@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank_api.controller;
 
 import com.exalt_company.kata_bank_api.dto.BaseDto;
 import com.exalt_company.kata_bank_api.dto.PageDto;
+import com.exalt_company.kata_bank_api.exception.BaseException;
 import com.exalt_company.kata_bank_api.service.IBaseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,7 +32,7 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<D> getById(@PathVariable long id) {
+    public ResponseEntity<D> getById(@PathVariable long id) throws BaseException {
         return service.getById(id);
     }
 
@@ -46,17 +47,17 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<D> update(@PathVariable long id, @RequestBody D dto) {
+    public ResponseEntity<D> update(@PathVariable long id, @RequestBody D dto) throws BaseException {
         return service.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Boolean> deleteById(@PathVariable long id) {
+    public ResponseEntity<Boolean> deleteById(@PathVariable long id) throws BaseException {
         return service.deleteById(id);
     }
 
     @DeleteMapping
-    public ResponseEntity<Boolean> delete(@RequestBody D dto) {
+    public ResponseEntity<Boolean> delete(@RequestBody D dto) throws BaseException {
         return service.delete(dto);
     }
 }

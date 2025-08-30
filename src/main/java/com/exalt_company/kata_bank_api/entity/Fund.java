@@ -1,10 +1,12 @@
 package com.exalt_company.kata_bank_api.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Fund extends BaseEntity {
+    @Column(nullable = false)
     private float balance;
 
     @ManyToOne(optional = false)
