@@ -6,7 +6,11 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Similar to advisor case the mapping needs a hand.
+ * Mappers help us translate an entity to a dto with minimal code.
+ * By default, the plugin will match the same fields together.
+ * In our case we need to map embedded fields so a helping hand with the mapping marker is needed.
+ * Implemented classes will be generated in target for the injection.
+ * <p>
  * Since we also have an entity to id mapping, we complete the field linkage.
  */
 @Mapper(componentModel = "spring")

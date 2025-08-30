@@ -9,15 +9,27 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
+ * This is the model layer.
+ * We represent the database structure through our entities.
+ * The markers will help spring with the background bootstrapping.
+ * <p>
  * In an effort to showcase D.R.Y concepts, embedded fields are added.
  * An argument could be made for direct Advisor extension, since the only difference is the advisor field.
  * <p>
  * I personally prefer unidirectional relations to ease code complexity. (ManyToOne mostly)
+ * <p>
+ * We are using this entity for JWT authentication, so we have UserDetails interface to implement.
  */
 @Entity
-public class BankUser extends BaseEntity {
+public class BankUser extends BaseEntity implements UserDetails {
     @Embedded
     private Identity identity;
 
@@ -29,7 +41,7 @@ public class BankUser extends BaseEntity {
     private BankRole bankRole;
 
     @ManyToOne
-    private Advisor advisor;
+    private BankUser advisor;
 
     public Identity getIdentity() {
         return identity;
@@ -55,11 +67,26 @@ public class BankUser extends BaseEntity {
         this.bankRole = bankRole;
     }
 
-    public Advisor getAdvisor() {
+    public BankUser getAdvisor() {
         return advisor;
     }
 
-    public void setAdvisor(Advisor advisor) {
+    public void setAdvisor(BankUser advisor) {
         this.advisor = advisor;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(bankRole.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return credentials.getPassword();
+    }
+
+    @Override
+    public String getUsername() {
+        return credentials.getEmail();
     }
 }

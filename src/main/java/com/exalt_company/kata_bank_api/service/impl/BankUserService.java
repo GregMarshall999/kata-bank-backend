@@ -8,6 +8,10 @@ import com.exalt_company.kata_bank_api.service.IBankUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * We now have a service with extensive CRUD capabilities through minimal coding.
+ * At any point we can override to our needs. Add more specific functionality all while maintaining a safe upscaling.
+ */
 @Service
 public class BankUserService extends BaseService<BankUserDto, BankUser, BankUserMapper, BankUserRepository>
         implements IBankUserService {
