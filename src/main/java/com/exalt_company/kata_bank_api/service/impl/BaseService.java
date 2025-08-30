@@ -2,44 +2,99 @@ package com.exalt_company.kata_bank_api.service.impl;
 
 import com.exalt_company.kata_bank_api.dto.BaseDto;
 import com.exalt_company.kata_bank_api.dto.PageDto;
+import com.exalt_company.kata_bank_api.entity.BaseEntity;
+import com.exalt_company.kata_bank_api.exception.BaseException;
+import com.exalt_company.kata_bank_api.mapper.BaseMapper;
+import com.exalt_company.kata_bank_api.repository.BaseRepository;
 import com.exalt_company.kata_bank_api.service.IBaseService;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
-public abstract class BaseService<D extends BaseDto> implements IBaseService<D> {
-    @Override
-    public ResponseEntity<D> create(D dto) {
-        return null;
+/**
+ * Base implementation of CRUD operations.
+ * @param <D> BaseDto inheritors.
+ * @param <E> BaseEntity inheritors.
+ * @param <M> Mappers for entity - dto mapping.
+ * @param <R> ORM repository for database communication.
+ */
+public abstract class BaseService<
+        D extends BaseDto, E extends BaseEntity, M extends BaseMapper<D, E>, R extends BaseRepository<E>>
+        implements IBaseService<D> {
+    protected final M mapper;
+    protected final R repository;
+    protected final Class<E> entityClass;
+
+    protected BaseService(M mapper, R repository, Class<E> entityClass) {
+        this.mapper = mapper;
+        this.repository = repository;
+        this.entityClass = entityClass;
     }
 
     @Override
-    public ResponseEntity<D> getById(long id) {
-        return null;
+    public ResponseEntity<D> create(D dto) {
+        E saved = repository.save(mapper.toEntity(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(saved));
+    }
+
+    @Override
+    public ResponseEntity<D> getById(long id) throws BaseException {
+        E found = repository.findById(id).orElseThrow(() -> new BaseException(entityClass.getName() + " not found"));
+        return ResponseEntity.status(HttpStatus.FOUND).body(mapper.toDto(found));
     }
 
     @Override
     public ResponseEntity<List<D>> getAll() {
-        return null;
+        List<E> all = repository.findAll();
+        return ResponseEntity.status(HttpStatus.FOUND).body(mapper.toDtos(all));
     }
 
     @Override
     public ResponseEntity<PageDto<D>> getPage(int page, int size) {
-        return null;
+        Page<E> result = repository.findAll(PageRequest.of(page, size));
+
+        PageDto<D> pageDto = new PageDto<>();
+
+        pageDto.setContent(mapper.toDtos(result.getContent()));
+        pageDto.setNumber(result.getNumber());
+        pageDto.setSize(result.getSize());
+        pageDto.setTotalPages(result.getTotalPages());
+        pageDto.setTotalElements(result.getTotalElements());
+        pageDto.setNumberOfElements(result.getNumberOfElements());
+
+        return ResponseEntity.status(HttpStatus.FOUND).body(pageDto);
     }
 
     @Override
-    public ResponseEntity<D> update(long id, D dto) {
-        return null;
+    public ResponseEntity<D> update(long id, D dto) throws BaseException {
+        repository.findById(id).orElseThrow(() -> new BaseException(
+                "Could not update " + entityClass.getName() + ": Please create first."));
+
+        dto.setId(id);
+        E updated = repository.save(mapper.toEntity(dto));
+
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDto(updated));
     }
 
     @Override
-    public ResponseEntity<Boolean> deleteById(long id) {
-        return null;
+    public ResponseEntity<Boolean> deleteById(long id) throws BaseException {
+        repository.findById(id).orElseThrow(() -> new BaseException(
+                "Could not delete " + entityClass.getName() + ": Nothing to delete."));
+
+        repository.deleteById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 
     @Override
-    public ResponseEntity<Boolean> delete(D dto) {
-        return null;
+    public ResponseEntity<Boolean> delete(D dto) throws BaseException {
+        E toDelete = repository.findOne(Example.of(mapper.toEntity(dto))).orElseThrow(() -> new BaseException(
+                "Could not delete " + entityClass.getName() + ": Nothing to delete."));
+
+        repository.delete(toDelete);
+        return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 }
