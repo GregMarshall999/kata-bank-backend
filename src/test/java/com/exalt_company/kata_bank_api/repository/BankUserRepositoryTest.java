@@ -7,9 +7,9 @@ import com.exalt_company.kata_bank_api.enums.BankRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,12 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DataJpaTest
+@SpringBootTest
 @ActiveProfiles("test")
+@Transactional
 class BankUserRepositoryTest {
-    @Autowired
-    private TestEntityManager entityManager;
-
     @Autowired
     private BankUserRepository bankUserRepository;
 
@@ -64,7 +62,7 @@ class BankUserRepositoryTest {
 
     @Test
     void testFindByCredentialsEmail() {
-        entityManager.persistAndFlush(testUser);
+        bankUserRepository.save(testUser);
 
         Optional<BankUser> foundUser = bankUserRepository.findByCredentialsEmail("test@example.com");
 
@@ -85,9 +83,9 @@ class BankUserRepositoryTest {
         BankUser user2 = createTestUser("user2@example.com", "User2", "Doe2", BankRole.ADVISOR);
         BankUser user3 = createTestUser("user3@example.com", "User3", "Doe3", BankRole.ADMIN);
 
-        entityManager.persistAndFlush(user1);
-        entityManager.persistAndFlush(user2);
-        entityManager.persistAndFlush(user3);
+        bankUserRepository.save(user1);
+        bankUserRepository.save(user2);
+        bankUserRepository.save(user3);
 
         List<BankUser> allUsers = bankUserRepository.findAll();
 
@@ -108,7 +106,7 @@ class BankUserRepositoryTest {
 
     @Test
     void testUpdateBankUser() {
-        BankUser savedUser = entityManager.persistAndFlush(testUser);
+        BankUser savedUser = bankUserRepository.save(testUser);
         savedUser.getIdentity().setName("Jane");
         savedUser.getIdentity().setSurname("Smith");
 
@@ -120,11 +118,10 @@ class BankUserRepositoryTest {
 
     @Test
     void testDeleteBankUser() {
-        BankUser savedUser = entityManager.persistAndFlush(testUser);
+        BankUser savedUser = bankUserRepository.save(testUser);
         Long userId = savedUser.getId();
 
         bankUserRepository.delete(savedUser);
-        entityManager.flush();
 
         Optional<BankUser> deletedUser = bankUserRepository.findById(userId);
         assertFalse(deletedUser.isPresent());
@@ -132,7 +129,7 @@ class BankUserRepositoryTest {
 
     @Test
     void testFindById() {
-        BankUser savedUser = entityManager.persistAndFlush(testUser);
+        BankUser savedUser = bankUserRepository.save(testUser);
         Long userId = savedUser.getId();
 
         Optional<BankUser> foundUser = bankUserRepository.findById(userId);
