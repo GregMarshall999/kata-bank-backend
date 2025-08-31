@@ -15,16 +15,21 @@ src/test/java/com/exalt_company/kata_bank_api/
 ├── entity/                                   # Entity layer tests
 │   ├── BankUserTest.java                     # BankUser entity tests
 │   ├── FundTest.java                         # Fund entity tests
+│   ├── FundOverdrawTest.java                 # Fund overdraw functionality tests
 │   └── user_fields/                          # Embedded field tests
 │       ├── IdentityTest.java                 # Identity embedded class tests
 │       └── CredentialsTest.java              # Credentials embedded class tests
 ├── service/                                  # Service layer tests
-│   └── AuthServiceTest.java                  # Authentication service tests
+│   ├── AuthServiceTest.java                  # Authentication service tests
+│   └── FundServiceTest.java                  # Fund service tests (including overdraw)
 ├── repository/                               # Repository layer tests
 │   └── BankUserRepositoryTest.java           # BankUser repository tests
-├── dto/auth/                                 # DTO tests
-│   ├── AuthenticationRequestTest.java        # Authentication request DTO tests
-│   └── AuthenticationResponseTest.java       # Authentication response DTO tests
+├── dto/                                      # DTO tests
+│   ├── auth/                                 # Authentication DTOs
+│   │   ├── AuthenticationRequestTest.java    # Authentication request DTO tests
+│   │   └── AuthenticationResponseTest.java   # Authentication response DTO tests
+│   └── fund/                                 # Fund DTOs
+│       └── OverdrawDtoTest.java              # Overdraw DTO tests
 ├── enums/                                    # Enum tests
 │   └── BankRoleTest.java                     # BankRole enum tests
 ├── exception/                                # Exception handling tests
@@ -35,7 +40,8 @@ src/test/java/com/exalt_company/kata_bank_api/
 │   └── GlobalExceptionHandlerTest.java       # Global exception handler tests
 └── integration/                              # Integration tests
     ├── AuthIntegrationTest.java              # End-to-end authentication tests
-    └── FundIntegrationTest.java              # End-to-end fund management tests
+    ├── FundIntegrationTest.java              # End-to-end fund management tests
+    └── OverdrawIntegrationTest.java          # End-to-end overdraw functionality tests
 ```
 
 ## Test Configuration
@@ -122,6 +128,12 @@ mvn test -Dtest="*ServiceTest" -DfailIfNoTests=false
 
 # Run only exception tests
 mvn test -Dtest="*ExceptionTest" -DfailIfNoTests=false
+
+# Run only overdraw-related tests
+mvn test -Dtest="*Overdraw*" -DfailIfNoTests=false
+
+# Run fund-related tests (including overdraw)
+mvn test -Dtest="*Fund*" -DfailIfNoTests=false
 ```
 
 ### Running Individual Test Classes
@@ -132,20 +144,31 @@ mvn test -Dtest=BankUserTest
 
 # Run specific test method
 mvn test -Dtest=BankUserTest#testBankUserCreation
+
+# Run overdraw-related test classes
+mvn test -Dtest=FundServiceTest
+mvn test -Dtest=OverdrawIntegrationTest
+mvn test -Dtest=FundOverdrawTest
+mvn test -Dtest=OverdrawDtoTest
+
+# Run specific overdraw test methods
+mvn test -Dtest=FundServiceTest#testRequestOverdrawCapabilitiesSuccess
+mvn test -Dtest=OverdrawIntegrationTest#testWithdrawWithOverdrawEnabledSuccess
 ```
 
 ## Test Coverage
 
 The test suite provides comprehensive coverage for:
 
-- ✅ **Entity Layer**: 100% coverage of entity classes and embedded fields
-- ✅ **Service Layer**: Business logic testing with mocked dependencies
-- ✅ **Repository Layer**: Database operation testing with H2
-- ✅ **DTO Layer**: Data transfer object validation
-- ✅ **Enum Layer**: Enum value and behavior testing
-- ✅ **Exception Layer**: Exception handling and error response testing
-- ✅ **Integration Layer**: End-to-end flow testing for authentication and fund management
-- ✅ **Application Context**: Spring context loading verification
+- **Entity Layer**: 100% coverage of entity classes and embedded fields
+- **Service Layer**: Business logic testing with mocked dependencies
+- **Repository Layer**: Database operation testing with H2
+- **DTO Layer**: Data transfer object validation
+- **Enum Layer**: Enum value and behavior testing
+- **Exception Layer**: Exception handling and error response testing
+- **Integration Layer**: End-to-end flow testing for authentication and fund management
+- **Application Context**: Spring context loading verification
+- **Overdraw Banking**: Comprehensive testing of overdraw functionality including request, cancel, and withdraw operations
 
 ## Security Testing
 
@@ -157,6 +180,7 @@ The test suite includes security-focused tests:
 - Authentication failure scenarios
 - User registration security
 - Fund operation authorization
+- Overdraw operation authorization and validation
 
 ## Performance Considerations
 
