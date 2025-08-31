@@ -6,6 +6,6 @@ import com.exalt_company.kata_bank_api.exception.FundException;
 import org.springframework.http.ResponseEntity;
 
 public interface IFundService extends IBaseService<FundDto> {
-    ResponseEntity<Banking> deposit(FundDto dto) throws FundException;
-    ResponseEntity<Banking> withdraw(FundDto dto) throws FundException;
+    ResponseEntity<Banking> deposit(FundDto dto, String token) throws FundException;
+    ResponseEntity<Banking> withdraw(FundDto dto, String token) throws FundException;
 }

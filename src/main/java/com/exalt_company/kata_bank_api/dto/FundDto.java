@@ -1,15 +1,15 @@
 package com.exalt_company.kata_bank_api.dto;
 
 public class FundDto extends BaseDto {
-    private float balance;
+    private double balance;
 
     private long ownerId;
 
-    public float getBalance() {
+    public double getBalance() {
         return balance;
     }
 
-    public void setBalance(float balance) {
+    public void setBalance(double balance) {
         this.balance = balance;
     }
 

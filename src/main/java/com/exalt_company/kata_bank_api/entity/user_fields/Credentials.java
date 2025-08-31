@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class Credentials {
+    //TODO: add email validation
     @Column(unique = true, nullable = false)
     private String email;
 

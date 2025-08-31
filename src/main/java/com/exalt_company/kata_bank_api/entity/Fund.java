@@ -7,16 +7,16 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Fund extends BaseEntity {
     @Column(nullable = false)
-    private float balance;
+    private double balance;
 
     @ManyToOne(optional = false)
     private BankUser owner;
 
-    public float getBalance() {
+    public double getBalance() {
         return balance;
     }
 
-    public void setBalance(float balance) {
+    public void setBalance(double balance) {
         this.balance = balance;
     }
 

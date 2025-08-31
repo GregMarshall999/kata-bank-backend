@@ -4,7 +4,9 @@ import com.exalt_company.kata_bank_api.dto.auth.AuthenticationRequest;
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationResponse;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
+import com.exalt_company.kata_bank_api.entity.user_fields.Identity;
 import com.exalt_company.kata_bank_api.enums.BankRole;
+import com.exalt_company.kata_bank_api.exception.AuthException;
 import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.security.JwtService;
 import com.exalt_company.kata_bank_api.service.IAuthService;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,13 +41,22 @@ public class AuthService implements IAuthService {
      * @return
      */
     @Override
-    public ResponseEntity<AuthenticationResponse> register(AuthenticationRequest request) {
-        BankUser user = new BankUser();
-        Credentials credentials = new Credentials();
+    public ResponseEntity<AuthenticationResponse> register(AuthenticationRequest request) throws AuthException {
+        if (repository.findByCredentialsEmail(request.getEmail()).isPresent()) {
+            throw new AuthException("User with this email already exists");
+        }
 
+        BankUser user = new BankUser();
+
+        Identity identity = new Identity();
+        identity.setName(request.getName());
+        identity.setSurname(request.getSurname());
+
+        Credentials credentials = new Credentials();
         credentials.setEmail(request.getEmail());
         credentials.setPassword(encoder.encode(request.getPassword()));
 
+        user.setIdentity(identity);
         user.setCredentials(credentials);
         user.setBankRole(BankRole.CLIENT);
         if(repository.findAll().isEmpty())
@@ -66,8 +78,12 @@ public class AuthService implements IAuthService {
      * @return
      */
     @Override
-    public ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) {
-        manager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+    public ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) throws AuthException {
+        try {
+            manager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        } catch (BadCredentialsException e) {
+            throw new AuthException("Bad credentials");
+        }
 
         BankUser user = repository.findByCredentialsEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

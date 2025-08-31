@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,12 +21,14 @@ public class FundController extends BaseController<FundDto, IFundService> {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<Banking> deposit(@RequestBody FundDto dto) throws FundException {
-        return service.deposit(dto);
+    public ResponseEntity<Banking> deposit(
+            @RequestBody FundDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
+        return service.deposit(dto, token);
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Banking> withdraw(@RequestBody FundDto dto) throws FundException {
-        return service.withdraw(dto);
+    public ResponseEntity<Banking> withdraw(
+            @RequestBody FundDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
+        return service.withdraw(dto, token);
     }
 }

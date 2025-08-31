@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank_api.controller;
 
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationRequest;
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationResponse;
+import com.exalt_company.kata_bank_api.exception.AuthException;
 import com.exalt_company.kata_bank_api.service.IAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +26,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<AuthenticationResponse> register(@RequestBody AuthenticationRequest request) throws AuthException {
         return service.register(request);
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<AuthenticationResponse> authenticate(
+            @RequestBody AuthenticationRequest request) throws AuthException {
         return service.authenticate(request);
     }
 }
