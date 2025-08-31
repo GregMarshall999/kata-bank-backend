@@ -22,6 +22,8 @@
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<maven.compiler.version>3.11.0</maven.compiler.version>
 		<jwt.version>0.13.0</jwt.version>
+		<swagger.version>2.8.9</swagger.version>
+		<commons-lang3.version>3.18.0</commons-lang3.version>
 	</properties>
 
 	<dependencies>
@@ -61,7 +63,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- H2 Database for testing -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -91,6 +92,18 @@
 			<version>${jwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>${commons-lang3.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -117,4 +130,14 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>${commons-lang3.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

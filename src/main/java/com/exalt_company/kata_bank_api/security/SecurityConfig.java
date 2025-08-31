@@ -20,7 +20,13 @@ public class SecurityConfig {
     private final JwtAuthorizationFilter jwtAuthFilter;
 
     private static final String[] allowedEndPoints = {
-            "/api/auth/**"
+            "/api/auth/**",
+            "/api/health/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**",
+            "/api-docs/**",
+            "/webjars/**"
     };
 
     private static final String[] crudEndpoints = {
