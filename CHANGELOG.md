@@ -44,6 +44,13 @@ All notable changes to this project will be documented in this file.
   - Fund operation endpoints (deposit, withdrawal)
   - Base CRUD operations with pagination support
 
+- **API Documentation**
+  - Swagger/OpenAPI 3 integration for interactive API documentation
+  - Auto-generated API documentation from code annotations
+  - Interactive API testing interface at `/swagger-ui.html`
+  - API documentation endpoint at `/api-docs`
+  - Customized Swagger UI configuration for better user experience
+
 - **Data Models**
   - `BankUser` entity with user information and roles
   - `Fund` entity for managing account balances and transactions
