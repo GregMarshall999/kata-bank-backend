@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kata-bank-api
+  labels:
+    app: kata-bank-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kata-bank-api
+  template:
+    metadata:
+      labels:
+        app: kata-bank-api
+    spec:
+      containers:
+      - name: kata-bank-api
+        image: ${CI_REGISTRY_IMAGE}:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: kata-bank-secrets
+              key: database-url
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: kata-bank-secrets
+              key: database-username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kata-bank-secrets
+              key: database-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kata-bank-secrets
+              key: jwt-secret
+        - name: JWT_EXPIRATION
+          value: "86400000"
+        - name: LOG_LEVEL_ROOT
+          value: "INFO"
+        - name: LOG_LEVEL_WEB
+          value: "WARN"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: logs
+        emptyDir: {}
+      imagePullSecrets:
+      - name: gitlab-registry-secret
