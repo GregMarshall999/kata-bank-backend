@@ -1,6 +1,8 @@
 package com.exalt_company.kata_bank_api.controller;
 
-import com.exalt_company.kata_bank_api.dto.FundDto;
+import com.exalt_company.kata_bank_api.dto.fund.FundDto;
+import com.exalt_company.kata_bank_api.dto.fund.FundOpDto;
+import com.exalt_company.kata_bank_api.dto.fund.OverdrawDto;
 import com.exalt_company.kata_bank_api.enums.Banking;
 import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.service.IFundService;
@@ -14,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,7 +42,7 @@ public class FundController extends BaseController<FundDto, IFundService> {
     @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/deposit")
     public ResponseEntity<Banking> deposit(
-            @RequestBody FundDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
+            @RequestBody FundOpDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
         return service.deposit(dto, token);
     }
 
@@ -55,7 +58,21 @@ public class FundController extends BaseController<FundDto, IFundService> {
     @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/withdraw")
     public ResponseEntity<Banking> withdraw(
-            @RequestBody FundDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
+            @RequestBody FundOpDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
         return service.withdraw(dto, token);
+    }
+
+    @PutMapping("/request-overdraw")
+    public ResponseEntity<Banking> requestOverdrawCapabilities(
+            @RequestBody OverdrawDto overdrawDto,
+            @RequestHeader(name = "Authorization") String token) throws FundException {
+        return service.requestOverdrawCapabilities(overdrawDto, token);
+    }
+
+    @PutMapping("/cancel-overdraw")
+    public ResponseEntity<Banking> cancelOverdrawCapabilities(
+            @RequestBody OverdrawDto overdrawDto,
+            @RequestHeader(name = "Authorization") String token) throws FundException {
+        return service.cancelOverdrawCapabilities(overdrawDto, token);
     }
 }
