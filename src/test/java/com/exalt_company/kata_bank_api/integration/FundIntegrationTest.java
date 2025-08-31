@@ -1,6 +1,6 @@
 package com.exalt_company.kata_bank_api.integration;
 
-import com.exalt_company.kata_bank_api.dto.FundDto;
+import com.exalt_company.kata_bank_api.dto.fund.FundDto;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.Fund;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;

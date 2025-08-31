@@ -93,10 +93,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
     @Override
     public ResponseEntity<Banking> requestOverdrawCapabilities(
             OverdrawDto overdrawDto, String token) throws FundException {
-        checkUserAuthorized(token, overdrawDto, "No authorization for overdraws");
-
         if(overdrawDto.getId() == 0L)
             throw new FundException("No funds to overdraw");
+
+        checkUserAuthorized(token, overdrawDto, "No authorization for overdraws");
 
         Fund found = repository.findById(overdrawDto.getId())
                 .orElseThrow(() -> new FundException("No funds to overdraw"));
@@ -119,10 +119,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
     @Override
     public ResponseEntity<Banking> cancelOverdrawCapabilities(
             OverdrawDto overdrawDto, String token) throws FundException {
-        checkUserAuthorized(token, overdrawDto, "No authorization for overdraw cancellation");
-
         if(overdrawDto.getId() == 0L)
             throw new FundException("No funds overdrawn to cancel");
+
+        checkUserAuthorized(token, overdrawDto, "No authorization for overdraw cancellation");
 
         Fund found = repository.findById(overdrawDto.getId())
                 .orElseThrow(() -> new FundException("No funds overdrawn to cancel"));
@@ -155,7 +155,7 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
     private <F extends BaseFundDto> void checkUserAuthorized(
             String token, F fundDto, String actionErrorMessage) throws FundException {
         Long id = jwtService.extractId(token);
-        if(id == null) throw new FundException(actionErrorMessage);
+        if(id == null || id == 0L) throw new FundException(actionErrorMessage);
         if(fundDto.getOwnerId() != id) throw new FundException("Attempted to access unauthorized funds");
     }
 }
