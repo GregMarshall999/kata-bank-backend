@@ -99,8 +99,12 @@ Ce relevé devra faire apparaître :
 
 ![archi-hexa](./assets/hexa-schema.png)
 
+# Implémentation
 
- 
+[Les changements (EN)](CHANGELOG.md) <br>
+[Informations sur les tests (EN)](TEST.md) <br>
+[Les paramètres de production](ENVIRONMENT_VARIABLES.md) <br>
+[L'intégration et déployment continue](CI_CD_README.md)
 
 
 
