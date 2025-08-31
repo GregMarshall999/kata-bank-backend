@@ -21,7 +21,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Bank API")
                         .description("Banking API for managing bank accounts, users, and funds")
-                        .version("0.0.1-SNAPSHOT")
+                        .version("0.0.2-SNAPSHOT")
                         .contact(new Contact()
                                 .name("Exalt")
                                 .email("contact@exalt-company.com")

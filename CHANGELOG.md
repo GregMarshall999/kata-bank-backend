@@ -2,7 +2,60 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0]
+## [0.0.2-SNAPSHOT] - 2024-12-19
+
+### Added
+- **Overdraw Banking Functionality**
+  - **Request Overdraw Capabilities**: Users can request authorization to withdraw more than their current balance
+  - **Cancel Overdraw Capabilities**: Users can cancel overdraw functionality when balance is not negative
+  - **Enhanced Withdraw Operations**: Withdraw functionality now supports overdraw when enabled
+  - **Overdraw Limit Management**: Configurable maximum overdraw amounts per fund
+  - **Business Rule Enforcement**: Comprehensive validation of overdraw operations
+
+- **New API Endpoints**
+  - `PUT /api/fund/request-overdraw` - Enable overdraw capabilities on a fund
+  - `PUT /api/fund/cancel-overdraw` - Disable overdraw capabilities on a fund
+  - Enhanced `POST /api/fund/withdraw` - Now supports overdraw functionality
+
+- **Enhanced Data Models**
+  - **Fund Entity**: Added `canOverdraw` boolean field and `maxOverdraw` double field
+  - **OverdrawDto**: New DTO for overdraw operations with maxOverdraw parameter
+  - **Enhanced DTOs**: Added comprehensive Swagger documentation to all fund-related DTOs
+
+- **Comprehensive Testing Suite**
+  - **Service Layer Tests**: Complete unit tests for all overdraw business logic
+  - **Integration Tests**: End-to-end API testing for overdraw functionality
+  - **Entity Tests**: Fund entity overdraw capabilities testing
+  - **DTO Tests**: OverdrawDto validation and edge cases
+  - **Error Handling Tests**: Comprehensive error scenario coverage
+
+- **Enhanced API Documentation**
+  - **Swagger Integration**: Complete OpenAPI documentation for overdraw endpoints
+  - **Detailed Descriptions**: Business rules and constraints clearly documented
+  - **Error Response Documentation**: Comprehensive error handling documentation
+  - **Schema Documentation**: Enhanced DTO and response schema documentation
+
+- **Business Rules Implementation**
+  - **Overdraw Authorization**: Users must request overdraw capabilities before using them
+  - **Balance Protection**: Cannot cancel overdraw when balance is negative
+  - **Limit Enforcement**: Withdrawals cannot exceed overdraw limits
+  - **Authorization Validation**: All operations require proper user authorization
+
+### Technical Improvements
+- **Enhanced Error Handling**: Specific error messages for overdraw-related failures
+- **Security Enhancements**: Authorization checks for all overdraw operations
+- **Code Quality**: Comprehensive test coverage for new functionality
+- **Documentation**: Updated TEST.md with overdraw testing documentation
+
+### Breaking Changes
+- None
+
+### Deprecated
+- None
+
+---
+
+## [0.0.1-SNAPSHOT]
 
 ### Added
 - **Bank User Management**
@@ -83,7 +136,13 @@ All notable changes to this project will be documented in this file.
 
 ## Version History
 
-- **1.0.0** - Initial release with core banking functionality
+- **0.0.2-SNAPSHOT** - Overdraw banking functionality release
+  - Comprehensive overdraw capabilities (request, cancel, withdraw)
+  - Enhanced API documentation with Swagger
+  - Complete test coverage for overdraw functionality
+  - Business rule enforcement and validation
+
+- **0.0.1-SNAPSHOT** - Initial release with core banking functionality
   - User authentication and authorization
   - Fund deposit and withdrawal operations
   - Negative balance prevention
