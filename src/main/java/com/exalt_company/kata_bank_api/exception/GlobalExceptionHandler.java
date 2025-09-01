@@ -52,6 +52,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(SavingException.class)
+    public ResponseEntity<ErrorResponse> handleSavingException(SavingException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                new Date(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(

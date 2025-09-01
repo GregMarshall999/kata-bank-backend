@@ -1,6 +1,5 @@
 package com.exalt_company.kata_bank_api.service.impl;
 
-import com.exalt_company.kata_bank_api.dto.fund.BaseFundDto;
 import com.exalt_company.kata_bank_api.dto.fund.FundDto;
 import com.exalt_company.kata_bank_api.dto.fund.FundOpDto;
 import com.exalt_company.kata_bank_api.dto.fund.OverdrawDto;
@@ -11,6 +10,7 @@ import com.exalt_company.kata_bank_api.mapper.FundMapper;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
 import com.exalt_company.kata_bank_api.security.JwtService;
 import com.exalt_company.kata_bank_api.service.IFundService;
+import com.exalt_company.kata_bank_api.util.ServiceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +37,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      */
     @Override
     public ResponseEntity<Banking> deposit(FundOpDto dto, String token) throws FundException {
-        checkUserAuthorized(token, dto, "No authorization for deposits");
+        if(dto == null) throw new FundException("Wrong request body");
+        if(dto.getBalance() < 0) throw new FundException("Wrong value for balance");
+
+        ServiceUtil.checkUserAuthorized(token, dto, jwtService, "No authorization for deposits");
 
         if(dto.getId() == 0L) {
             repository.save(mapper.toEntity(dto));
@@ -64,10 +67,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      */
     @Override
     public ResponseEntity<Banking> withdraw(FundOpDto dto, String token) throws FundException {
-        checkUserAuthorized(token, dto, "No authorization for withdrawals");
+        if(dto == null || dto.getId() == 0L) throw new FundException("No balance to withdraw from");
+        if(dto.getBalance() < 0) throw new FundException("Wrong value for balance");
 
-        if(dto.getId() == 0L)
-            throw new FundException("No balance to withdraw from");
+        ServiceUtil.checkUserAuthorized(token, dto, jwtService, "No authorization for withdrawals");
 
         Fund found = repository.findById(dto.getId()).orElseThrow(
                 () -> new FundException("No balance to withdraw from"));
@@ -93,10 +96,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
     @Override
     public ResponseEntity<Banking> requestOverdrawCapabilities(
             OverdrawDto overdrawDto, String token) throws FundException {
-        if(overdrawDto.getId() == 0L)
-            throw new FundException("No funds to overdraw");
+        if(overdrawDto.getId() == 0L) throw new FundException("No funds to overdraw");
 
-        checkUserAuthorized(token, overdrawDto, "No authorization for overdraws");
+        ServiceUtil.checkUserAuthorized(
+                token, overdrawDto, jwtService, "No authorization for overdraws");
 
         Fund found = repository.findById(overdrawDto.getId())
                 .orElseThrow(() -> new FundException("No funds to overdraw"));
@@ -119,10 +122,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
     @Override
     public ResponseEntity<Banking> cancelOverdrawCapabilities(
             OverdrawDto overdrawDto, String token) throws FundException {
-        if(overdrawDto.getId() == 0L)
-            throw new FundException("No funds overdrawn to cancel");
+        if(overdrawDto.getId() == 0L) throw new FundException("No funds overdrawn to cancel");
 
-        checkUserAuthorized(token, overdrawDto, "No authorization for overdraw cancellation");
+        ServiceUtil.checkUserAuthorized(
+                token, overdrawDto, jwtService, "No authorization for overdraw cancellation");
 
         Fund found = repository.findById(overdrawDto.getId())
                 .orElseThrow(() -> new FundException("No funds overdrawn to cancel"));
@@ -136,26 +139,5 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         repository.save(found);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.COMPLETED);
-    }
-
-    /**
-     * Since most fund operations need to be tight with security, this regroups the checks to avoid repeating them by
-     * hand.
-     * We check if the token embedded ID is the same as the owner of these funds.
-     * If anything goes wrong, they get a slap with the corresponding exception.
-     * The handler should provide a simple error message for frontend apps.
-     * <p>
-     * Later on, it would be a good idea to set up an admin override. Since the role is also embedded in the token
-     * @param token we find the requesting user ID here and use jwtService to extract it.
-     * @param fundDto again to avoid repetition any funding dto must extend this ownerId holder.
-     * @param actionErrorMessage custom error messages
-     * @param <F>
-     * @throws FundException
-     */
-    private <F extends BaseFundDto> void checkUserAuthorized(
-            String token, F fundDto, String actionErrorMessage) throws FundException {
-        Long id = jwtService.extractId(token);
-        if(id == null || id == 0L) throw new FundException(actionErrorMessage);
-        if(fundDto.getOwnerId() != id) throw new FundException("Attempted to access unauthorized funds");
     }
 }
