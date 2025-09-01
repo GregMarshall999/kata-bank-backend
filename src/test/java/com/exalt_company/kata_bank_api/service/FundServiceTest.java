@@ -395,8 +395,104 @@ class FundServiceTest {
 
     @Test
     void testWithdrawWithNullDto() {
-        assertThrows(FundException.class, () ->
+        FundException exception = assertThrows(FundException.class, () ->
             fundService.withdraw(null, validToken)
+        );
+
+        assertEquals("No balance to withdraw from", exception.getMessage());
+        verify(repository, never()).findById(any());
+        verify(repository, never()).save(any(Fund.class));
+    }
+
+    @Test
+    void testDepositSuccess() throws FundException {
+        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(repository.save(any(Fund.class))).thenReturn(testFund);
+
+        ResponseEntity<Banking> response = fundService.deposit(fundOpDto, validToken);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Banking.DEPOSITED, response.getBody());
+
+        verify(jwtService).extractId(validToken);
+        verify(repository).findById(1L);
+        verify(repository).save(argThat(fund -> 
+            fund.getBalance() == 1100.0
+        ));
+    }
+
+    @Test
+    void testDepositNewFund() throws FundException {
+        fundOpDto.setId(0L);
+        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(mapper.toEntity(fundOpDto)).thenReturn(testFund);
+        when(repository.save(any(Fund.class))).thenReturn(testFund);
+
+        ResponseEntity<Banking> response = fundService.deposit(fundOpDto, validToken);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(Banking.DEPOSITED, response.getBody());
+
+        verify(jwtService).extractId(validToken);
+        verify(repository).save(any(Fund.class));
+        verify(repository, never()).findById(any());
+    }
+
+    @Test
+    void testDepositWithNegativeAmount() {
+        fundOpDto.setBalance(-100.0);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.deposit(fundOpDto, validToken)
+        );
+
+        assertEquals("Wrong value for balance", exception.getMessage());
+        verify(repository, never()).findById(any());
+        verify(repository, never()).save(any(Fund.class));
+    }
+
+    @Test
+    void testDepositWithNonExistentFund() {
+        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.deposit(fundOpDto, validToken)
+        );
+
+        assertEquals("No balance to add funds", exception.getMessage());
+        verify(repository).findById(1L);
+        verify(repository, never()).save(any(Fund.class));
+    }
+
+    @Test
+    void testDepositUnauthorizedUser() {
+        when(jwtService.extractId(validToken)).thenReturn(2L);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.deposit(fundOpDto, validToken)
+        );
+
+        assertEquals("Attempted to access unauthorized funds", exception.getMessage());
+        verify(jwtService).extractId(validToken);
+        verify(repository, never()).findById(any());
+        verify(repository, never()).save(any(Fund.class));
+    }
+
+    @Test
+    void testDepositWithNullToken() {
+        assertThrows(FundException.class, () ->
+            fundService.deposit(fundOpDto, null)
+        );
+    }
+
+    @Test
+    void testDepositWithNullDto() {
+        assertThrows(FundException.class, () ->
+            fundService.deposit(null, validToken)
         );
     }
 }
