@@ -16,12 +16,14 @@ src/test/java/com/exalt_company/kata_bank_api/
 │   ├── BankUserTest.java                     # BankUser entity tests
 │   ├── FundTest.java                         # Fund entity tests
 │   ├── FundOverdrawTest.java                 # Fund overdraw functionality tests
+│   ├── SavingTest.java                       # Saving entity tests
 │   └── user_fields/                          # Embedded field tests
 │       ├── IdentityTest.java                 # Identity embedded class tests
 │       └── CredentialsTest.java              # Credentials embedded class tests
 ├── service/                                  # Service layer tests
 │   ├── AuthServiceTest.java                  # Authentication service tests
-│   └── FundServiceTest.java                  # Fund service tests (including overdraw)
+│   ├── FundServiceTest.java                  # Fund service tests (including overdraw)
+│   └── SavingServiceTest.java                # Saving service tests
 ├── repository/                               # Repository layer tests
 │   └── BankUserRepositoryTest.java           # BankUser repository tests
 ├── dto/                                      # DTO tests
@@ -36,12 +38,14 @@ src/test/java/com/exalt_company/kata_bank_api/
 │   ├── AuthExceptionTest.java                # Authentication exception tests
 │   ├── BaseExceptionTest.java                # Base exception tests
 │   ├── FundExceptionTest.java                # Fund exception tests
+│   ├── SavingExceptionTest.java              # Saving exception tests
 │   ├── ErrorResponseTest.java                # Error response DTO tests
 │   └── GlobalExceptionHandlerTest.java       # Global exception handler tests
 └── integration/                              # Integration tests
     ├── AuthIntegrationTest.java              # End-to-end authentication tests
     ├── FundIntegrationTest.java              # End-to-end fund management tests
-    └── OverdrawIntegrationTest.java          # End-to-end overdraw functionality tests
+    ├── OverdrawIntegrationTest.java          # End-to-end overdraw functionality tests
+    └── SavingIntegrationTest.java            # End-to-end saving operations tests
 ```
 
 ## Test Configuration
@@ -134,6 +138,9 @@ mvn test -Dtest="*Overdraw*" -DfailIfNoTests=false
 
 # Run fund-related tests (including overdraw)
 mvn test -Dtest="*Fund*" -DfailIfNoTests=false
+
+# Run saving-related tests
+mvn test -Dtest="*Saving*" -DfailIfNoTests=false
 ```
 
 ### Running Individual Test Classes
@@ -154,6 +161,16 @@ mvn test -Dtest=OverdrawDtoTest
 # Run specific overdraw test methods
 mvn test -Dtest=FundServiceTest#testRequestOverdrawCapabilitiesSuccess
 mvn test -Dtest=OverdrawIntegrationTest#testWithdrawWithOverdrawEnabledSuccess
+
+# Run saving-related test classes
+mvn test -Dtest=SavingServiceTest
+mvn test -Dtest=SavingIntegrationTest
+mvn test -Dtest=SavingTest
+mvn test -Dtest=SavingExceptionTest
+
+# Run specific saving test methods
+mvn test -Dtest=SavingServiceTest#testOpenSavingsAccountSuccess
+mvn test -Dtest=SavingIntegrationTest#testCompleteSavingsWorkflow
 ```
 
 ## Test Coverage
@@ -166,9 +183,10 @@ The test suite provides comprehensive coverage for:
 - **DTO Layer**: Data transfer object validation
 - **Enum Layer**: Enum value and behavior testing
 - **Exception Layer**: Exception handling and error response testing
-- **Integration Layer**: End-to-end flow testing for authentication and fund management
+- **Integration Layer**: End-to-end flow testing for authentication, fund management, and savings operations
 - **Application Context**: Spring context loading verification
 - **Overdraw Banking**: Comprehensive testing of overdraw functionality including request, cancel, and withdraw operations
+- **Savings Banking**: Complete testing of savings account operations including open, close, deposit, and withdraw with max balance validation
 
 ## Security Testing
 
@@ -181,6 +199,7 @@ The test suite includes security-focused tests:
 - User registration security
 - Fund operation authorization
 - Overdraw operation authorization and validation
+- Savings operation authorization and validation
 
 ## Performance Considerations
 
@@ -233,3 +252,5 @@ Potential improvements for the test suite:
 4. **Mutation Testing**: Add mutation testing for better test quality
 5. **API Documentation Tests**: Test OpenAPI/Swagger documentation
 6. **Database Migration Tests**: Test schema evolution scenarios
+7. **Savings Interest Tests**: Add tests for interest calculation if implemented
+8. **Savings Transfer Tests**: Add tests for transfers between savings accounts

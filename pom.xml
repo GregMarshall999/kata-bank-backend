@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.exalt_company</groupId>
 	<artifactId>kata_bank_api</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<name>kata-bank-api</name>
 	<description>Kata project for bank accounts</description>
 

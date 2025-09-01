@@ -2,6 +2,65 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.3-SNAPSHOT]
+
+### Added
+- **Savings Account Functionality**
+  - **Open Savings Account**: Users can create new savings accounts with configurable maximum balance limits
+  - **Close Savings Account**: Users can close savings accounts when balance is zero
+  - **Savings Deposit Operations**: Deposit money into savings accounts with maximum balance validation
+  - **Savings Withdraw Operations**: Withdraw money from savings accounts with balance protection
+  - **Maximum Balance Management**: Configurable maximum balance limits per savings account
+  - **Business Rule Enforcement**: Comprehensive validation of savings operations
+
+- **New API Endpoints**
+  - `POST /api/saving/open` - Create a new savings account
+  - `POST /api/saving/close` - Close an existing savings account
+  - `POST /api/saving/deposit` - Deposit money into a savings account
+  - `POST /api/saving/withdraw` - Withdraw money from a savings account
+
+- **Enhanced Data Models**
+  - **Saving Entity**: New entity with balance, maxBalance, and owner relationship
+  - **SavingDto**: New DTO for savings operations with comprehensive validation
+  - **SavingMapper**: MapStruct mapper for entity-DTO conversions
+  - **SavingRepository**: Repository interface for savings data persistence
+
+- **Comprehensive Testing Suite**
+  - **Entity Tests**: Complete unit tests for Saving entity (`SavingTest.java`)
+  - **Service Tests**: Comprehensive unit tests for all savings business logic (`SavingServiceTest.java`)
+  - **Integration Tests**: End-to-end API testing for savings functionality (`SavingIntegrationTest.java`)
+  - **Exception Tests**: Savings exception handling and validation (`SavingExceptionTest.java`)
+  - **Error Handling Tests**: Comprehensive error scenario coverage for savings operations
+
+- **Enhanced API Documentation**
+  - **Swagger Integration**: Complete OpenAPI documentation for savings endpoints
+  - **Detailed Descriptions**: Business rules and constraints clearly documented
+  - **Error Response Documentation**: Comprehensive error handling documentation
+  - **Schema Documentation**: Enhanced DTO and response schema documentation
+
+- **Business Rules Implementation**
+  - **Maximum Balance Protection**: Deposits cannot exceed the configured maximum balance
+  - **Zero Balance Requirement**: Savings accounts can only be closed when balance is zero
+  - **Negative Balance Prevention**: Withdrawals cannot result in negative balances
+  - **Authorization Validation**: All operations require proper user authorization
+  - **Account Uniqueness**: Users cannot open multiple savings accounts with the same ID
+
+### Technical Improvements
+- **Enhanced Error Handling**: Specific error messages for savings-related failures
+- **Security Enhancements**: Authorization checks for all savings operations
+- **Code Quality**: Comprehensive test coverage for new functionality
+- **Documentation**: Updated TEST.md with savings testing documentation
+- **Service Layer**: New SavingService with complete CRUD operations
+- **Controller Layer**: New SavingController with RESTful endpoints
+
+### Breaking Changes
+- None
+
+### Deprecated
+- None
+
+---
+
 ## [0.0.2-SNAPSHOT]
 
 ### Added
@@ -135,6 +194,12 @@ All notable changes to this project will be documented in this file.
 ---
 
 ## Version History
+
+- **0.0.3-SNAPSHOT** - Savings account functionality release
+  - Complete savings account management (open, close, deposit, withdraw)
+  - Maximum balance validation and protection
+  - Comprehensive test coverage for savings operations
+  - Enhanced API documentation and business rule enforcement
 
 - **0.0.2-SNAPSHOT** - Overdraw banking functionality release
   - Comprehensive overdraw capabilities (request, cancel, withdraw)
