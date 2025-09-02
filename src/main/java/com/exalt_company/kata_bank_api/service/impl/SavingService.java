@@ -1,12 +1,16 @@
 package com.exalt_company.kata_bank_api.service.impl;
 
 import com.exalt_company.kata_bank_api.dto.SavingDto;
+import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.Saving;
+import com.exalt_company.kata_bank_api.enums.AuditOperation;
 import com.exalt_company.kata_bank_api.enums.Banking;
 import com.exalt_company.kata_bank_api.exception.SavingException;
 import com.exalt_company.kata_bank_api.mapper.SavingMapper;
+import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.SavingRepository;
 import com.exalt_company.kata_bank_api.security.JwtService;
+import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.ISavingService;
 import com.exalt_company.kata_bank_api.util.ServiceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +22,17 @@ import org.springframework.stereotype.Service;
 public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, SavingRepository>
         implements ISavingService {
     private final JwtService jwtService;
+    private final BankUserRepository bankUserRepository;
+    private final IAuditService auditService;
 
     @Autowired
-    public SavingService(SavingMapper mapper, SavingRepository repository, JwtService jwtService) {
+    public SavingService(
+            SavingMapper mapper, SavingRepository repository, JwtService jwtService,
+            BankUserRepository bankUserRepository, IAuditService auditService) {
         super(mapper, repository, Saving.class);
         this.jwtService = jwtService;
+        this.bankUserRepository = bankUserRepository;
+        this.auditService = auditService;
     }
 
     /**
@@ -42,7 +52,14 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
         Saving found = repository.findById(dto.getId()).orElse(null);
         if(found != null) throw new SavingException("Can't open same savings twice");
 
-        repository.save(mapper.toEntity(dto));
+        BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+
+        Saving savedSavings = repository.save(mapper.toEntity(dto));
+
+        auditService.recordAudit(
+                AuditOperation.OPEN, 0D, 0D, 0D, savingsOwner, null,
+                savedSavings);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Banking.AUTHORIZED);
     }
@@ -63,7 +80,14 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
 
         if(found.getBalance() != 0) throw new SavingException("Can not close savings if balance not empty");
 
+        BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+
         repository.delete(mapper.toEntity(dto));
+
+        auditService.recordAudit(
+                AuditOperation.CLOSE, 0D, 0D, 0D, savingsOwner, null,
+                null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.COMPLETED);
     }
@@ -85,12 +109,21 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
         Saving found = repository.findById(dto.getId())
                 .orElseThrow(() -> new SavingException("No savings to deposit"));
 
-        if(found.getBalance() + dto.getBalance() > found.getMaxBalance())
+        double before = found.getBalance();
+        double after = found.getBalance() + dto.getBalance();
+
+        if(after > found.getMaxBalance())
             throw new SavingException("Savings cannot exceed the maximum allowed balance");
 
-        found.setBalance(found.getBalance() + dto.getBalance());
+        BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new SavingException("Could not find savings owner"));
 
-        repository.save(found);
+        found.setBalance(after);
+
+        Saving savedSavings = repository.save(found);
+
+        auditService.recordAudit(
+                AuditOperation.DEPOSIT, dto.getBalance(), before, after, savingsOwner, null, savedSavings);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.DEPOSITED);
     }
@@ -113,11 +146,19 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
         Saving found = repository.findById(dto.getId())
                 .orElseThrow(() -> new SavingException("No savings to withdraw from"));
 
-        if(found.getBalance() - dto.getBalance() < 0)
+        double before = found.getBalance();
+        double after = found.getBalance() - dto.getBalance();
+        if(after < 0)
             throw new SavingException("Attempting to withdraw more than allowed");
 
-        found.setBalance(found.getBalance() - dto.getBalance());
-        repository.save(found);
+        BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+
+        found.setBalance(after);
+        Saving savedSavings = repository.save(found);
+
+        auditService.recordAudit(
+                AuditOperation.WITHDRAW, dto.getBalance(), before, after, savingsOwner, null, savedSavings);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.WITHDREW);
     }

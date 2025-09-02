@@ -3,12 +3,16 @@ package com.exalt_company.kata_bank_api.service.impl;
 import com.exalt_company.kata_bank_api.dto.fund.FundDto;
 import com.exalt_company.kata_bank_api.dto.fund.FundOpDto;
 import com.exalt_company.kata_bank_api.dto.fund.OverdrawDto;
+import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.Fund;
+import com.exalt_company.kata_bank_api.enums.AuditOperation;
 import com.exalt_company.kata_bank_api.enums.Banking;
 import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.mapper.FundMapper;
+import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
 import com.exalt_company.kata_bank_api.security.JwtService;
+import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.IFundService;
 import com.exalt_company.kata_bank_api.util.ServiceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +23,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepository> implements IFundService {
     private final JwtService jwtService;
+    private final BankUserRepository bankUserRepository;
+    private final IAuditService auditService;
 
     @Autowired
-    public FundService(FundMapper mapper, FundRepository repository, JwtService jwtService) {
+    public FundService(
+            FundMapper mapper, FundRepository repository, JwtService jwtService, BankUserRepository bankUserRepository,
+            IAuditService auditService) {
         super(mapper, repository, Fund.class);
         this.jwtService = jwtService;
+        this.bankUserRepository = bankUserRepository;
+        this.auditService = auditService;
     }
 
     /**
@@ -42,6 +52,9 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
 
         ServiceUtil.checkUserAuthorized(token, dto, jwtService, "No authorization for deposits");
 
+        BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new FundException("Could not find funds owner"));
+
         if(dto.getId() == 0L) {
             repository.save(mapper.toEntity(dto));
             return ResponseEntity.status(HttpStatus.CREATED).body(Banking.DEPOSITED);
@@ -50,8 +63,14 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         Fund found = repository.findById(dto.getId()).orElseThrow(
                 () -> new FundException("No balance to add funds"));
 
-        found.setBalance(found.getBalance() + dto.getBalance());
-        repository.save(found);
+        double before = found.getBalance();
+        double after = found.getBalance() + dto.getBalance();
+
+        found.setBalance(after);
+        Fund savedFunds = repository.save(found);
+
+        auditService.recordAudit(
+                AuditOperation.DEPOSIT, dto.getBalance(), before, after, fundsOwner, savedFunds, null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.DEPOSITED);
     }
@@ -75,14 +94,24 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         Fund found = repository.findById(dto.getId()).orElseThrow(
                 () -> new FundException("No balance to withdraw from"));
 
-        if(!found.canOverdraw() && found.getBalance() - dto.getBalance() < 0)
+        double after = found.getBalance() - dto.getBalance();
+
+        if(!found.canOverdraw() && after < 0)
             throw new FundException("Attempting to withdraw more than available");
 
-        if(found.canOverdraw() && found.getBalance() - dto.getBalance() < -found.getMaxOverdraw())
+        if(found.canOverdraw() && after < -found.getMaxOverdraw())
             throw new FundException("Attempting to withdraw more than allowed");
 
-        found.setBalance(found.getBalance() - dto.getBalance());
-        repository.save(found);
+        BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new FundException("Could not find funds owner"));
+
+        found.setBalance(after);
+        Fund savedFunds = repository.save(found);
+
+        double before = found.getBalance();
+
+        auditService.recordAudit(
+                AuditOperation.WITHDRAW, dto.getBalance(), before, after, fundsOwner, savedFunds, null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.WITHDREW);
     }
@@ -107,7 +136,14 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         found.setCanOverdraw(true);
         found.setMaxOverdraw(overdrawDto.getMaxOverdraw());
 
-        repository.save(found);
+        BankUser fundsOwner = bankUserRepository.findById(overdrawDto.getOwnerId())
+                .orElseThrow(() -> new FundException("Could not find funds owner"));
+
+        Fund savedFunds = repository.save(found);
+
+        auditService.recordAudit(
+                AuditOperation.OVERDRAW_REQUEST, 0D, 0D, 0D, fundsOwner, savedFunds,
+                null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.AUTHORIZED);
     }
@@ -136,7 +172,14 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         found.setMaxOverdraw(0D);
         found.setCanOverdraw(false);
 
-        repository.save(found);
+        BankUser fundsOwner = bankUserRepository.findById(overdrawDto.getOwnerId())
+                .orElseThrow(() -> new FundException("Could not find funds owner"));
+
+        Fund savedFunds = repository.save(found);
+
+        auditService.recordAudit(
+                AuditOperation.OVERDRAW_CANCEL, 0D, 0D, 0D, fundsOwner, savedFunds,
+                null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.COMPLETED);
     }
