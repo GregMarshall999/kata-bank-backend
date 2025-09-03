@@ -5,12 +5,15 @@ import com.exalt_company.kata_bank_api.dto.fund.OverdrawDto;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.Fund;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
+import com.exalt_company.kata_bank_api.enums.AuditOperation;
 import com.exalt_company.kata_bank_api.enums.BankRole;
 import com.exalt_company.kata_bank_api.enums.Banking;
 import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.mapper.FundMapper;
+import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
 import com.exalt_company.kata_bank_api.security.JwtService;
+import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.impl.FundService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,6 +47,12 @@ class FundServiceTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private BankUserRepository bankUserRepository;
+
+    @Mock
+    private IAuditService auditService;
 
     @InjectMocks
     private FundService fundService;
@@ -85,6 +96,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.requestOverdrawCapabilities(overdrawDto, validToken);
 
@@ -97,6 +109,8 @@ class FundServiceTest {
         verify(repository).save(argThat(fund -> 
             fund.canOverdraw() && fund.getMaxOverdraw() == 500.0
         ));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -150,6 +164,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.cancelOverdrawCapabilities(overdrawDto, validToken);
 
@@ -162,6 +177,8 @@ class FundServiceTest {
         verify(repository).save(argThat(fund -> 
             !fund.canOverdraw() && fund.getMaxOverdraw() == 0.0
         ));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -233,6 +250,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
 
@@ -241,6 +259,8 @@ class FundServiceTest {
         assertEquals(Banking.WITHDREW, response.getBody());
 
         verify(repository).save(argThat(fund -> fund.getBalance() == -100.0));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -288,6 +308,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
 
@@ -296,6 +317,8 @@ class FundServiceTest {
         assertEquals(Banking.WITHDREW, response.getBody());
 
         verify(repository).save(argThat(fund -> fund.getBalance() == -500.0));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -308,6 +331,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
 
@@ -316,6 +340,8 @@ class FundServiceTest {
         assertEquals(Banking.WITHDREW, response.getBody());
 
         verify(repository).save(argThat(fund -> fund.getBalance() == 700.0));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -328,6 +354,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
 
@@ -336,6 +363,8 @@ class FundServiceTest {
         assertEquals(Banking.WITHDREW, response.getBody());
 
         verify(repository).save(argThat(fund -> fund.getBalance() == -200.0));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -348,6 +377,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
 
@@ -356,6 +386,8 @@ class FundServiceTest {
         assertEquals(Banking.WITHDREW, response.getBody());
 
         verify(repository).save(argThat(fund -> fund.getBalance() == -300.0));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
@@ -409,6 +441,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
         ResponseEntity<Banking> response = fundService.deposit(fundOpDto, validToken);
 
@@ -421,6 +454,8 @@ class FundServiceTest {
         verify(repository).save(argThat(fund -> 
             fund.getBalance() == 1100.0
         ));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test

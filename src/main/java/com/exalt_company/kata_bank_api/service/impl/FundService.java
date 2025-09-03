@@ -52,9 +52,6 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
 
         ServiceUtil.checkUserAuthorized(token, dto, jwtService, "No authorization for deposits");
 
-        BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new FundException("Could not find funds owner"));
-
         if(dto.getId() == 0L) {
             repository.save(mapper.toEntity(dto));
             return ResponseEntity.status(HttpStatus.CREATED).body(Banking.DEPOSITED);
@@ -62,6 +59,9 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
 
         Fund found = repository.findById(dto.getId()).orElseThrow(
                 () -> new FundException("No balance to add funds"));
+
+        BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
+                .orElseThrow(() -> new FundException("Could not find funds owner"));
 
         double before = found.getBalance();
         double after = found.getBalance() + dto.getBalance();

@@ -12,6 +12,7 @@ import com.exalt_company.kata_bank_api.exception.AuditException;
 import com.exalt_company.kata_bank_api.repository.AccountAuditRepository;
 import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
+import com.exalt_company.kata_bank_api.repository.SavingRepository;
 import com.exalt_company.kata_bank_api.service.IAuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,13 +28,15 @@ public class AuditService implements IAuditService {
     private final AccountAuditRepository repository;
     private BankUserRepository bankUserRepository;
     private FundRepository fundRepository;
+    private SavingRepository savingRepository;
 
     @Autowired
     public AuditService(AccountAuditRepository repository, BankUserRepository bankUserRepository,
-                        FundRepository fundRepository) {
+                        FundRepository fundRepository, SavingRepository savingRepository) {
         this.repository = repository;
         this.bankUserRepository = bankUserRepository;
         this.fundRepository = fundRepository;
+        this.savingRepository = savingRepository;
     }
 
     @Override
@@ -69,16 +72,26 @@ public class AuditService implements IAuditService {
         try {
             AccountType type = AccountType.valueOf(accountType);
 
-            BankUser fundOwner = bankUserRepository.findById(ownerId)
+            BankUser owner = bankUserRepository.findById(ownerId)
                     .orElseThrow(() -> new AuditException("Can't find funds owner"));
 
-            Fund ownerFunds = fundRepository.findByOwner(fundOwner)
-                    .orElseThrow(() -> new AuditException("Could not find user's funds"));
-
+            AccountStatementDto dto = new AccountStatementDto();
             Page<AccountAudit> audits;
+            Fund ownerFunds;
+            Saving ownerSavings;
             switch (type) {
-                case FUND -> audits = repository.findByUserFundOwnerCurrentMonth(fundOwner, PageRequest.of(page, size));
-                case SAVING -> audits = repository.findByUserSavingOwnerCurrentMonth(fundOwner, PageRequest.of(page, size));
+                case FUND -> {
+                    ownerFunds = fundRepository.findByOwner(owner)
+                            .orElseThrow(() -> new AuditException("Could not find user's funds"));
+                    audits = repository.findByUserFundOwnerCurrentMonth(owner, PageRequest.of(page, size));
+                    dto.setAccountBalance(ownerFunds.getBalance());
+                }
+                case SAVING -> {
+                    ownerSavings = savingRepository.findByOwner(owner)
+                            .orElseThrow(() -> new AuditException("Could not find user's Savings"));
+                    audits = repository.findByUserSavingOwnerCurrentMonth(owner, PageRequest.of(page, size));
+                    dto.setAccountBalance(ownerSavings.getBalance());
+                }
                 default -> throw new AuditException("A critical error has occurred! Please check accountType value"); //Lets be honest lads, if we ever reach this, pandemonium will follow our doom
             }
 
@@ -101,9 +114,7 @@ public class AuditService implements IAuditService {
                     })
                     .toList();
 
-            AccountStatementDto dto = new AccountStatementDto();
             dto.setAccountType(type);
-            dto.setAccountBalance(ownerFunds.getBalance());
             dto.setOperations(operations);
             dto.setOperationsPage(audits.getNumber());
             dto.setOperationsSize(audits.getSize());

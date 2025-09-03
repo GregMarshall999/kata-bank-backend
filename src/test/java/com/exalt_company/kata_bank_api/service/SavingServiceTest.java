@@ -4,12 +4,15 @@ import com.exalt_company.kata_bank_api.dto.SavingDto;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.Saving;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
+import com.exalt_company.kata_bank_api.enums.AuditOperation;
 import com.exalt_company.kata_bank_api.enums.BankRole;
 import com.exalt_company.kata_bank_api.enums.Banking;
 import com.exalt_company.kata_bank_api.exception.SavingException;
 import com.exalt_company.kata_bank_api.mapper.SavingMapper;
+import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.SavingRepository;
 import com.exalt_company.kata_bank_api.security.JwtService;
+import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.impl.SavingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -41,6 +45,12 @@ class SavingServiceTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private BankUserRepository bankUserRepository;
+
+    @Mock
+    private IAuditService auditService;
 
     @InjectMocks
     private SavingService savingService;
@@ -77,6 +87,7 @@ class SavingServiceTest {
     void testOpenSavingsAccountSuccess() throws SavingException {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(mapper.toEntity(savingDto)).thenReturn(testSaving);
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
@@ -88,6 +99,8 @@ class SavingServiceTest {
 
         verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
         verify(repository).save(any(Saving.class));
     }
 
@@ -137,6 +150,7 @@ class SavingServiceTest {
         testSaving.setBalance(0.0);
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(mapper.toEntity(savingDto)).thenReturn(testSaving);
 
         ResponseEntity<Banking> response = savingService.closeSavingsAccount(savingDto, validToken);
@@ -147,6 +161,8 @@ class SavingServiceTest {
 
         verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any());
         verify(repository).delete(any(Saving.class));
     }
 
@@ -196,6 +212,7 @@ class SavingServiceTest {
     void testDepositSuccess() throws SavingException {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
         ResponseEntity<Banking> response = savingService.deposit(savingDto, validToken);
@@ -206,7 +223,9 @@ class SavingServiceTest {
 
         verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
-        verify(repository).save(argThat(saving -> 
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
+        verify(repository).save(argThat(saving ->
             saving.getBalance() == 1100.0
         ));
     }
@@ -285,6 +304,7 @@ class SavingServiceTest {
     void testWithdrawSuccess() throws SavingException {
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
         ResponseEntity<Banking> response = savingService.withdraw(savingDto, validToken);
@@ -295,6 +315,8 @@ class SavingServiceTest {
 
         verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
         verify(repository).save(argThat(saving -> 
             saving.getBalance() == 900.0
         ));
@@ -376,6 +398,7 @@ class SavingServiceTest {
 
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
         ResponseEntity<Banking> response = savingService.withdraw(savingDto, validToken);
@@ -384,6 +407,10 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.WITHDREW, response.getBody());
 
+        verify(jwtService).extractId(validToken);
+        verify(repository).findById(1L);
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
         verify(repository).save(argThat(saving -> 
             saving.getBalance() == 0.0
         ));
@@ -396,6 +423,7 @@ class SavingServiceTest {
 
         when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
         ResponseEntity<Banking> response = savingService.deposit(savingDto, validToken);
@@ -404,6 +432,10 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.DEPOSITED, response.getBody());
 
+        verify(jwtService).extractId(validToken);
+        verify(repository).findById(1L);
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
         verify(repository).save(argThat(saving -> 
             saving.getBalance() == 5000.0
         ));

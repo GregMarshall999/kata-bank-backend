@@ -6,6 +6,8 @@ import com.exalt_company.kata_bank_api.enums.AuditOperation;
 public class OperationDto extends BaseDto {
     private AuditOperation operation;
 
+    //TODO: private double amount;
+
     private String operationAuthor;
 
     public AuditOperation getOperation() {
