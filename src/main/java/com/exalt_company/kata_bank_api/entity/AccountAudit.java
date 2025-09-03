@@ -5,7 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class AccountAudit extends BaseEntity {
@@ -19,13 +19,13 @@ public class AccountAudit extends BaseEntity {
 
     private double balanceAfter;
 
-    @OneToOne
+    @ManyToOne
     private BankUser requestingUser;
 
-    @OneToOne
+    @ManyToOne
     private Fund userFund;
 
-    @OneToOne
+    @ManyToOne
     private Saving userSaving;
 
     public AuditOperation getOperation() {

@@ -2,7 +2,6 @@ package com.exalt_company.kata_bank_api.mapper;
 
 import com.exalt_company.kata_bank_api.dto.fund.FundDto;
 import com.exalt_company.kata_bank_api.dto.fund.FundOpDto;
-import com.exalt_company.kata_bank_api.dto.fund.OverdrawDto;
 import com.exalt_company.kata_bank_api.entity.Fund;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
