@@ -7,8 +7,8 @@ import com.exalt_company.kata_bank_api.exception.SavingException;
 import org.springframework.http.ResponseEntity;
 
 public interface ISavingService extends IBaseService<SavingDto> {
-    ResponseEntity<Banking> openSavingsAccount(SavingDto dto, String token) throws SavingException;
-    ResponseEntity<Banking> closeSavingsAccount(SavingDto dto, String token) throws SavingException;
-    ResponseEntity<Banking> deposit(SavingDto dto, String token) throws FundException, SavingException;
-    ResponseEntity<Banking> withdraw(SavingDto dto, String token) throws SavingException;
+    ResponseEntity<Banking> openSavingsAccount(SavingDto dto) throws SavingException;
+    ResponseEntity<Banking> closeSavingsAccount(SavingDto dto) throws SavingException;
+    ResponseEntity<Banking> deposit(SavingDto dto) throws FundException, SavingException;
+    ResponseEntity<Banking> withdraw(SavingDto dto) throws SavingException;
 }

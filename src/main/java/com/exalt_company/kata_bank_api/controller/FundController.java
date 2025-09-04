@@ -4,6 +4,7 @@ import com.exalt_company.kata_bank_api.dto.fund.FundDto;
 import com.exalt_company.kata_bank_api.dto.fund.FundOpDto;
 import com.exalt_company.kata_bank_api.dto.fund.OverdrawDto;
 import com.exalt_company.kata_bank_api.enums.Banking;
+import com.exalt_company.kata_bank_api.exception.ErrorResponse;
 import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.service.IFundService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,14 +13,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,11 +39,10 @@ public class FundController extends BaseController<FundDto, IFundService> {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/deposit")
     public ResponseEntity<Banking> deposit(
-            @RequestBody FundOpDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
-        return service.deposit(dto, token);
+            @RequestBody FundOpDto dto) throws FundException {
+        return service.deposit(dto);
     }
 
     @Operation(summary = "Withdraw funds", description = "Withdraws funds from a user's account. Supports overdraw functionality when enabled.")
@@ -52,15 +50,14 @@ public class FundController extends BaseController<FundDto, IFundService> {
             @ApiResponse(responseCode = "200", description = "Withdrawal successful",
                     content = @Content(schema = @Schema(implementation = Banking.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data or insufficient funds/overdraw limit exceeded",
-                    content = @Content(schema = @Schema(implementation = com.exalt_company.kata_bank_api.exception.ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/withdraw")
     public ResponseEntity<Banking> withdraw(
-            @RequestBody FundOpDto dto, @RequestHeader(name = "Authorization") String token) throws FundException {
-        return service.withdraw(dto, token);
+            @RequestBody FundOpDto dto) throws FundException {
+        return service.withdraw(dto);
     }
 
     @Operation(summary = "Request overdraw capabilities", 
@@ -70,15 +67,13 @@ public class FundController extends BaseController<FundDto, IFundService> {
             @ApiResponse(responseCode = "200", description = "Overdraw capabilities authorized successfully",
                     content = @Content(schema = @Schema(implementation = Banking.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data, fund not found, or unauthorized access",
-                    content = @Content(schema = @Schema(implementation = com.exalt_company.kata_bank_api.exception.ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    @SecurityRequirement(name = "Bearer Authentication")
     @PutMapping("/request-overdraw")
     public ResponseEntity<Banking> requestOverdrawCapabilities(
-            @RequestBody OverdrawDto overdrawDto,
-            @RequestHeader(name = "Authorization") String token) throws FundException {
-        return service.requestOverdrawCapabilities(overdrawDto, token);
+            @RequestBody OverdrawDto overdrawDto) throws FundException {
+        return service.requestOverdrawCapabilities(overdrawDto);
     }
 
     @Operation(summary = "Cancel overdraw capabilities", 
@@ -88,14 +83,12 @@ public class FundController extends BaseController<FundDto, IFundService> {
             @ApiResponse(responseCode = "200", description = "Overdraw capabilities cancelled successfully",
                     content = @Content(schema = @Schema(implementation = Banking.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request data, fund not found, negative balance, or unauthorized access",
-                    content = @Content(schema = @Schema(implementation = com.exalt_company.kata_bank_api.exception.ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    @SecurityRequirement(name = "Bearer Authentication")
     @PutMapping("/cancel-overdraw")
     public ResponseEntity<Banking> cancelOverdrawCapabilities(
-            @RequestBody OverdrawDto overdrawDto,
-            @RequestHeader(name = "Authorization") String token) throws FundException {
-        return service.cancelOverdrawCapabilities(overdrawDto, token);
+            @RequestBody OverdrawDto overdrawDto) throws FundException {
+        return service.cancelOverdrawCapabilities(overdrawDto);
     }
 }

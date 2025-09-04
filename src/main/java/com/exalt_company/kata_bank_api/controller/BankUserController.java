@@ -20,4 +20,6 @@ public class BankUserController extends BaseController<BankUserDto, IBankUserSer
     public BankUserController(IBankUserService service) {
         super(service);
     }
+
+    //TODO: add password updating request
 }

@@ -5,6 +5,7 @@ import com.exalt_company.kata_bank_api.dto.fund.BaseFundDto;
 import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.exception.SavingException;
 import com.exalt_company.kata_bank_api.security.JwtService;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class ServiceUtil {
     /**
@@ -15,31 +16,31 @@ public class ServiceUtil {
      * The handler should provide a simple error message for frontend apps.
      * <p>
      * Later on, it would be a good idea to set up an admin override. Since the role is also embedded in the token
-     * @param token we find the requesting user ID here and use jwtService to extract it.
      * @param fundDto again to avoid repetition any funding dto must extend this ownerId holder.
      * @param actionErrorMessage custom error messages
      * @param <F>
      * @throws FundException
      */
-    public static  <F extends BaseFundDto> void checkUserAuthorized(
-            String token, F fundDto, JwtService jwtService, String actionErrorMessage) throws FundException {
-        Long id = jwtService.extractId(token);
+    public static  <F extends BaseFundDto> void checkUserAuthorized(F fundDto, String actionErrorMessage) throws FundException {
+        Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        if(!(credentials instanceof Long)) throw new FundException("An error has occured with the user credentials");
+        Long id = (Long) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+
         if(id == null || id == 0L) throw new FundException(actionErrorMessage);
         if(fundDto.getOwnerId() != id) throw new FundException("Attempted to access unauthorized funds");
     }
 
     /**
      * Simple overload method for similar access checks with savings.
-     * @param token
      * @param savingDto
-     * @param jwtService
      * @param actionErrorMessage
      * @param <F>
      * @throws SavingException
      */
-    public static  <F extends SavingDto> void checkUserAuthorized(
-            String token, F savingDto, JwtService jwtService, String actionErrorMessage) throws SavingException {
-        Long id = jwtService.extractId(token);
+    public static  <F extends SavingDto> void checkUserAuthorized(F savingDto, String actionErrorMessage) throws SavingException {
+        Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        if(!(credentials instanceof Long)) throw new SavingException("An error has occured with the user credentials");
+        Long id = (Long) SecurityContextHolder.getContext().getAuthentication().getCredentials();
         if(id == null || id == 0L) throw new SavingException(actionErrorMessage);
         if(savingDto.getOwnerId() != id) throw new SavingException("Attempted to access unauthorized savings");
     }

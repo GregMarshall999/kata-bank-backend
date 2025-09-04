@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank_api.service.impl;
 
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationRequest;
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationResponse;
+import com.exalt_company.kata_bank_api.dto.auth.RegisterRequest;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
 import com.exalt_company.kata_bank_api.entity.user_fields.Identity;
@@ -41,7 +42,7 @@ public class AuthService implements IAuthService {
      * @return
      */
     @Override
-    public ResponseEntity<AuthenticationResponse> register(AuthenticationRequest request) throws AuthException {
+    public ResponseEntity<AuthenticationResponse> register(RegisterRequest request) throws AuthException {
         if (repository.findByCredentialsEmail(request.getEmail()).isPresent()) {
             throw new AuthException("User with this email already exists");
         }

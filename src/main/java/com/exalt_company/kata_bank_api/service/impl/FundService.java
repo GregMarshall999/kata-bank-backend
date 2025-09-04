@@ -11,7 +11,6 @@ import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.mapper.FundMapper;
 import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
-import com.exalt_company.kata_bank_api.security.JwtService;
 import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.IFundService;
 import com.exalt_company.kata_bank_api.util.ServiceUtil;
@@ -22,16 +21,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepository> implements IFundService {
-    private final JwtService jwtService;
     private final BankUserRepository bankUserRepository;
     private final IAuditService auditService;
 
     @Autowired
     public FundService(
-            FundMapper mapper, FundRepository repository, JwtService jwtService, BankUserRepository bankUserRepository,
+            FundMapper mapper, FundRepository repository, BankUserRepository bankUserRepository,
             IAuditService auditService) {
         super(mapper, repository, Fund.class);
-        this.jwtService = jwtService;
         this.bankUserRepository = bankUserRepository;
         this.auditService = auditService;
     }
@@ -46,28 +43,35 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      * @throws FundException
      */
     @Override
-    public ResponseEntity<Banking> deposit(FundOpDto dto, String token) throws FundException {
+    public ResponseEntity<Banking> deposit(FundOpDto dto) throws FundException {
         if(dto == null) throw new FundException("Wrong request body");
         if(dto.getBalance() < 0) throw new FundException("Wrong value for balance");
 
-        ServiceUtil.checkUserAuthorized(token, dto, jwtService, "No authorization for deposits");
-
-        if(dto.getId() == 0L) {
-            repository.save(mapper.toEntity(dto));
-            return ResponseEntity.status(HttpStatus.CREATED).body(Banking.DEPOSITED);
-        }
-
-        Fund found = repository.findById(dto.getId()).orElseThrow(
-                () -> new FundException("No balance to add funds"));
+        ServiceUtil.checkUserAuthorized(dto, "No authorization for deposits");
 
         BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
                 .orElseThrow(() -> new FundException("Could not find funds owner"));
 
-        double before = found.getBalance();
-        double after = found.getBalance() + dto.getBalance();
+        if(repository.findByOwner(fundsOwner).isPresent()) throw new FundException("User can only have one funds account");
 
-        found.setBalance(after);
-        Fund savedFunds = repository.save(found);
+        double before;
+        double after;
+        Fund savedFunds;
+        if(dto.getId() == 0L) {
+            savedFunds = repository.save(mapper.toEntity(dto));
+            before = 0;
+            after = savedFunds.getBalance();
+        }
+        else {
+            Fund found = repository.findById(dto.getId()).orElseThrow(
+                    () -> new FundException("No balance to add funds"));
+
+            before = found.getBalance();
+            after = found.getBalance() + dto.getBalance();
+
+            found.setBalance(after);
+            savedFunds = repository.save(found);
+        }
 
         auditService.recordAudit(
                 AuditOperation.DEPOSIT, dto.getBalance(), before, after, fundsOwner, savedFunds, null);
@@ -80,20 +84,20 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      * As long as the result does not exceed the authorized overdraw value.
      * These operations are available only if the fund has the overdraw enabled feature active.
      * @param dto
-     * @param token
      * @return
      * @throws FundException
      */
     @Override
-    public ResponseEntity<Banking> withdraw(FundOpDto dto, String token) throws FundException {
+    public ResponseEntity<Banking> withdraw(FundOpDto dto) throws FundException {
         if(dto == null || dto.getId() == 0L) throw new FundException("No balance to withdraw from");
         if(dto.getBalance() < 0) throw new FundException("Wrong value for balance");
 
-        ServiceUtil.checkUserAuthorized(token, dto, jwtService, "No authorization for withdrawals");
+        ServiceUtil.checkUserAuthorized(dto, "No authorization for withdrawals");
 
         Fund found = repository.findById(dto.getId()).orElseThrow(
                 () -> new FundException("No balance to withdraw from"));
 
+        double before = found.getBalance();
         double after = found.getBalance() - dto.getBalance();
 
         if(!found.canOverdraw() && after < 0)
@@ -108,8 +112,6 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         found.setBalance(after);
         Fund savedFunds = repository.save(found);
 
-        double before = found.getBalance();
-
         auditService.recordAudit(
                 AuditOperation.WITHDRAW, dto.getBalance(), before, after, fundsOwner, savedFunds, null);
 
@@ -123,12 +125,10 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      * @return
      */
     @Override
-    public ResponseEntity<Banking> requestOverdrawCapabilities(
-            OverdrawDto overdrawDto, String token) throws FundException {
+    public ResponseEntity<Banking> requestOverdrawCapabilities(OverdrawDto overdrawDto) throws FundException {
         if(overdrawDto.getId() == 0L) throw new FundException("No funds to overdraw");
 
-        ServiceUtil.checkUserAuthorized(
-                token, overdrawDto, jwtService, "No authorization for overdraws");
+        ServiceUtil.checkUserAuthorized(overdrawDto, "No authorization for overdraws");
 
         Fund found = repository.findById(overdrawDto.getId())
                 .orElseThrow(() -> new FundException("No funds to overdraw"));
@@ -142,7 +142,7 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         Fund savedFunds = repository.save(found);
 
         auditService.recordAudit(
-                AuditOperation.OVERDRAW_REQUEST, 0D, 0D, 0D, fundsOwner, savedFunds,
+                AuditOperation.OVERDRAW_REQUEST, 0D, found.getBalance(), savedFunds.getBalance(), fundsOwner, savedFunds,
                 null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.AUTHORIZED);
@@ -151,17 +151,14 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
     /**
      * Before canceling the overdraw operations, the user's balance must not be negative.
      * @param overdrawDto
-     * @param token
      * @return
      * @throws FundException
      */
     @Override
-    public ResponseEntity<Banking> cancelOverdrawCapabilities(
-            OverdrawDto overdrawDto, String token) throws FundException {
+    public ResponseEntity<Banking> cancelOverdrawCapabilities(OverdrawDto overdrawDto) throws FundException {
         if(overdrawDto.getId() == 0L) throw new FundException("No funds overdrawn to cancel");
 
-        ServiceUtil.checkUserAuthorized(
-                token, overdrawDto, jwtService, "No authorization for overdraw cancellation");
+        ServiceUtil.checkUserAuthorized(overdrawDto, "No authorization for overdraw cancellation");
 
         Fund found = repository.findById(overdrawDto.getId())
                 .orElseThrow(() -> new FundException("No funds overdrawn to cancel"));
@@ -178,7 +175,7 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
         Fund savedFunds = repository.save(found);
 
         auditService.recordAudit(
-                AuditOperation.OVERDRAW_CANCEL, 0D, 0D, 0D, fundsOwner, savedFunds,
+                AuditOperation.OVERDRAW_CANCEL, 0D, found.getBalance(), savedFunds.getBalance(), fundsOwner, savedFunds,
                 null);
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.COMPLETED);

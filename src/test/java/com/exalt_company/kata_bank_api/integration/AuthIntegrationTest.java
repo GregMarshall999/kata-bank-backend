@@ -1,6 +1,7 @@
 package com.exalt_company.kata_bank_api.integration;
 
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationRequest;
+import com.exalt_company.kata_bank_api.dto.auth.RegisterRequest;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
 import com.exalt_company.kata_bank_api.entity.user_fields.Identity;
@@ -55,7 +56,7 @@ class AuthIntegrationTest {
 
     @Test
     void testCompleteRegistrationFlow() throws Exception {
-        AuthenticationRequest request = new AuthenticationRequest();
+        RegisterRequest request = new RegisterRequest();
         request.setName("new");
         request.setSurname("user");
         request.setEmail("newuser@example.com");
@@ -111,7 +112,7 @@ class AuthIntegrationTest {
                 BankRole.CLIENT);
         bankUserRepository.save(existingUser);
 
-        AuthenticationRequest request = new AuthenticationRequest();
+        RegisterRequest request = new RegisterRequest();
         request.setName("New");
         request.setSurname("User");
         request.setEmail("existing@example.com");
@@ -223,13 +224,13 @@ class AuthIntegrationTest {
 
     @Test
     void testMultipleRegistrations() throws Exception {
-        AuthenticationRequest request1 = new AuthenticationRequest();
+        RegisterRequest request1 = new RegisterRequest();
         request1.setName("User");
         request1.setSurname("One");
         request1.setEmail("user1@example.com");
         request1.setPassword("password1");
 
-        AuthenticationRequest request2 = new AuthenticationRequest();
+        RegisterRequest request2 = new RegisterRequest();
         request2.setName("User");
         request2.setSurname("Two");
         request2.setEmail("user2@example.com");

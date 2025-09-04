@@ -91,7 +91,7 @@ class SavingServiceTest {
         when(mapper.toEntity(savingDto)).thenReturn(testSaving);
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
-        ResponseEntity<Banking> response = savingService.openSavingsAccount(savingDto, validToken);
+        ResponseEntity<Banking> response = savingService.openSavingsAccount(savingDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -109,7 +109,7 @@ class SavingServiceTest {
         savingDto.setMaxBalance(-100.0);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.openSavingsAccount(savingDto, validToken)
+            savingService.openSavingsAccount(savingDto)
         );
 
         assertEquals("Wrong value for max balance", exception.getMessage());
@@ -123,7 +123,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.openSavingsAccount(savingDto, validToken)
+            savingService.openSavingsAccount(savingDto)
         );
 
         assertEquals("Can't open same savings twice", exception.getMessage());
@@ -136,7 +136,7 @@ class SavingServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.openSavingsAccount(savingDto, validToken)
+            savingService.openSavingsAccount(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
@@ -153,7 +153,7 @@ class SavingServiceTest {
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(mapper.toEntity(savingDto)).thenReturn(testSaving);
 
-        ResponseEntity<Banking> response = savingService.closeSavingsAccount(savingDto, validToken);
+        ResponseEntity<Banking> response = savingService.closeSavingsAccount(savingDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -172,7 +172,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.closeSavingsAccount(savingDto, validToken)
+            savingService.closeSavingsAccount(savingDto)
         );
 
         assertEquals("Can not close savings if balance not empty", exception.getMessage());
@@ -186,7 +186,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.closeSavingsAccount(savingDto, validToken)
+            savingService.closeSavingsAccount(savingDto)
         );
 
         assertEquals("Could not close non existing savings", exception.getMessage());
@@ -199,7 +199,7 @@ class SavingServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.closeSavingsAccount(savingDto, validToken)
+            savingService.closeSavingsAccount(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
@@ -215,7 +215,7 @@ class SavingServiceTest {
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
-        ResponseEntity<Banking> response = savingService.deposit(savingDto, validToken);
+        ResponseEntity<Banking> response = savingService.deposit(savingDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -235,7 +235,7 @@ class SavingServiceTest {
         savingDto.setId(0L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto, validToken)
+            savingService.deposit(savingDto)
         );
 
         assertEquals("Please open a savings account before depositing here", exception.getMessage());
@@ -248,7 +248,7 @@ class SavingServiceTest {
         savingDto.setBalance(-100.0);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto, validToken)
+            savingService.deposit(savingDto)
         );
 
         assertEquals("Wrong value for balance", exception.getMessage());
@@ -264,7 +264,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto, validToken)
+            savingService.deposit(savingDto)
         );
 
         assertEquals("Savings cannot exceed the maximum allowed balance", exception.getMessage());
@@ -278,7 +278,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto, validToken)
+            savingService.deposit(savingDto)
         );
 
         assertEquals("No savings to deposit", exception.getMessage());
@@ -291,7 +291,7 @@ class SavingServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto, validToken)
+            savingService.deposit(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
@@ -307,7 +307,7 @@ class SavingServiceTest {
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
-        ResponseEntity<Banking> response = savingService.withdraw(savingDto, validToken);
+        ResponseEntity<Banking> response = savingService.withdraw(savingDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -327,7 +327,7 @@ class SavingServiceTest {
         savingDto.setId(0L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto, validToken)
+            savingService.withdraw(savingDto)
         );
 
         assertEquals("No savings to withdraw from", exception.getMessage());
@@ -340,7 +340,7 @@ class SavingServiceTest {
         savingDto.setBalance(-100.0);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto, validToken)
+            savingService.withdraw(savingDto)
         );
 
         assertEquals("Wrong value for balance", exception.getMessage());
@@ -356,7 +356,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto, validToken)
+            savingService.withdraw(savingDto)
         );
 
         assertEquals("Attempting to withdraw more than allowed", exception.getMessage());
@@ -370,7 +370,7 @@ class SavingServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto, validToken)
+            savingService.withdraw(savingDto)
         );
 
         assertEquals("No savings to withdraw from", exception.getMessage());
@@ -383,7 +383,7 @@ class SavingServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto, validToken)
+            savingService.withdraw(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
@@ -401,7 +401,7 @@ class SavingServiceTest {
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
-        ResponseEntity<Banking> response = savingService.withdraw(savingDto, validToken);
+        ResponseEntity<Banking> response = savingService.withdraw(savingDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -426,7 +426,7 @@ class SavingServiceTest {
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
-        ResponseEntity<Banking> response = savingService.deposit(savingDto, validToken);
+        ResponseEntity<Banking> response = savingService.deposit(savingDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -444,56 +444,56 @@ class SavingServiceTest {
     @Test
     void testOpenSavingsAccountWithNullToken() {
         assertThrows(SavingException.class, () ->
-            savingService.openSavingsAccount(savingDto, null)
+            savingService.openSavingsAccount(savingDto)
         );
     }
 
     @Test
     void testCloseSavingsAccountWithNullToken() {
         assertThrows(SavingException.class, () ->
-            savingService.closeSavingsAccount(savingDto, null)
+            savingService.closeSavingsAccount(savingDto)
         );
     }
 
     @Test
     void testDepositWithNullToken() {
         assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto, null)
+            savingService.deposit(savingDto)
         );
     }
 
     @Test
     void testWithdrawWithNullToken() {
         assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto, null)
+            savingService.withdraw(savingDto)
         );
     }
 
     @Test
     void testOpenSavingsAccountWithNullDto() {
         assertThrows(NullPointerException.class, () ->
-            savingService.openSavingsAccount(null, validToken)
+            savingService.openSavingsAccount(null)
         );
     }
 
     @Test
     void testCloseSavingsAccountWithNullDto() {
         assertThrows(SavingException.class, () ->
-            savingService.closeSavingsAccount(null, validToken)
+            savingService.closeSavingsAccount(null)
         );
     }
 
     @Test
     void testDepositWithNullDto() {
         assertThrows(SavingException.class, () ->
-            savingService.deposit(null, validToken)
+            savingService.deposit(null)
         );
     }
 
     @Test
     void testWithdrawWithNullDto() {
         assertThrows(SavingException.class, () ->
-            savingService.withdraw(null, validToken)
+            savingService.withdraw(null)
         );
     }
 }

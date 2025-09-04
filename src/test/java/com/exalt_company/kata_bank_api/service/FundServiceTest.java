@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -98,7 +97,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.requestOverdrawCapabilities(overdrawDto, validToken);
+        ResponseEntity<Banking> response = fundService.requestOverdrawCapabilities(overdrawDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -119,7 +118,7 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto, validToken)
+            fundService.requestOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("No funds to overdraw", exception.getMessage());
@@ -132,7 +131,7 @@ class FundServiceTest {
         overdrawDto.setId(0L);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto, validToken)
+            fundService.requestOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("No funds to overdraw", exception.getMessage());
@@ -145,7 +144,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto, validToken)
+            fundService.requestOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("Attempted to access unauthorized funds", exception.getMessage());
@@ -166,7 +165,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.cancelOverdrawCapabilities(overdrawDto, validToken);
+        ResponseEntity<Banking> response = fundService.cancelOverdrawCapabilities(overdrawDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -191,7 +190,7 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto, validToken)
+            fundService.cancelOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("Cannot cancel overdraw when balance is negative", exception.getMessage());
@@ -205,7 +204,7 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto, validToken)
+            fundService.cancelOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("No funds overdrawn to cancel", exception.getMessage());
@@ -218,7 +217,7 @@ class FundServiceTest {
         overdrawDto.setId(0L);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto, validToken)
+            fundService.cancelOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("No funds overdrawn to cancel", exception.getMessage());
@@ -231,7 +230,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto, validToken)
+            fundService.cancelOverdrawCapabilities(overdrawDto)
         );
 
         assertEquals("Attempted to access unauthorized funds", exception.getMessage());
@@ -252,7 +251,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -274,7 +273,7 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.withdraw(fundOpDto, validToken)
+            fundService.withdraw(fundOpDto)
         );
 
         assertEquals("Attempting to withdraw more than allowed", exception.getMessage());
@@ -291,7 +290,7 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.withdraw(fundOpDto, validToken)
+            fundService.withdraw(fundOpDto)
         );
 
         assertEquals("Attempting to withdraw more than available", exception.getMessage());
@@ -310,7 +309,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -333,7 +332,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -356,7 +355,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -379,7 +378,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -393,42 +392,42 @@ class FundServiceTest {
     @Test
     void testRequestOverdrawCapabilitiesWithNullToken() {
         assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto, null)
+            fundService.requestOverdrawCapabilities(overdrawDto)
         );
     }
 
     @Test
     void testCancelOverdrawCapabilitiesWithNullToken() {
         assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto, null)
+            fundService.cancelOverdrawCapabilities(overdrawDto)
         );
     }
 
     @Test
     void testWithdrawWithNullToken() {
         assertThrows(FundException.class, () ->
-            fundService.withdraw(fundOpDto, null)
+            fundService.withdraw(fundOpDto)
         );
     }
 
     @Test
     void testRequestOverdrawCapabilitiesWithNullDto() {
         assertThrows(NullPointerException.class, () ->
-            fundService.requestOverdrawCapabilities(null, validToken)
+            fundService.requestOverdrawCapabilities(null)
         );
     }
 
     @Test
     void testCancelOverdrawCapabilitiesWithNullDto() {
         assertThrows(NullPointerException.class, () ->
-            fundService.cancelOverdrawCapabilities(null, validToken)
+            fundService.cancelOverdrawCapabilities(null)
         );
     }
 
     @Test
     void testWithdrawWithNullDto() {
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.withdraw(null, validToken)
+            fundService.withdraw(null)
         );
 
         assertEquals("No balance to withdraw from", exception.getMessage());
@@ -443,7 +442,7 @@ class FundServiceTest {
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
 
-        ResponseEntity<Banking> response = fundService.deposit(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -465,7 +464,7 @@ class FundServiceTest {
         when(mapper.toEntity(fundOpDto)).thenReturn(testFund);
         when(repository.save(any(Fund.class))).thenReturn(testFund);
 
-        ResponseEntity<Banking> response = fundService.deposit(fundOpDto, validToken);
+        ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -481,7 +480,7 @@ class FundServiceTest {
         fundOpDto.setBalance(-100.0);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.deposit(fundOpDto, validToken)
+            fundService.deposit(fundOpDto)
         );
 
         assertEquals("Wrong value for balance", exception.getMessage());
@@ -495,7 +494,7 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.deposit(fundOpDto, validToken)
+            fundService.deposit(fundOpDto)
         );
 
         assertEquals("No balance to add funds", exception.getMessage());
@@ -508,7 +507,7 @@ class FundServiceTest {
         when(jwtService.extractId(validToken)).thenReturn(2L);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.deposit(fundOpDto, validToken)
+            fundService.deposit(fundOpDto)
         );
 
         assertEquals("Attempted to access unauthorized funds", exception.getMessage());
@@ -520,14 +519,14 @@ class FundServiceTest {
     @Test
     void testDepositWithNullToken() {
         assertThrows(FundException.class, () ->
-            fundService.deposit(fundOpDto, null)
+            fundService.deposit(fundOpDto)
         );
     }
 
     @Test
     void testDepositWithNullDto() {
         assertThrows(FundException.class, () ->
-            fundService.deposit(null, validToken)
+            fundService.deposit(null)
         );
     }
 }

@@ -36,7 +36,7 @@ public abstract class BaseService<
     }
 
     @Override
-    public ResponseEntity<D> create(D dto) {
+    public ResponseEntity<D> create(D dto) throws BaseException {
         E saved = repository.save(mapper.toEntity(dto));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(saved));
     }
@@ -71,11 +71,13 @@ public abstract class BaseService<
 
     @Override
     public ResponseEntity<D> update(long id, D dto) throws BaseException {
-        repository.findById(id).orElseThrow(() -> new BaseException(
+        E current = repository.findById(id).orElseThrow(() -> new BaseException(
                 "Could not update " + entityClass.getName() + ": Please create first."));
 
         dto.setId(id);
-        E updated = repository.save(mapper.toEntity(dto));
+        mapper.updateEntityFromDto(dto, current);
+
+        E updated = repository.save(current);
 
         return ResponseEntity.status(HttpStatus.OK).body(mapper.toDto(updated));
     }

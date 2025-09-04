@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank_api.service;
 
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationRequest;
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationResponse;
+import com.exalt_company.kata_bank_api.dto.auth.RegisterRequest;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
 import com.exalt_company.kata_bank_api.enums.BankRole;
@@ -56,14 +57,19 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    private AuthenticationRequest request;
+    private RegisterRequest registerRequest;
+    private AuthenticationRequest authenticationRequest;
     private BankUser bankUser;
 
     @BeforeEach
     void setUp() {
-        request = new AuthenticationRequest();
-        request.setEmail("test@example.com");
-        request.setPassword("password123");
+        registerRequest = new RegisterRequest();
+        registerRequest.setEmail("test@example.com");
+        registerRequest.setPassword("password123");
+
+        authenticationRequest = new AuthenticationRequest();
+        authenticationRequest.setEmail("test@example.com");
+        authenticationRequest.setPassword("password123");
 
         Credentials credentials = new Credentials();
         credentials.setEmail("test@example.com");
@@ -83,7 +89,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
                 .thenReturn("jwtToken");
 
-        ResponseEntity<AuthenticationResponse> response = authService.register(request);
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -103,7 +109,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
                 .thenReturn("jwtToken");
 
-        ResponseEntity<AuthenticationResponse> response = authService.register(request);
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -120,7 +126,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
                 .thenReturn("jwtToken");
 
-        ResponseEntity<AuthenticationResponse> response = authService.register(request);
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -137,7 +143,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
                 .thenReturn("jwtToken");
 
-        ResponseEntity<AuthenticationResponse> response = authService.authenticate(request);
+        ResponseEntity<AuthenticationResponse> response = authService.authenticate(authenticationRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -156,7 +162,7 @@ class AuthServiceTest {
         when(repository.findByCredentialsEmail("test@example.com"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> authService.authenticate(request));
+        assertThrows(UsernameNotFoundException.class, () -> authService.authenticate(authenticationRequest));
         
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(repository).findByCredentialsEmail("test@example.com");
@@ -169,7 +175,7 @@ class AuthServiceTest {
 
         assertThrows(AuthException.class, () -> {
             try {
-                authService.authenticate(request);
+                authService.authenticate(authenticationRequest);
             } catch (AuthException e) {
                 assertEquals("Bad credentials", e.getMessage());
                 throw e;
@@ -187,7 +193,7 @@ class AuthServiceTest {
 
         assertThrows(AuthException.class, () -> {
             try {
-                authService.register(request);
+                authService.register(registerRequest);
             } catch (AuthException e) {
                 assertEquals("User with this email already exists", e.getMessage());
                 throw e;

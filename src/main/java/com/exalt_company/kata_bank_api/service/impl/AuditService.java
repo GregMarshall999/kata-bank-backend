@@ -103,12 +103,15 @@ public class AuditService implements IAuditService {
                     .stream()
                     .map(audit -> {
                         OperationDto opDto = new OperationDto();
+                        dto.setId(audit.getId());
                         opDto.setOperation(audit.getOperation());
                         opDto.setOperationAuthor(
-                                audit.getRequestingUser().getIdentity().getSurname() +
+                                audit.getRequestingUser().getIdentity().getName() +
                                         " " +
                                         audit.getRequestingUser().getIdentity().getSurname()
                         );
+                        opDto.setOperationAmount(audit.getAmount());
+                        opDto.setOperationDate(audit.getCreatedAt());
 
                         return opDto;
                     })

@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank_api.controller;
 
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationRequest;
 import com.exalt_company.kata_bank_api.dto.auth.AuthenticationResponse;
+import com.exalt_company.kata_bank_api.dto.auth.RegisterRequest;
 import com.exalt_company.kata_bank_api.exception.AuthException;
 import com.exalt_company.kata_bank_api.service.IAuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +41,7 @@ public class AuthController {
             @ApiResponse(responseCode = "409", description = "User already exists")
     })
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody AuthenticationRequest request) throws AuthException {
+    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) throws AuthException {
         return service.register(request);
     }
 

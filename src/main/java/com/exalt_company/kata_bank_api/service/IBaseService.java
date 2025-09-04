@@ -12,7 +12,7 @@ import java.util.List;
  * @param <D> must be a BaseDto inheritor.
  */
 public interface IBaseService<D extends BaseDto> {
-    ResponseEntity<D> create(D dto);
+    ResponseEntity<D> create(D dto) throws BaseException;
     ResponseEntity<D> getById(long id) throws BaseException;
     ResponseEntity<List<D>> getAll();
     ResponseEntity<PageDto<D>> getPage(int page, int size);

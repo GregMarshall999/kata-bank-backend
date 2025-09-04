@@ -2,11 +2,14 @@ package com.exalt_company.kata_bank_api.repository;
 
 import com.exalt_company.kata_bank_api.entity.AccountAudit;
 import com.exalt_company.kata_bank_api.entity.BankUser;
+import com.exalt_company.kata_bank_api.entity.Saving;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface AccountAuditRepository extends BaseRepository<AccountAudit> {
@@ -32,4 +35,6 @@ public interface AccountAuditRepository extends BaseRepository<AccountAudit> {
      */
     @Query("SELECT a FROM AccountAudit a WHERE a.userSaving.owner = :owner AND YEAR(a.createdAt) = YEAR(CURRENT_DATE) AND MONTH(a.createdAt) = MONTH(CURRENT_DATE)")
     Page<AccountAudit> findByUserSavingOwnerCurrentMonth(@Param("owner") BankUser owner, Pageable pageable);
+
+    List<AccountAudit> findAllByUserSaving(Saving userSaving);
 }

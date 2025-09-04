@@ -30,7 +30,7 @@ public class SecurityConfig {
     };
 
     private static final String[] crudEndpoints = {
-            "/api/bank-user/**", "/api/fund/**"
+            "/api/bank-user/**"
     };
 
     @Autowired

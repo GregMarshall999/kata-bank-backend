@@ -42,7 +42,7 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
             @ApiResponse(responseCode = "409", description = "Entity already exists")
     })
     @PostMapping
-    public ResponseEntity<D> create(@RequestBody D dto) {
+    public ResponseEntity<D> create(@RequestBody D dto) throws BaseException {
         return service.create(dto);
     }
 
