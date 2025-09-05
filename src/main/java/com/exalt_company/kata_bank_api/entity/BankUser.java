@@ -13,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -77,16 +78,22 @@ public class BankUser extends BaseEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if(bankRole == null) return new ArrayList<>();
+
         return List.of(new SimpleGrantedAuthority(bankRole.name()));
     }
 
     @Override
     public String getPassword() {
-        return credentials.getPassword();
+        if(credentials != null) return credentials.getPassword();
+
+        return null;
     }
 
     @Override
     public String getUsername() {
-        return credentials.getEmail();
+        if(credentials != null) return credentials.getEmail();
+
+        return null;
     }
 }

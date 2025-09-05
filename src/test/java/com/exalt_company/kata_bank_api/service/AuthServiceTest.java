@@ -27,7 +27,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Collections;
 import java.util.Optional;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -205,12 +204,131 @@ class AuthServiceTest {
     }
 
     @Test
-    void testRegisterWithNullRequest() {
-        assertThrows(NullPointerException.class, () -> authService.register(null));
+    void testRegisterWithEmptyEmail() throws AuthException {
+        registerRequest.setEmail("");
+        
+        when(repository.findByCredentialsEmail("")).thenReturn(Optional.empty());
+        when(encoder.encode(anyString())).thenReturn("encodedPassword");
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(repository.save(any(BankUser.class))).thenReturn(bankUser);
+        when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
+                .thenReturn("jwtToken");
+
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("jwtToken", response.getBody().getToken());
     }
 
     @Test
-    void testAuthenticateWithNullRequest() {
-        assertThrows(NullPointerException.class, () -> authService.authenticate(null));
+    void testRegisterWithNullEmail() throws AuthException {
+        registerRequest.setEmail(null);
+        
+        when(repository.findByCredentialsEmail(null)).thenReturn(Optional.empty());
+        when(encoder.encode(anyString())).thenReturn("encodedPassword");
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(repository.save(any(BankUser.class))).thenReturn(bankUser);
+        when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
+                .thenReturn("jwtToken");
+
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("jwtToken", response.getBody().getToken());
+    }
+
+    @Test
+    void testRegisterWithEmptyPassword() throws AuthException {
+        registerRequest.setPassword("");
+        
+        when(repository.findByCredentialsEmail("test@example.com")).thenReturn(Optional.empty());
+        when(encoder.encode("")).thenReturn("encodedPassword");
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(repository.save(any(BankUser.class))).thenReturn(bankUser);
+        when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
+                .thenReturn("jwtToken");
+
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("jwtToken", response.getBody().getToken());
+    }
+
+    @Test
+    void testAuthenticateWithEmptyEmail() {
+        authenticationRequest.setEmail("");
+        
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(null);
+        when(repository.findByCredentialsEmail(""))
+                .thenReturn(Optional.empty());
+
+        assertThrows(UsernameNotFoundException.class, () -> authService.authenticate(authenticationRequest));
+        
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(repository).findByCredentialsEmail("");
+    }
+
+    @Test
+    void testAuthenticateWithEmptyPassword() throws AuthException {
+        authenticationRequest.setPassword("");
+        
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(null);
+        when(repository.findByCredentialsEmail("test@example.com"))
+                .thenReturn(Optional.of(bankUser));
+        when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
+                .thenReturn("jwtToken");
+
+        ResponseEntity<AuthenticationResponse> response = authService.authenticate(authenticationRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("jwtToken", response.getBody().getToken());
+    }
+
+    @Test
+    void testRegisterWithNullPassword() throws AuthException {
+        registerRequest.setPassword(null);
+        
+        when(repository.findByCredentialsEmail("test@example.com")).thenReturn(Optional.empty());
+        when(encoder.encode(null)).thenReturn("encodedPassword");
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(repository.save(any(BankUser.class))).thenReturn(bankUser);
+        when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
+                .thenReturn("jwtToken");
+
+        ResponseEntity<AuthenticationResponse> response = authService.register(registerRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("jwtToken", response.getBody().getToken());
+    }
+
+    @Test
+    void testAuthenticateWithNullPassword() throws AuthException {
+        authenticationRequest.setPassword(null);
+        
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(null);
+        when(repository.findByCredentialsEmail("test@example.com"))
+                .thenReturn(Optional.of(bankUser));
+        when(jwtService.generateToken(any(BankUser.class), anyLong(), any(BankRole.class)))
+                .thenReturn("jwtToken");
+
+        ResponseEntity<AuthenticationResponse> response = authService.authenticate(authenticationRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("jwtToken", response.getBody().getToken());
     }
 } 

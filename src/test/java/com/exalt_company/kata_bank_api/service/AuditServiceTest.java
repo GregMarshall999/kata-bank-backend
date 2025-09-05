@@ -42,7 +42,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
-
     @Mock
     private AccountAuditRepository auditRepository;
 
@@ -62,14 +61,13 @@ class AuditServiceTest {
     private Fund testFund;
     private Saving testSaving;
     private AccountAudit testAudit;
-    private Identity testIdentity;
 
     @BeforeEach
     void setUp() {
         testUser = new BankUser();
         testUser.setId(1L);
-        
-        testIdentity = new Identity();
+
+        Identity testIdentity = new Identity();
         testIdentity.setSurname("Doe");
         testIdentity.setName("John");
         testUser.setIdentity(testIdentity);
@@ -155,7 +153,7 @@ class AuditServiceTest {
 
         OperationDto operation = dto.getOperations().get(0);
         assertEquals(AuditOperation.DEPOSIT, operation.getOperation());
-        assertEquals("Doe Doe", operation.getOperationAuthor());
+        assertEquals("John Doe", operation.getOperationAuthor());
 
         verify(bankUserRepository).findById(1L);
         verify(fundRepository).findByOwner(testUser);
@@ -188,7 +186,7 @@ class AuditServiceTest {
         // Verify operation details
         OperationDto operation = dto.getOperations().get(0);
         assertEquals(AuditOperation.DEPOSIT, operation.getOperation());
-        assertEquals("Doe Doe", operation.getOperationAuthor()); // Note: there's a bug in the service - it concatenates surname twice
+        assertEquals("John Doe", operation.getOperationAuthor());
 
         verify(bankUserRepository).findById(1L);
         verify(savingRepository).findByOwner(testUser);
@@ -349,8 +347,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void testRequestStatement_AuthorNameBug() throws AuditException {
-        // This test documents the bug in the service where surname is concatenated twice
+    void testRequestStatement_AuthorNameFormat() throws AuditException {
         Page<AccountAudit> auditPage = new PageImpl<>(List.of(testAudit), PageRequest.of(0, 10), 1);
         
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
@@ -363,13 +360,6 @@ class AuditServiceTest {
         AccountStatementDto dto = response.getBody();
         OperationDto operation = dto.getOperations().get(0);
         
-        // The service currently concatenates surname + " " + surname instead of surname + " " + name
-        // This should be "Doe John" but it's currently "Doe Doe"
-        assertEquals("Doe Doe", operation.getOperationAuthor());
-        
-        // TODO: Fix this bug in AuditService line 108-109:
-        // audit.getRequestingUser().getIdentity().getSurname() + " " + audit.getRequestingUser().getIdentity().getSurname()
-        // Should be:
-        // audit.getRequestingUser().getIdentity().getSurname() + " " + audit.getRequestingUser().getIdentity().getName()
+        assertEquals("John Doe", operation.getOperationAuthor());
     }
 }

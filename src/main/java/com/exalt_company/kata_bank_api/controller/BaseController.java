@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
             @ApiResponse(responseCode = "409", description = "Entity already exists")
     })
     @PostMapping
-    public ResponseEntity<D> create(@RequestBody D dto) throws BaseException {
+    public ResponseEntity<D> create(@Valid @RequestBody D dto) throws BaseException {
         return service.create(dto);
     }
 
@@ -53,7 +54,8 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
             @ApiResponse(responseCode = "404", description = "Entity not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<D> getById(@Parameter(description = "Unique identifier of the entity", example = "1") @PathVariable long id) throws BaseException {
+    public ResponseEntity<D> getById(@Parameter(description = "Unique identifier of the entity", example = "1")
+                                         @PathVariable long id) throws BaseException {
         return service.getById(id);
     }
 
@@ -89,7 +91,7 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
     @PutMapping("/{id}")
     public ResponseEntity<D> update(
             @Parameter(description = "Unique identifier of the entity to update", example = "1") @PathVariable long id,
-            @RequestBody D dto) throws BaseException {
+            @Valid @RequestBody D dto) throws BaseException {
         return service.update(id, dto);
     }
 
@@ -112,7 +114,7 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
             @ApiResponse(responseCode = "404", description = "Entity not found")
     })
     @DeleteMapping
-    public ResponseEntity<Boolean> delete(@RequestBody D dto) throws BaseException {
+    public ResponseEntity<Boolean> delete(@Valid @RequestBody D dto) throws BaseException {
         return service.delete(dto);
     }
 }

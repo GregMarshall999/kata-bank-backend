@@ -13,8 +13,10 @@ public class OperationDto {
     @Schema(description = "Username or identifier of the person who performed the operation", example = "john.doe")
     private String operationAuthor;
 
+    @Schema(description = "Amount involved in the operation", example = "100.50")
     private double operationAmount;
 
+    @Schema(description = "Date and time when the operation was performed", example = "2024-01-15T10:30:00")
     private LocalDateTime operationDate;
 
     public AuditOperation getOperation() {

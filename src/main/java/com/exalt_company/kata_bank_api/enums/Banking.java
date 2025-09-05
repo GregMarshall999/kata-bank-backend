@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Banking operation status responses")
 public enum Banking {
-    
     @Schema(description = "Operation authorized (used for overdraw requests)")
     AUTHORIZED,
     

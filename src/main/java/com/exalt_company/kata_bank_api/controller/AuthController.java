@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 /**
  * With this controller, we can handle JWT transactions.
@@ -41,7 +42,7 @@ public class AuthController {
             @ApiResponse(responseCode = "409", description = "User already exists")
     })
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) throws AuthException {
+    public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) throws AuthException {
         return service.register(request);
     }
 
@@ -54,7 +55,7 @@ public class AuthController {
     })
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(
-            @RequestBody AuthenticationRequest request) throws AuthException {
+            @Valid @RequestBody AuthenticationRequest request) throws AuthException {
         return service.authenticate(request);
     }
 }

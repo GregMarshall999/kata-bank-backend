@@ -24,12 +24,10 @@ class AccountStatementDtoTest {
         testOperations = new ArrayList<>();
         
         OperationDto operation1 = new OperationDto();
-        operation1.setId(1L);
         operation1.setOperation(AuditOperation.DEPOSIT);
         operation1.setOperationAuthor("John Doe");
         
         OperationDto operation2 = new OperationDto();
-        operation2.setId(2L);
         operation2.setOperation(AuditOperation.WITHDRAW);
         operation2.setOperationAuthor("John Doe");
         
@@ -221,7 +219,6 @@ class AccountStatementDtoTest {
         accountStatementDto.setOperations(testOperations);
         
         OperationDto newOperation = new OperationDto();
-        newOperation.setId(3L);
         newOperation.setOperation(AuditOperation.OPEN);
         newOperation.setOperationAuthor("Jane Smith");
         

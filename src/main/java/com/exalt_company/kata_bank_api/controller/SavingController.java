@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/saving")
@@ -40,7 +41,7 @@ public class SavingController extends BaseController<SavingDto, ISavingService> 
     })
     @PostMapping("/open")
     public ResponseEntity<Banking> openSavingsAccount(
-            @RequestBody SavingDto dto) throws SavingException {
+            @Valid @RequestBody SavingDto dto) throws SavingException {
         return service.openSavingsAccount(dto);
     }
 
@@ -57,7 +58,7 @@ public class SavingController extends BaseController<SavingDto, ISavingService> 
     })
     @PostMapping("/close")
     public ResponseEntity<Banking> closeSavingsAccount(
-            @RequestBody SavingDto dto) throws SavingException {
+            @Valid @RequestBody SavingDto dto) throws SavingException {
         return service.closeSavingsAccount(dto);
     }
 
@@ -74,7 +75,7 @@ public class SavingController extends BaseController<SavingDto, ISavingService> 
     })
     @PostMapping("/deposit")
     public ResponseEntity<Banking> deposit(
-            @RequestBody SavingDto dto) throws FundException, SavingException {
+            @Valid @RequestBody SavingDto dto) throws FundException, SavingException {
         return service.deposit(dto);
     }
 
@@ -91,7 +92,7 @@ public class SavingController extends BaseController<SavingDto, ISavingService> 
     })
     @PostMapping("/withdraw")
     public ResponseEntity<Banking> withdraw(
-            @RequestBody SavingDto dto) throws SavingException {
+            @Valid @RequestBody SavingDto dto) throws SavingException {
         return service.withdraw(dto);
     }
 }

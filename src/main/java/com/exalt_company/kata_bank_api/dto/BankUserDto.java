@@ -1,6 +1,12 @@
 package com.exalt_company.kata_bank_api.dto;
 
 import com.exalt_company.kata_bank_api.enums.BankRole;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -12,12 +18,35 @@ import java.util.stream.Collectors;
  * I prefer to link entities with their ID for frontend sub requests for general use.
  * Later specific cases can have custom mapping of the required fields.
  */
+@Schema(description = "Data Transfer Object for bank user information")
 public class BankUserDto extends BaseDto {
+    @Schema(description = "First name of the bank user", 
+            example = "John")
+    @NotBlank(message = "Name is required")
+    @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
     private String name;
+    
+    @Schema(description = "Last name of the bank user", 
+            example = "Doe")
+    @NotBlank(message = "Surname is required")
+    @Size(min = 2, max = 50, message = "Surname must be between 2 and 50 characters")
     private String surname;
+    
+    @Schema(description = "Email address of the bank user", 
+            example = "john.doe@example.com")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be a valid email address")
     private String email;
+    
+    @Schema(description = "Role of the bank user in the system", 
+            example = "CLIENT", 
+            allowableValues = {"ADMIN", "ADVISOR", "CLIENT"})
+    @NotNull(message = "Bank role is required")
     private BankRole bankRole;
 
+    @Schema(description = "ID of the advisor assigned to this user (if applicable)", 
+            example = "1")
+    @Positive(message = "Advisor ID must be a positive number")
     private long advisorId;
 
     public String getName() {

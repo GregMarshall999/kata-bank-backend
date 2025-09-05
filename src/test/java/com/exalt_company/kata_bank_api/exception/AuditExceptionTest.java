@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuditExceptionTest {
     @ParameterizedTest
@@ -16,13 +17,40 @@ class AuditExceptionTest {
             "",
             "This is a very long error message that contains multiple sentences and should be properly handled by the exception class. It should not cause any issues with the constructor or message handling.",
             "Error with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?",
-            "Error with unicode: éèêëàâäôöùûüçñ"
+            "Error with unicode: éèêëàâäôöùûüçñ",
+            "   Audit exception with whitespace   ",
+            "Audit exception\nwith newline\ncharacters",
+            "Audit exception\twith tab\tcharacters",
+            "Audit exception with numbers: 1234567890",
+            "Audit exception with mixed content: 123 ABC !@# éèê 中文"
     })
     void testConstructor(String arg) {
         AuditException exception = new AuditException(arg);
 
         assertNotNull(exception);
         assertEquals(arg, exception.getMessage());
+    }
+
+    @Test
+    void testAuditExceptionToString() {
+        String message = "Audit exception toString test";
+        AuditException exception = new AuditException(message);
+
+        assertNotNull(exception);
+        String toString = exception.toString();
+        assertNotNull(toString);
+        assertTrue(toString.contains("AuditException"));
+        assertTrue(toString.contains(message));
+    }
+
+    @Test
+    void testAuditExceptionWithVeryLongMessage() {
+        String message = "a".repeat(10000);
+
+        AuditException exception = new AuditException(message);
+
+        assertNotNull(exception);
+        assertEquals(message, exception.getMessage());
     }
 
     @Test
@@ -61,5 +89,24 @@ class AuditExceptionTest {
         assertNotNull(exception);
         assertEquals(message, exception.getMessage());
         assertEquals(cause, exception.getCause());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "Audit operation failed: insufficient permissions",
+            "Audit log creation failed",
+            "Audit trail corrupted",
+            "Audit operation timeout",
+            "Audit database connection failed",
+            "Audit operation not authorized",
+            "Audit log entry validation failed",
+            "Audit operation rollback failed",
+            "Audit trail integrity check failed",
+            "Audit operation serialization failed"
+    })
+    void testAuditExceptionRealisticScenarios(String errorMessage) {
+        AuditException exception = new AuditException(errorMessage);
+        assertNotNull(exception);
+        assertEquals(errorMessage, exception.getMessage());
     }
 }

@@ -96,6 +96,115 @@ class SavingIntegrationTest {
         assertEquals(testUser.getId(), savedSaving.getOwner().getId());
     }
 
+    // Validation Integration Tests
+    @Test
+    void testOpenSavingsAccountWithNullMaxBalance() throws Exception {
+        // Create JSON with null maxBalance field
+        String jsonWithNullMaxBalance = """
+                {
+                    "id": 0,
+                    "balance": 0.0,
+                    "maxBalance": null,
+                    "ownerId": %d
+                }
+                """.formatted(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonWithNullMaxBalance))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithZeroMaxBalance() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(0L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(0.0); // Zero max balance
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithNullOwnerId() throws Exception {
+        // Create JSON with null ownerId field
+        String jsonWithNullOwnerId = """
+                {
+                    "id": 0,
+                    "balance": 0.0,
+                    "maxBalance": 10000.0,
+                    "ownerId": null
+                }
+                """;
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonWithNullOwnerId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithZeroOwnerId() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(0L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(10000.0);
+        savingDto.setOwnerId(0L); // Zero owner ID
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithNegativeOwnerId() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(0L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(10000.0);
+        savingDto.setOwnerId(-1L); // Negative owner ID
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
     @Test
     void testOpenSavingsAccountWithNegativeMaxBalance() throws Exception {
         SavingDto savingDto = new SavingDto();
@@ -465,6 +574,251 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithoutAuthorization() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(0L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(10000.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testDepositWithoutAuthorization() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(1L);
+        savingDto.setBalance(500.0);
+        savingDto.setMaxBalance(5000.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/deposit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testWithdrawWithoutAuthorization() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(1L);
+        savingDto.setBalance(500.0);
+        savingDto.setMaxBalance(5000.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/withdraw")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testCloseSavingsAccountWithoutAuthorization() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(1L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(5000.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithZeroMaxBalanceValidation() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(0L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(0.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for max balance"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testOpenSavingsAccountWithVeryLargeMaxBalance() throws Exception {
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(0L);
+        savingDto.setBalance(0.0);
+        savingDto.setMaxBalance(Double.MAX_VALUE);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
+
+        Saving savedSaving = savingRepository.findAll().stream()
+                .filter(saving -> saving.getOwner().getId() == testUser.getId())
+                .findFirst()
+                .orElse(null);
+        assertNotNull(savedSaving);
+        assertEquals(Double.MAX_VALUE, savedSaving.getMaxBalance());
+    }
+
+    @Test
+    void testDepositWithVeryLargeAmount() throws Exception {
+        Saving existingSaving = new Saving();
+        existingSaving.setBalance(0.0);
+        existingSaving.setMaxBalance(Double.MAX_VALUE);
+        existingSaving.setOwner(testUser);
+        existingSaving = savingRepository.save(existingSaving);
+
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(existingSaving.getId());
+        savingDto.setBalance(1000000.0);
+        savingDto.setMaxBalance(Double.MAX_VALUE);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
+
+        Saving updatedSaving = savingRepository.findById(existingSaving.getId()).orElse(null);
+        assertNotNull(updatedSaving);
+        assertEquals(1000000.0, updatedSaving.getBalance());
+    }
+
+    @Test
+    void testWithdrawWithVeryLargeAmount() throws Exception {
+        Saving existingSaving = new Saving();
+        existingSaving.setBalance(2000000.0);
+        existingSaving.setMaxBalance(Double.MAX_VALUE);
+        existingSaving.setOwner(testUser);
+        existingSaving = savingRepository.save(existingSaving);
+
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(existingSaving.getId());
+        savingDto.setBalance(1000000.0);
+        savingDto.setMaxBalance(Double.MAX_VALUE);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
+
+        Saving updatedSaving = savingRepository.findById(existingSaving.getId()).orElse(null);
+        assertNotNull(updatedSaving);
+        assertEquals(1000000.0, updatedSaving.getBalance());
+    }
+
+    @Test
+    void testMultipleSavingsAccountsForSameUser() throws Exception {
+        // First savings account
+        SavingDto savingDto1 = new SavingDto();
+        savingDto1.setId(0L);
+        savingDto1.setBalance(0.0);
+        savingDto1.setMaxBalance(5000.0);
+        savingDto1.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto1)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
+
+        // Second savings account
+        SavingDto savingDto2 = new SavingDto();
+        savingDto2.setId(0L);
+        savingDto2.setBalance(0.0);
+        savingDto2.setMaxBalance(10000.0);
+        savingDto2.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/open")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto2)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
+
+        // Verify both accounts were created
+        long savingsCount = savingRepository.findAll().stream()
+                .filter(saving -> saving.getOwner().getId() == testUser.getId())
+                .count();
+        assertEquals(2, savingsCount);
+    }
+
+    @Test
+    void testDepositWithExactMaxBalance() throws Exception {
+        Saving existingSaving = new Saving();
+        existingSaving.setBalance(0.0);
+        existingSaving.setMaxBalance(1000.0);
+        existingSaving.setOwner(testUser);
+        existingSaving = savingRepository.save(existingSaving);
+
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(existingSaving.getId());
+        savingDto.setBalance(1000.0); // Exact max balance
+        savingDto.setMaxBalance(1000.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
+
+        Saving updatedSaving = savingRepository.findById(existingSaving.getId()).orElse(null);
+        assertNotNull(updatedSaving);
+        assertEquals(1000.0, updatedSaving.getBalance());
+    }
+
+    @Test
+    void testWithdrawWithExactBalance() throws Exception {
+        Saving existingSaving = new Saving();
+        existingSaving.setBalance(1000.0);
+        existingSaving.setMaxBalance(5000.0);
+        existingSaving.setOwner(testUser);
+        existingSaving = savingRepository.save(existingSaving);
+
+        SavingDto savingDto = new SavingDto();
+        savingDto.setId(existingSaving.getId());
+        savingDto.setBalance(1000.0); // Exact current balance
+        savingDto.setMaxBalance(5000.0);
+        savingDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/saving/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(savingDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
+
+        Saving updatedSaving = savingRepository.findById(existingSaving.getId()).orElse(null);
+        assertNotNull(updatedSaving);
+        assertEquals(0.0, updatedSaving.getBalance());
     }
 
     @Test

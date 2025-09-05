@@ -349,4 +349,59 @@ class AccountAuditRepositoryTest {
         assertEquals(0, emptyResult.getContent().size());
         assertEquals(0, emptyResult.getTotalPages());
     }
+
+    @Test
+    void testFindAllByUserSaving() {
+        // Create audit records for the test saving
+        AccountAudit savingAudit1 = new AccountAudit();
+        savingAudit1.setOperation(AuditOperation.OPEN);
+        savingAudit1.setAmount(0.0);
+        savingAudit1.setBalanceBefore(0.0);
+        savingAudit1.setBalanceAfter(0.0);
+        savingAudit1.setRequestingUser(testUser);
+        savingAudit1.setUserFund(null);
+        savingAudit1.setUserSaving(testSaving);
+        auditRepository.save(savingAudit1);
+
+        AccountAudit savingAudit2 = new AccountAudit();
+        savingAudit2.setOperation(AuditOperation.DEPOSIT);
+        savingAudit2.setAmount(200.0);
+        savingAudit2.setBalanceBefore(500.0);
+        savingAudit2.setBalanceAfter(700.0);
+        savingAudit2.setRequestingUser(testUser);
+        savingAudit2.setUserFund(null);
+        savingAudit2.setUserSaving(testSaving);
+        auditRepository.save(savingAudit2);
+
+        // Create another saving and audit for it
+        Saving otherSaving = new Saving();
+        otherSaving.setBalance(1000.0);
+        otherSaving.setOwner(testUser);
+        otherSaving.setMaxBalance(5000.0);
+        otherSaving = savingRepository.save(otherSaving);
+
+        AccountAudit otherSavingAudit = new AccountAudit();
+        otherSavingAudit.setOperation(AuditOperation.DEPOSIT);
+        otherSavingAudit.setAmount(100.0);
+        otherSavingAudit.setBalanceBefore(1000.0);
+        otherSavingAudit.setBalanceAfter(1100.0);
+        otherSavingAudit.setRequestingUser(testUser);
+        otherSavingAudit.setUserFund(null);
+        otherSavingAudit.setUserSaving(otherSaving);
+        auditRepository.save(otherSavingAudit);
+
+        // Test finding audits by specific saving
+        List<AccountAudit> testSavingAudits = auditRepository.findAllByUserSaving(testSaving);
+
+        assertEquals(2, testSavingAudits.size());
+        assertTrue(testSavingAudits.stream().allMatch(audit -> audit.getUserSaving().equals(testSaving)));
+        assertTrue(testSavingAudits.stream().anyMatch(audit -> audit.getOperation() == AuditOperation.OPEN));
+        assertTrue(testSavingAudits.stream().anyMatch(audit -> audit.getOperation() == AuditOperation.DEPOSIT));
+    }
+
+    @Test
+    void testFindAllByUserSavingEmpty() {
+        List<AccountAudit> emptyResult = auditRepository.findAllByUserSaving(testSaving);
+        assertEquals(0, emptyResult.size());
+    }
 }

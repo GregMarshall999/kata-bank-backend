@@ -12,8 +12,6 @@ import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.mapper.FundMapper;
 import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
-import com.exalt_company.kata_bank_api.security.JwtService;
-import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.impl.FundService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +21,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
@@ -31,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,25 +45,28 @@ class FundServiceTest {
     private FundMapper mapper;
 
     @Mock
-    private JwtService jwtService;
-
-    @Mock
     private BankUserRepository bankUserRepository;
 
     @Mock
     private IAuditService auditService;
 
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
+
     @InjectMocks
     private FundService fundService;
 
     private Fund testFund;
-    private String validToken;
+    private BankUser testUser;
     private FundOpDto fundOpDto;
     private OverdrawDto overdrawDto;
 
     @BeforeEach
     void setUp() {
-        BankUser testUser = new BankUser();
+        testUser = new BankUser();
         testUser.setId(1L);
         Credentials credentials = new Credentials();
         credentials.setEmail("test@example.com");
@@ -87,169 +90,152 @@ class FundServiceTest {
         overdrawDto.setMaxOverdraw(500.0);
         overdrawDto.setOwnerId(1L);
 
-        validToken = "Bearer valid.jwt.token";
+        SecurityContextHolder.setContext(securityContext);
     }
 
     @Test
-    void testRequestOverdrawCapabilitiesSuccess() throws FundException {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+    void testDeposit_NewFund_Success() throws FundException {
+        fundOpDto.setId(0L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(mapper.toEntity(fundOpDto)).thenReturn(testFund);
         when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(repository.findByOwner(testUser)).thenReturn(Optional.empty());
 
-        ResponseEntity<Banking> response = fundService.requestOverdrawCapabilities(overdrawDto);
+        ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.AUTHORIZED, response.getBody());
+        assertEquals(Banking.DEPOSITED, response.getBody());
 
-        verify(jwtService).extractId(validToken);
-        verify(repository).findById(1L);
-        verify(repository).save(argThat(fund -> 
-            fund.canOverdraw() && fund.getMaxOverdraw() == 500.0
-        ));
+        verify(mapper).toEntity(fundOpDto);
+        verify(repository).save(testFund);
         verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
+        verify(auditService).recordAudit(AuditOperation.DEPOSIT, 100.0, 0.0, 1000.0, testUser, testFund, null);
     }
 
     @Test
-    void testRequestOverdrawCapabilitiesWithNonExistentFund() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-
-        FundException exception = assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto)
-        );
-
-        assertEquals("No funds to overdraw", exception.getMessage());
-        verify(repository).findById(1L);
-        verify(repository, never()).save(any(Fund.class));
-    }
-
-    @Test
-    void testRequestOverdrawCapabilitiesWithZeroId() {
-        overdrawDto.setId(0L);
-
-        FundException exception = assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto)
-        );
-
-        assertEquals("No funds to overdraw", exception.getMessage());
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
-    }
-
-    @Test
-    void testRequestOverdrawCapabilitiesUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
-
-        FundException exception = assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto)
-        );
-
-        assertEquals("Attempted to access unauthorized funds", exception.getMessage());
-        verify(jwtService).extractId(validToken);
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
-    }
-
-    @Test
-    void testCancelOverdrawCapabilitiesSuccess() throws FundException {
-        // Given
-        testFund.setCanOverdraw(true);
-        testFund.setMaxOverdraw(500.0);
-        testFund.setBalance(100.0);
-
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+    void testDeposit_ExistingFund_Success() throws FundException {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(repository.findByOwner(testUser)).thenReturn(Optional.empty());
 
-        ResponseEntity<Banking> response = fundService.cancelOverdrawCapabilities(overdrawDto);
+        ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.COMPLETED, response.getBody());
+        assertEquals(Banking.DEPOSITED, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
-        verify(repository).save(argThat(fund -> 
-            !fund.canOverdraw() && fund.getMaxOverdraw() == 0.0
-        ));
+        verify(repository).save(argThat(fund -> fund.getBalance() == 1100.0));
         verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
+        verify(auditService).recordAudit(AuditOperation.DEPOSIT, 100.0, 1000.0, 1100.0, testUser, testFund, null);
     }
 
     @Test
-    void testCancelOverdrawCapabilitiesWithNegativeBalance() {
-        testFund.setCanOverdraw(true);
-        testFund.setMaxOverdraw(500.0);
-        testFund.setBalance(-100.0);
+    void testDeposit_NullDto_ThrowsException() {
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.deposit(null)
+        );
+        assertEquals("Wrong request body", exception.getMessage());
+    }
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+    @Test
+    void testDeposit_NegativeAmount_ThrowsException() {
+        fundOpDto.setBalance(-100.0);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto)
+            fundService.deposit(fundOpDto)
         );
-
-        assertEquals("Cannot cancel overdraw when balance is negative", exception.getMessage());
-        verify(repository).findById(1L);
-        verify(repository, never()).save(any(Fund.class));
+        assertEquals("Wrong value for balance", exception.getMessage());
     }
 
     @Test
-    void testCancelOverdrawCapabilitiesWithNonExistentFund() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+    void testDeposit_UserAlreadyHasFund_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(repository.findByOwner(testUser)).thenReturn(Optional.of(testFund));
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.deposit(fundOpDto)
+        );
+        assertEquals("User can only have one funds account", exception.getMessage());
+    }
+
+    @Test
+    void testDeposit_NonExistentUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.empty());
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.deposit(fundOpDto)
+        );
+        assertEquals("Could not find funds owner", exception.getMessage());
+    }
+
+    @Test
+    void testDeposit_NonExistentFund_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(repository.findByOwner(testUser)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto)
+            fundService.deposit(fundOpDto)
         );
-
-        assertEquals("No funds overdrawn to cancel", exception.getMessage());
-        verify(repository).findById(1L);
-        verify(repository, never()).save(any(Fund.class));
+        assertEquals("No balance to add funds", exception.getMessage());
     }
 
     @Test
-    void testCancelOverdrawCapabilitiesWithZeroId() {
-        overdrawDto.setId(0L);
+    void testDeposit_UnauthorizedUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto)
+            fundService.deposit(fundOpDto)
         );
-
-        assertEquals("No funds overdrawn to cancel", exception.getMessage());
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
-    }
-
-    @Test
-    void testCancelOverdrawCapabilitiesUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
-
-        FundException exception = assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto)
-        );
-
         assertEquals("Attempted to access unauthorized funds", exception.getMessage());
-        verify(jwtService).extractId(validToken);
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
     }
 
     @Test
-    void testWithdrawWithOverdrawEnabledSuccess() throws FundException {
+    void testWithdraw_ValidAmount_Success() throws FundException {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Banking.WITHDREW, response.getBody());
+
+        verify(repository).findById(1L);
+        verify(repository).save(argThat(fund -> fund.getBalance() == 900.0));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(AuditOperation.WITHDRAW, 100.0, 1000.0, 900.0, testUser, testFund, null);
+    }
+
+    @Test
+    void testWithdraw_WithOverdrawEnabled_Success() throws FundException {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         testFund.setCanOverdraw(true);
         testFund.setMaxOverdraw(500.0);
         testFund.setBalance(100.0);
         fundOpDto.setBalance(200.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
 
@@ -258,275 +244,270 @@ class FundServiceTest {
         assertEquals(Banking.WITHDREW, response.getBody());
 
         verify(repository).save(argThat(fund -> fund.getBalance() == -100.0));
-        verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
     }
 
     @Test
-    void testWithdrawWithOverdrawEnabledExceedingLimit() {
+    void testWithdraw_WithOverdrawEnabled_ExceedingLimit_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         testFund.setCanOverdraw(true);
         testFund.setMaxOverdraw(500.0);
         testFund.setBalance(100.0);
         fundOpDto.setBalance(700.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
 
         FundException exception = assertThrows(FundException.class, () ->
             fundService.withdraw(fundOpDto)
         );
-
         assertEquals("Attempting to withdraw more than allowed", exception.getMessage());
         verify(repository, never()).save(any(Fund.class));
     }
 
     @Test
-    void testWithdrawWithOverdrawDisabledExceedingBalance() {
+    void testWithdraw_WithoutOverdraw_ExceedingBalance_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         testFund.setCanOverdraw(false);
         testFund.setBalance(100.0);
         fundOpDto.setBalance(200.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
 
         FundException exception = assertThrows(FundException.class, () ->
             fundService.withdraw(fundOpDto)
         );
-
         assertEquals("Attempting to withdraw more than available", exception.getMessage());
         verify(repository, never()).save(any(Fund.class));
     }
 
     @Test
-    void testWithdrawWithOverdrawEnabledAtLimit() throws FundException {
-        testFund.setCanOverdraw(true);
-        testFund.setMaxOverdraw(500.0);
-        testFund.setBalance(100.0);
-        fundOpDto.setBalance(600.0);
-
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
-        when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
-
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.WITHDREW, response.getBody());
-
-        verify(repository).save(argThat(fund -> fund.getBalance() == -500.0));
-        verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
-    }
-
-    @Test
-    void testWithdrawWithOverdrawEnabledWithinBalance() throws FundException {
-        testFund.setCanOverdraw(true);
-        testFund.setMaxOverdraw(500.0);
-        testFund.setBalance(1000.0);
-        fundOpDto.setBalance(300.0);
-
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
-        when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
-
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.WITHDREW, response.getBody());
-
-        verify(repository).save(argThat(fund -> fund.getBalance() == 700.0));
-        verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
-    }
-
-    @Test
-    void testWithdrawWithOverdrawEnabledZeroBalance() throws FundException {
-        testFund.setCanOverdraw(true);
-        testFund.setMaxOverdraw(500.0);
-        testFund.setBalance(0.0);
-        fundOpDto.setBalance(200.0);
-
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
-        when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
-
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.WITHDREW, response.getBody());
-
-        verify(repository).save(argThat(fund -> fund.getBalance() == -200.0));
-        verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
-    }
-
-    @Test
-    void testWithdrawWithOverdrawEnabledNegativeBalance() throws FundException {
-        testFund.setCanOverdraw(true);
-        testFund.setMaxOverdraw(500.0);
-        testFund.setBalance(-100.0);
-        fundOpDto.setBalance(200.0);
-
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
-        when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
-
-        ResponseEntity<Banking> response = fundService.withdraw(fundOpDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.WITHDREW, response.getBody());
-
-        verify(repository).save(argThat(fund -> fund.getBalance() == -300.0));
-        verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
-    }
-
-    @Test
-    void testRequestOverdrawCapabilitiesWithNullToken() {
-        assertThrows(FundException.class, () ->
-            fundService.requestOverdrawCapabilities(overdrawDto)
-        );
-    }
-
-    @Test
-    void testCancelOverdrawCapabilitiesWithNullToken() {
-        assertThrows(FundException.class, () ->
-            fundService.cancelOverdrawCapabilities(overdrawDto)
-        );
-    }
-
-    @Test
-    void testWithdrawWithNullToken() {
-        assertThrows(FundException.class, () ->
-            fundService.withdraw(fundOpDto)
-        );
-    }
-
-    @Test
-    void testRequestOverdrawCapabilitiesWithNullDto() {
-        assertThrows(NullPointerException.class, () ->
-            fundService.requestOverdrawCapabilities(null)
-        );
-    }
-
-    @Test
-    void testCancelOverdrawCapabilitiesWithNullDto() {
-        assertThrows(NullPointerException.class, () ->
-            fundService.cancelOverdrawCapabilities(null)
-        );
-    }
-
-    @Test
-    void testWithdrawWithNullDto() {
+    void testWithdraw_NullDto_ThrowsException() {
         FundException exception = assertThrows(FundException.class, () ->
             fundService.withdraw(null)
         );
-
         assertEquals("No balance to withdraw from", exception.getMessage());
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
     }
 
     @Test
-    void testDepositSuccess() throws FundException {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
-        when(repository.save(any(Fund.class))).thenReturn(testFund);
-        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testFund.getOwner()));
-
-        ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Banking.DEPOSITED, response.getBody());
-
-        verify(jwtService).extractId(validToken);
-        verify(repository).findById(1L);
-        verify(repository).save(argThat(fund -> 
-            fund.getBalance() == 1100.0
-        ));
-        verify(bankUserRepository).findById(1L);
-        verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(Fund.class), any());
-    }
-
-    @Test
-    void testDepositNewFund() throws FundException {
+    void testWithdraw_ZeroId_ThrowsException() {
         fundOpDto.setId(0L);
-        when(jwtService.extractId(validToken)).thenReturn(1L);
-        when(mapper.toEntity(fundOpDto)).thenReturn(testFund);
-        when(repository.save(any(Fund.class))).thenReturn(testFund);
 
-        ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(Banking.DEPOSITED, response.getBody());
-
-        verify(jwtService).extractId(validToken);
-        verify(repository).save(any(Fund.class));
-        verify(repository, never()).findById(any());
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.withdraw(fundOpDto)
+        );
+        assertEquals("No balance to withdraw from", exception.getMessage());
     }
 
     @Test
-    void testDepositWithNegativeAmount() {
+    void testWithdraw_NegativeAmount_ThrowsException() {
         fundOpDto.setBalance(-100.0);
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.deposit(fundOpDto)
+            fundService.withdraw(fundOpDto)
         );
-
         assertEquals("Wrong value for balance", exception.getMessage());
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
     }
 
     @Test
-    void testDepositWithNonExistentFund() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+    void testWithdraw_NonExistentFund_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->
-            fundService.deposit(fundOpDto)
+            fundService.withdraw(fundOpDto)
         );
+        assertEquals("No balance to withdraw from", exception.getMessage());
+    }
 
-        assertEquals("No balance to add funds", exception.getMessage());
+    @Test
+    void testWithdraw_UnauthorizedUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.withdraw(fundOpDto)
+        );
+        assertEquals("Attempted to access unauthorized funds", exception.getMessage());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilities_Success() throws FundException {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        ResponseEntity<Banking> response = fundService.requestOverdrawCapabilities(overdrawDto);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Banking.AUTHORIZED, response.getBody());
+
         verify(repository).findById(1L);
+        verify(repository).save(argThat(fund -> 
+            fund.canOverdraw() && fund.getMaxOverdraw() == 500.0
+        ));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(AuditOperation.OVERDRAW_REQUEST, 0.0, 1000.0, 1000.0, testUser, testFund, null);
+    }
+
+    @Test
+    void testRequestOverdrawCapabilities_ZeroId_ThrowsException() {
+        overdrawDto.setId(0L);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.requestOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("No funds to overdraw", exception.getMessage());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilities_NonExistentFund_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.requestOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("No funds to overdraw", exception.getMessage());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilities_UnauthorizedUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.requestOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("Attempted to access unauthorized funds", exception.getMessage());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilities_NonExistentUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.empty());
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.requestOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("Could not find funds owner", exception.getMessage());
+    }
+
+    @Test
+    void testCancelOverdrawCapabilities_Success() throws FundException {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        testFund.setCanOverdraw(true);
+        testFund.setMaxOverdraw(500.0);
+        testFund.setBalance(100.0);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(repository.save(any(Fund.class))).thenReturn(testFund);
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        ResponseEntity<Banking> response = fundService.cancelOverdrawCapabilities(overdrawDto);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Banking.COMPLETED, response.getBody());
+
+        verify(repository).findById(1L);
+        verify(repository).save(argThat(fund -> 
+            !fund.canOverdraw() && fund.getMaxOverdraw() == 0.0
+        ));
+        verify(bankUserRepository).findById(1L);
+        verify(auditService).recordAudit(AuditOperation.OVERDRAW_CANCEL, 0.0, 100.0, 100.0, testUser, testFund, null);
+    }
+
+    @Test
+    void testCancelOverdrawCapabilities_NegativeBalance_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        testFund.setCanOverdraw(true);
+        testFund.setMaxOverdraw(500.0);
+        testFund.setBalance(-100.0);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.cancelOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("Cannot cancel overdraw when balance is negative", exception.getMessage());
         verify(repository, never()).save(any(Fund.class));
     }
 
     @Test
-    void testDepositUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
+    void testCancelOverdrawCapabilities_ZeroId_ThrowsException() {
+        overdrawDto.setId(0L);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.cancelOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("No funds overdrawn to cancel", exception.getMessage());
+    }
+
+    @Test
+    void testCancelOverdrawCapabilities_NonExistentFund_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.cancelOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("No funds overdrawn to cancel", exception.getMessage());
+    }
+
+    @Test
+    void testCancelOverdrawCapabilities_UnauthorizedUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.cancelOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("Attempted to access unauthorized funds", exception.getMessage());
+    }
+
+    @Test
+    void testCancelOverdrawCapabilities_NonExistentUser_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.empty());
+
+        FundException exception = assertThrows(FundException.class, () ->
+            fundService.cancelOverdrawCapabilities(overdrawDto)
+        );
+        assertEquals("Could not find funds owner", exception.getMessage());
+    }
+
+    @Test
+    void testDeposit_InvalidCredentials_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn("invalid");
 
         FundException exception = assertThrows(FundException.class, () ->
             fundService.deposit(fundOpDto)
         );
-
-        assertEquals("Attempted to access unauthorized funds", exception.getMessage());
-        verify(jwtService).extractId(validToken);
-        verify(repository, never()).findById(any());
-        verify(repository, never()).save(any(Fund.class));
+        assertEquals("An error has occured with the user credentials", exception.getMessage());
     }
 
     @Test
-    void testDepositWithNullToken() {
-        assertThrows(FundException.class, () ->
+    void testDeposit_ZeroCredentials_ThrowsException() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(0L);
+
+        FundException exception = assertThrows(FundException.class, () ->
             fundService.deposit(fundOpDto)
         );
-    }
-
-    @Test
-    void testDepositWithNullDto() {
-        assertThrows(FundException.class, () ->
-            fundService.deposit(null)
-        );
+        assertEquals("No authorization for deposits", exception.getMessage());
     }
 }

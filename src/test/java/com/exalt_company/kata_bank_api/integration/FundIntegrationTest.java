@@ -1,6 +1,7 @@
 package com.exalt_company.kata_bank_api.integration;
 
 import com.exalt_company.kata_bank_api.dto.fund.FundDto;
+import com.exalt_company.kata_bank_api.dto.fund.FundOpDto;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.Fund;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
@@ -95,6 +96,82 @@ class FundIntegrationTest {
     }
 
     @Test
+    void testDepositWithZeroBalance() throws Exception {
+        FundOpDto fundOpDto = new FundOpDto();
+        fundOpDto.setId(0L);
+        fundOpDto.setBalance(0.0);
+        fundOpDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundOpDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testDepositWithZeroOwnerId() throws Exception {
+        FundOpDto fundOpDto = new FundOpDto();
+        fundOpDto.setId(0L);
+        fundOpDto.setBalance(100.0);
+        fundOpDto.setOwnerId(0L);
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundOpDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testDepositWithNegativeOwnerId() throws Exception {
+        FundOpDto fundOpDto = new FundOpDto();
+        fundOpDto.setId(0L);
+        fundOpDto.setBalance(100.0);
+        fundOpDto.setOwnerId(-1L); // Negative owner ID
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundOpDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testWithdrawWithZeroBalance() throws Exception {
+        FundOpDto fundOpDto = new FundOpDto();
+        fundOpDto.setId(0L);
+        fundOpDto.setBalance(0.0); // Zero balance
+        fundOpDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundOpDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
     void testDepositToExistingFund() throws Exception {
         Fund existingFund = new Fund();
         existingFund.setBalance(500.0);
@@ -144,11 +221,6 @@ class FundIntegrationTest {
         assertEquals(700.0, updatedFund.getBalance());
     }
 
-    /** TODO: Fix this
-     * For some reason the FundException gets ghosted so we endup with a 500 error instead of the handler exception
-     * I never encountered this before, is it an issue with a spring update?
-     * For the context of the Kata I won't waste too much time before finishing the rest of the project.
-     * In a real world context this is a very important bug to fix and contact with Spring developers might be needed.
     @Test
     void testDepositWithoutAuthorization() throws Exception {
         FundDto fundDto = new FundDto();
@@ -159,12 +231,7 @@ class FundIntegrationTest {
         mockMvc.perform(post("/api/fund/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fundDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No authorization for deposits"))
-                .andExpect(jsonPath("$.path").exists());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -177,13 +244,8 @@ class FundIntegrationTest {
         mockMvc.perform(post("/api/fund/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fundDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No authorization for withdrawals"))
-                .andExpect(jsonPath("$.path").exists());
-    }*/
+                .andExpect(status().isUnauthorized());
+    }
 
     @Test
     void testDepositWithUnauthorizedAccess() throws Exception {
@@ -295,6 +357,157 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testDepositWithNegativeAmount() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund = fundRepository.save(existingFund);
+
+        FundDto fundDto = new FundDto();
+        fundDto.setId(existingFund.getId());
+        fundDto.setBalance(-100.0);
+        fundDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testWithdrawWithNegativeAmount() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund = fundRepository.save(existingFund);
+
+        FundDto fundDto = new FundDto();
+        fundDto.setId(existingFund.getId());
+        fundDto.setBalance(-100.0);
+        fundDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testDepositWithZeroAmount() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund = fundRepository.save(existingFund);
+
+        FundDto fundDto = new FundDto();
+        fundDto.setId(existingFund.getId());
+        fundDto.setBalance(0.0);
+        fundDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testWithdrawWithZeroAmount() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund = fundRepository.save(existingFund);
+
+        FundDto fundDto = new FundDto();
+        fundDto.setId(existingFund.getId());
+        fundDto.setBalance(0.0);
+        fundDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fundDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testCompleteFundWorkflow() throws Exception {
+        // 1. Create initial fund through deposit
+        FundDto initialDeposit = new FundDto();
+        initialDeposit.setId(0L);
+        initialDeposit.setBalance(2000.0);
+        initialDeposit.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(initialDeposit)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
+
+        // Get the created fund
+        Fund createdFund = fundRepository.findAll().stream()
+                .filter(fund -> fund.getOwner().getId() == testUser.getId())
+                .findFirst()
+                .orElse(null);
+        assertNotNull(createdFund);
+        assertEquals(2000.0, createdFund.getBalance());
+
+        // 2. Make additional deposit
+        FundDto additionalDeposit = new FundDto();
+        additionalDeposit.setId(createdFund.getId());
+        additionalDeposit.setBalance(500.0);
+        additionalDeposit.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(additionalDeposit)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
+
+        // 3. Make withdrawal
+        FundDto withdrawal = new FundDto();
+        withdrawal.setId(createdFund.getId());
+        withdrawal.setBalance(300.0);
+        withdrawal.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(withdrawal)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
+
+        // Verify final balance
+        Fund finalFund = fundRepository.findById(createdFund.getId()).orElse(null);
+        assertNotNull(finalFund);
+        assertEquals(2200.0, finalFund.getBalance());
     }
 
     private BankUser createTestUser(String name, String surname, String email, String password, BankRole role) {

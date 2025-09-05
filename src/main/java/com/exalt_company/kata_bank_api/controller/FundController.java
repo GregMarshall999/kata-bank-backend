@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/fund")
@@ -41,7 +42,7 @@ public class FundController extends BaseController<FundDto, IFundService> {
     })
     @PostMapping("/deposit")
     public ResponseEntity<Banking> deposit(
-            @RequestBody FundOpDto dto) throws FundException {
+            @Valid @RequestBody FundOpDto dto) throws FundException {
         return service.deposit(dto);
     }
 
@@ -56,7 +57,7 @@ public class FundController extends BaseController<FundDto, IFundService> {
     })
     @PostMapping("/withdraw")
     public ResponseEntity<Banking> withdraw(
-            @RequestBody FundOpDto dto) throws FundException {
+            @Valid @RequestBody FundOpDto dto) throws FundException {
         return service.withdraw(dto);
     }
 
@@ -72,7 +73,7 @@ public class FundController extends BaseController<FundDto, IFundService> {
     })
     @PutMapping("/request-overdraw")
     public ResponseEntity<Banking> requestOverdrawCapabilities(
-            @RequestBody OverdrawDto overdrawDto) throws FundException {
+            @Valid @RequestBody OverdrawDto overdrawDto) throws FundException {
         return service.requestOverdrawCapabilities(overdrawDto);
     }
 
@@ -88,7 +89,7 @@ public class FundController extends BaseController<FundDto, IFundService> {
     })
     @PutMapping("/cancel-overdraw")
     public ResponseEntity<Banking> cancelOverdrawCapabilities(
-            @RequestBody OverdrawDto overdrawDto) throws FundException {
+            @Valid @RequestBody OverdrawDto overdrawDto) throws FundException {
         return service.cancelOverdrawCapabilities(overdrawDto);
     }
 }

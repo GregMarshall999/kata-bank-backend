@@ -4,10 +4,11 @@ import com.exalt_company.kata_bank_api.dto.SavingDto;
 import com.exalt_company.kata_bank_api.dto.fund.BaseFundDto;
 import com.exalt_company.kata_bank_api.exception.FundException;
 import com.exalt_company.kata_bank_api.exception.SavingException;
-import com.exalt_company.kata_bank_api.security.JwtService;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class ServiceUtil {
+    private ServiceUtil() {}
+
     /**
      * Since most fund operations need to be tight with security, this regroups the checks to avoid repeating them by
      * hand.
@@ -17,9 +18,9 @@ public class ServiceUtil {
      * <p>
      * Later on, it would be a good idea to set up an admin override. Since the role is also embedded in the token
      * @param fundDto again to avoid repetition any funding dto must extend this ownerId holder.
-     * @param actionErrorMessage custom error messages
-     * @param <F>
-     * @throws FundException
+     * @param actionErrorMessage custom error message to display if authorization fails
+     * @param <F> generic type that extends BaseFundDto
+     * @throws FundException if user credentials are invalid, user is not authenticated, or user is not the fund owner
      */
     public static  <F extends BaseFundDto> void checkUserAuthorized(F fundDto, String actionErrorMessage) throws FundException {
         Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
@@ -32,10 +33,10 @@ public class ServiceUtil {
 
     /**
      * Simple overload method for similar access checks with savings.
-     * @param savingDto
-     * @param actionErrorMessage
-     * @param <F>
-     * @throws SavingException
+     * @param savingDto the savings DTO containing the owner ID to validate against
+     * @param actionErrorMessage custom error message to display if authorization fails
+     * @param <F> generic type that extends SavingDto
+     * @throws SavingException if user credentials are invalid, user is not authenticated, or user is not the savings owner
      */
     public static  <F extends SavingDto> void checkUserAuthorized(F savingDto, String actionErrorMessage) throws SavingException {
         Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();

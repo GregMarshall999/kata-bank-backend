@@ -20,7 +20,6 @@ class OperationDtoTest {
     @Test
     void testDefaultConstructor() {
         assertNotNull(operationDto);
-        assertEquals(0, operationDto.getId());
         assertNull(operationDto.getOperation());
         assertNull(operationDto.getOperationAuthor());
     }
@@ -44,23 +43,14 @@ class OperationDtoTest {
     }
 
     @Test
-    void testInheritedId() {
-        operationDto.setId(123L);
-        
-        assertEquals(123L, operationDto.getId());
-    }
-
-    @Test
     void testAllFieldsTogether() {
         AuditOperation operation = AuditOperation.WITHDRAW;
         String author = "Jane Smith";
         long id = 456L;
-        
-        operationDto.setId(id);
+
         operationDto.setOperation(operation);
         operationDto.setOperationAuthor(author);
         
-        assertEquals(id, operationDto.getId());
         assertEquals(operation, operationDto.getOperation());
         assertEquals(author, operationDto.getOperationAuthor());
     }
@@ -168,34 +158,5 @@ class OperationDtoTest {
         
         assertEquals(newOperation, operationDto.getOperation());
         assertEquals(author, operationDto.getOperationAuthor());
-    }
-
-    @Test
-    void testIdIndependence() {
-        long initialId = 100L;
-        long newId = 200L;
-        
-        operationDto.setId(initialId);
-        
-        assertEquals(initialId, operationDto.getId());
-        
-        operationDto.setId(newId);
-        
-        assertEquals(newId, operationDto.getId());
-        
-        assertNull(operationDto.getOperation());
-        assertNull(operationDto.getOperationAuthor());
-    }
-
-    @Test
-    void testBoundaryValues() {
-        operationDto.setId(0L);
-        assertEquals(0L, operationDto.getId());
-        
-        operationDto.setId(Long.MAX_VALUE);
-        assertEquals(Long.MAX_VALUE, operationDto.getId());
-        
-        operationDto.setId(Long.MIN_VALUE);
-        assertEquals(Long.MIN_VALUE, operationDto.getId());
     }
 }

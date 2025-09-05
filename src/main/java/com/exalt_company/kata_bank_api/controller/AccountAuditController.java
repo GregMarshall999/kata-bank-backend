@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,7 +58,6 @@ public class AccountAuditController {
             description = "Internal server error during audit retrieval"
         )
     })
-    @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/{accountType}/{ownerId}/{page}/{size}")
     public ResponseEntity<AccountStatementDto> requestStatement(
             @Parameter(description = "Type of account (FUND or SAVING)", example = "FUND")

@@ -9,10 +9,9 @@ import com.exalt_company.kata_bank_api.enums.BankRole;
 import com.exalt_company.kata_bank_api.enums.Banking;
 import com.exalt_company.kata_bank_api.exception.SavingException;
 import com.exalt_company.kata_bank_api.mapper.SavingMapper;
+import com.exalt_company.kata_bank_api.repository.AccountAuditRepository;
 import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.SavingRepository;
-import com.exalt_company.kata_bank_api.security.JwtService;
-import com.exalt_company.kata_bank_api.service.IAuditService;
 import com.exalt_company.kata_bank_api.service.impl.SavingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,19 +47,24 @@ class SavingServiceTest {
     private SavingMapper mapper;
 
     @Mock
-    private JwtService jwtService;
-
-    @Mock
     private BankUserRepository bankUserRepository;
 
     @Mock
+    private AccountAuditRepository accountAuditRepository;
+
+    @Mock
     private IAuditService auditService;
+
+    @Mock
+    private SecurityContext securityContext;
+
+    @Mock
+    private Authentication authentication;
 
     @InjectMocks
     private SavingService savingService;
 
     private Saving testSaving;
-    private String validToken;
     private SavingDto savingDto;
 
     @BeforeEach
@@ -80,14 +88,17 @@ class SavingServiceTest {
         savingDto.setMaxBalance(5000.0);
         savingDto.setOwnerId(1L);
 
-        validToken = "Bearer valid.jwt.token";
+        // Setup SecurityContext mock
+        SecurityContextHolder.setContext(securityContext);
     }
 
     @Test
     void testOpenSavingsAccountSuccess() throws SavingException {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
+        when(repository.findByOwner(testSaving.getOwner())).thenReturn(Optional.empty());
         when(mapper.toEntity(savingDto)).thenReturn(testSaving);
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
 
@@ -97,9 +108,9 @@ class SavingServiceTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(Banking.AUTHORIZED, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
         verify(bankUserRepository).findById(1L);
+        verify(repository).findByOwner(testSaving.getOwner());
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
         verify(repository).save(any(Saving.class));
     }
@@ -119,7 +130,8 @@ class SavingServiceTest {
 
     @Test
     void testOpenSavingsAccountWithExistingSaving() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -133,25 +145,45 @@ class SavingServiceTest {
 
     @Test
     void testOpenSavingsAccountUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
             savingService.openSavingsAccount(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
-        verify(jwtService).extractId(validToken);
         verify(repository, never()).findById(any());
+        verify(repository, never()).save(any(Saving.class));
+    }
+
+    @Test
+    void testOpenSavingsAccountUserAlreadyHasSaving() {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
+        when(repository.findByOwner(testSaving.getOwner())).thenReturn(Optional.of(testSaving));
+
+        SavingException exception = assertThrows(SavingException.class, () ->
+            savingService.openSavingsAccount(savingDto)
+        );
+
+        assertEquals("User can only have one savings account", exception.getMessage());
+        verify(repository).findById(1L);
+        verify(bankUserRepository).findById(1L);
+        verify(repository).findByOwner(testSaving.getOwner());
         verify(repository, never()).save(any(Saving.class));
     }
 
     @Test
     void testCloseSavingsAccountSuccess() throws SavingException {
         testSaving.setBalance(0.0);
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
-        when(mapper.toEntity(savingDto)).thenReturn(testSaving);
+        when(accountAuditRepository.findAllByUserSaving(testSaving)).thenReturn(new ArrayList<>());
 
         ResponseEntity<Banking> response = savingService.closeSavingsAccount(savingDto);
 
@@ -159,16 +191,17 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.COMPLETED, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
         verify(bankUserRepository).findById(1L);
+        verify(accountAuditRepository).findAllByUserSaving(testSaving);
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any());
         verify(repository).delete(any(Saving.class));
     }
 
     @Test
     void testCloseSavingsAccountWithNonZeroBalance() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -182,7 +215,8 @@ class SavingServiceTest {
 
     @Test
     void testCloseSavingsAccountWithNonExistentSaving() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -196,21 +230,22 @@ class SavingServiceTest {
 
     @Test
     void testCloseSavingsAccountUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
             savingService.closeSavingsAccount(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
-        verify(jwtService).extractId(validToken);
         verify(repository, never()).findById(any());
         verify(repository, never()).delete(any(Saving.class));
     }
 
     @Test
     void testDepositSuccess() throws SavingException {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
@@ -221,7 +256,6 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.DEPOSITED, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
         verify(bankUserRepository).findById(1L);
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
@@ -260,7 +294,8 @@ class SavingServiceTest {
     void testDepositExceedingMaxBalance() {
         savingDto.setBalance(5000.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -274,7 +309,8 @@ class SavingServiceTest {
 
     @Test
     void testDepositWithNonExistentSaving() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -288,21 +324,22 @@ class SavingServiceTest {
 
     @Test
     void testDepositUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
             savingService.deposit(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
-        verify(jwtService).extractId(validToken);
         verify(repository, never()).findById(any());
         verify(repository, never()).save(any(Saving.class));
     }
 
     @Test
     void testWithdrawSuccess() throws SavingException {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
@@ -313,7 +350,6 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.WITHDREW, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
         verify(bankUserRepository).findById(1L);
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
@@ -352,7 +388,8 @@ class SavingServiceTest {
     void testWithdrawExceedingBalance() {
         savingDto.setBalance(1500.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -366,7 +403,8 @@ class SavingServiceTest {
 
     @Test
     void testWithdrawWithNonExistentSaving() {
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
         SavingException exception = assertThrows(SavingException.class, () ->
@@ -380,14 +418,14 @@ class SavingServiceTest {
 
     @Test
     void testWithdrawUnauthorizedUser() {
-        when(jwtService.extractId(validToken)).thenReturn(2L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(2L);
 
         SavingException exception = assertThrows(SavingException.class, () ->
             savingService.withdraw(savingDto)
         );
 
         assertEquals("Attempted to access unauthorized savings", exception.getMessage());
-        verify(jwtService).extractId(validToken);
         verify(repository, never()).findById(any());
         verify(repository, never()).save(any(Saving.class));
     }
@@ -396,7 +434,8 @@ class SavingServiceTest {
     void testWithdrawExactBalance() throws SavingException {
         savingDto.setBalance(1000.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
@@ -407,7 +446,6 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.WITHDREW, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
         verify(bankUserRepository).findById(1L);
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
@@ -421,7 +459,8 @@ class SavingServiceTest {
         testSaving.setBalance(4000.0);
         savingDto.setBalance(1000.0);
 
-        when(jwtService.extractId(validToken)).thenReturn(1L);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(testSaving));
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.save(any(Saving.class))).thenReturn(testSaving);
@@ -432,41 +471,12 @@ class SavingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Banking.DEPOSITED, response.getBody());
 
-        verify(jwtService).extractId(validToken);
         verify(repository).findById(1L);
         verify(bankUserRepository).findById(1L);
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));
         verify(repository).save(argThat(saving -> 
             saving.getBalance() == 5000.0
         ));
-    }
-
-    @Test
-    void testOpenSavingsAccountWithNullToken() {
-        assertThrows(SavingException.class, () ->
-            savingService.openSavingsAccount(savingDto)
-        );
-    }
-
-    @Test
-    void testCloseSavingsAccountWithNullToken() {
-        assertThrows(SavingException.class, () ->
-            savingService.closeSavingsAccount(savingDto)
-        );
-    }
-
-    @Test
-    void testDepositWithNullToken() {
-        assertThrows(SavingException.class, () ->
-            savingService.deposit(savingDto)
-        );
-    }
-
-    @Test
-    void testWithdrawWithNullToken() {
-        assertThrows(SavingException.class, () ->
-            savingService.withdraw(savingDto)
-        );
     }
 
     @Test

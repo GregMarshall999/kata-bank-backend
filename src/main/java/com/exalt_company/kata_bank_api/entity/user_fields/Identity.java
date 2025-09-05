@@ -3,8 +3,10 @@ package com.exalt_company.kata_bank_api.entity.user_fields;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
+import java.io.Serializable;
+
 @Embeddable
-public class Identity {
+public class Identity implements Serializable {
     @Column(nullable = false)
     private String name;
 

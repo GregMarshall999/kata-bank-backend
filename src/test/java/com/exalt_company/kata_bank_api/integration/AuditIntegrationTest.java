@@ -16,13 +16,20 @@ import com.exalt_company.kata_bank_api.repository.AccountAuditRepository;
 import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
 import com.exalt_company.kata_bank_api.repository.SavingRepository;
+import com.exalt_company.kata_bank_api.security.JwtService;
 import com.exalt_company.kata_bank_api.service.IAuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,8 +39,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@AutoConfigureWebMvc
 @ActiveProfiles("test")
 @Transactional
 class AuditIntegrationTest {
@@ -52,12 +62,25 @@ class AuditIntegrationTest {
     @Autowired
     private SavingRepository savingRepository;
 
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
+
+
+    private MockMvc mockMvc;
     private BankUser testUser;
     private Fund testFund;
     private Saving testSaving;
+    private String validToken;
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         auditRepository.deleteAll();
         fundRepository.deleteAll();
         savingRepository.deleteAll();
@@ -68,7 +91,7 @@ class AuditIntegrationTest {
         
         Credentials credentials = new Credentials();
         credentials.setEmail("test@example.com");
-        credentials.setPassword("password123");
+        credentials.setPassword(passwordEncoder.encode("password123"));
         testUser.setCredentials(credentials);
         
         Identity identity = new Identity();
@@ -77,6 +100,7 @@ class AuditIntegrationTest {
         testUser.setIdentity(identity);
         
         testUser = bankUserRepository.save(testUser);
+        validToken = jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
 
         testFund = new Fund();
         testFund.setBalance(1000.0);
@@ -278,6 +302,152 @@ class AuditIntegrationTest {
         assertNotNull(audit.getCreatedAt());
         assertTrue(audit.getCreatedAt().isAfter(beforeCreation) || audit.getCreatedAt().isEqual(beforeCreation));
         assertTrue(audit.getCreatedAt().isBefore(afterCreation) || audit.getCreatedAt().isEqual(afterCreation));
+    }
+
+    @Test
+    void testRequestStatementViaWeb_FundAccount() throws Exception {
+        createAuditRecords(AuditOperation.DEPOSIT, 100.0, 1000.0, 1100.0, testUser, testFund, null);
+        createAuditRecords(AuditOperation.WITHDRAW, 50.0, 1100.0, 1050.0, testUser, testFund, null);
+
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 0, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.accountType").value("FUND"))
+                .andExpect(jsonPath("$.accountBalance").value(1000.0))
+                .andExpect(jsonPath("$.operations").isArray())
+                .andExpect(jsonPath("$.operations.length()").value(2))
+                .andExpect(jsonPath("$.operationsPage").value(0))
+                .andExpect(jsonPath("$.operationsSize").value(10))
+                .andExpect(jsonPath("$.totalOperationsPage").value(1));
+    }
+
+    @Test
+    void testRequestStatementViaWeb_SavingAccount() throws Exception {
+        createAuditRecords(AuditOperation.OPEN, 500.0, 0.0, 500.0, testUser, null, testSaving);
+
+        testSaving.setBalance(700);
+        savingRepository.save(testSaving);
+
+        createAuditRecords(AuditOperation.DEPOSIT, 200.0, 500.0, 700.0, testUser, null, testSaving);
+
+        mockMvc.perform(get("/api/audit-account/SAVING/{ownerId}/{page}/{size}", testUser.getId(), 0, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.accountType").value("SAVING"))
+                .andExpect(jsonPath("$.accountBalance").value(700.0))
+                .andExpect(jsonPath("$.operations").isArray())
+                .andExpect(jsonPath("$.operations.length()").value(2))
+                .andExpect(jsonPath("$.operationsPage").value(0))
+                .andExpect(jsonPath("$.operationsSize").value(10))
+                .andExpect(jsonPath("$.totalOperationsPage").value(1));
+    }
+
+    @Test
+    void testRequestStatementViaWeb_InvalidAccountType() throws Exception {
+        mockMvc.perform(get("/api/audit-account/INVALID/{ownerId}/{page}/{size}", testUser.getId(), 0, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong account type"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestStatementViaWeb_NonExistentUser() throws Exception {
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", 999L, 0, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Can't find funds owner"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestStatementViaWeb_EmptyResult() throws Exception {
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 0, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.accountType").value("FUND"))
+                .andExpect(jsonPath("$.accountBalance").value(1000.0))
+                .andExpect(jsonPath("$.operations").isArray())
+                .andExpect(jsonPath("$.operations.length()").value(0))
+                .andExpect(jsonPath("$.operationsPage").value(0))
+                .andExpect(jsonPath("$.operationsSize").value(10))
+                .andExpect(jsonPath("$.totalOperationsPage").value(0));
+    }
+
+    @Test
+    void testRequestStatementViaWeb_Pagination() throws Exception {
+        for (int i = 0; i < 25; i++) {
+            createAuditRecords(AuditOperation.DEPOSIT, 10.0, 1000.0 + i * 10, 1010.0 + i * 10, testUser, testFund, null);
+        }
+
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 0, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operationsPage").value(0))
+                .andExpect(jsonPath("$.operationsSize").value(10))
+                .andExpect(jsonPath("$.totalOperationsPage").value(3))
+                .andExpect(jsonPath("$.operations.length()").value(10));
+
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 1, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operationsPage").value(1))
+                .andExpect(jsonPath("$.operationsSize").value(10))
+                .andExpect(jsonPath("$.totalOperationsPage").value(3))
+                .andExpect(jsonPath("$.operations.length()").value(10));
+
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 2, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operationsPage").value(2))
+                .andExpect(jsonPath("$.operationsSize").value(10))
+                .andExpect(jsonPath("$.totalOperationsPage").value(3))
+                .andExpect(jsonPath("$.operations.length()").value(5));
+    }
+
+    @Test
+    void testRequestStatementViaWeb_NegativePageNumber() throws Exception {
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), -1, 10)
+                        .header("Authorization", validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Page number must be non-negative"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestStatementViaWeb_ZeroPageSize() throws Exception {
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 0, 0)
+                        .header("Authorization", validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Page size must be positive"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestStatementViaWeb_NegativePageSize() throws Exception {
+        mockMvc.perform(get("/api/audit-account/FUND/{ownerId}/{page}/{size}", testUser.getId(), 0, -1)
+                        .header("Authorization", validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Page size must be positive"))
+                .andExpect(jsonPath("$.path").exists());
     }
 
     private void createAuditRecords(AuditOperation operation, double amount, double balanceBefore,

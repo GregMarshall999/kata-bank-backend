@@ -1,5 +1,6 @@
 package com.exalt_company.kata_bank_api.exception;
 
+import com.exalt_company.kata_bank_api.enums.Banking;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -20,12 +21,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthException(AuthException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 new Date(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
+                HttpStatus.UNAUTHORIZED.value(),
+                "UNAUTHORIZED",
                 ex.getMessage(),
                 request.getDescription(false)
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(BaseException.class)
@@ -46,7 +47,7 @@ public class GlobalExceptionHandler {
                 new Date(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
-                ex.getMessage(),
+                ex.getMessage() + " " + Banking.REFUSED,
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -54,6 +55,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SavingException.class)
     public ResponseEntity<ErrorResponse> handleSavingException(SavingException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                new Date(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage() + " " + Banking.REFUSED,
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuditException.class)
+    public ResponseEntity<ErrorResponse> handleAuditException(AuditException ex, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 new Date(),
                 HttpStatus.BAD_REQUEST.value(),

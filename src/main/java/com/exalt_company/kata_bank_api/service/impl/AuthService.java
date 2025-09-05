@@ -55,7 +55,12 @@ public class AuthService implements IAuthService {
 
         Credentials credentials = new Credentials();
         credentials.setEmail(request.getEmail());
-        credentials.setPassword(encoder.encode(request.getPassword()));
+
+        try {
+            credentials.setPassword(encoder.encode(request.getPassword()));
+        } catch (IllegalArgumentException e) {
+            throw new AuthException("Password can not be more than 72 bytes");
+        }
 
         user.setIdentity(identity);
         user.setCredentials(credentials);

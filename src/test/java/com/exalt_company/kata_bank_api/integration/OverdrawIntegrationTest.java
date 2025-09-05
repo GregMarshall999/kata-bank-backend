@@ -446,7 +446,6 @@ class OverdrawIntegrationTest {
         assertEquals(-300.0, updatedFund.getBalance());
     }
 
-    /** TODO: Same Exception Ghosting issue as FundIntegrationTest...
     @Test
     void testRequestOverdrawCapabilitiesWithoutAuthorization() throws Exception {
         OverdrawDto overdrawDto = new OverdrawDto();
@@ -457,12 +456,7 @@ class OverdrawIntegrationTest {
         mockMvc.perform(put("/api/fund/request-overdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(overdrawDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No authorization for overdraws"))
-                .andExpect(jsonPath("$.path").exists());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -475,14 +469,8 @@ class OverdrawIntegrationTest {
         mockMvc.perform(put("/api/fund/cancel-overdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(overdrawDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No authorization for overdraw cancellation"))
-                .andExpect(jsonPath("$.path").exists());
+                .andExpect(status().isUnauthorized());
     }
-    */
 
     @Test
     void testRequestOverdrawCapabilitiesWithInvalidJson() throws Exception {
@@ -510,6 +498,182 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilitiesWithNegativeMaxOverdraw() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund.setCanOverdraw(false);
+        existingFund.setMaxOverdraw(0.0);
+        existingFund = fundRepository.save(existingFund);
+
+        OverdrawDto overdrawDto = new OverdrawDto();
+        overdrawDto.setId(existingFund.getId());
+        overdrawDto.setMaxOverdraw(-100.0);
+        overdrawDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(put("/api/fund/request-overdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(overdrawDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for max overdraw"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilitiesWithZeroMaxOverdraw() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund.setCanOverdraw(false);
+        existingFund.setMaxOverdraw(0.0);
+        existingFund = fundRepository.save(existingFund);
+
+        OverdrawDto overdrawDto = new OverdrawDto();
+        overdrawDto.setId(existingFund.getId());
+        overdrawDto.setMaxOverdraw(0.0);
+        overdrawDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(put("/api/fund/request-overdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(overdrawDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Wrong value for max overdraw"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testRequestOverdrawCapabilitiesOnAlreadyOverdrawEnabledFund() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund.setCanOverdraw(true);
+        existingFund.setMaxOverdraw(500.0);
+        existingFund = fundRepository.save(existingFund);
+
+        OverdrawDto overdrawDto = new OverdrawDto();
+        overdrawDto.setId(existingFund.getId());
+        overdrawDto.setMaxOverdraw(1000.0);
+        overdrawDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(put("/api/fund/request-overdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(overdrawDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
+
+        Fund updatedFund = fundRepository.findById(existingFund.getId()).orElse(null);
+        assertNotNull(updatedFund);
+        assertTrue(updatedFund.canOverdraw());
+        assertEquals(1000.0, updatedFund.getMaxOverdraw());
+    }
+
+    @Test
+    void testCancelOverdrawCapabilitiesOnNonOverdrawEnabledFund() throws Exception {
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund.setCanOverdraw(false);
+        existingFund.setMaxOverdraw(0.0);
+        existingFund = fundRepository.save(existingFund);
+
+        OverdrawDto overdrawDto = new OverdrawDto();
+        overdrawDto.setId(existingFund.getId());
+        overdrawDto.setMaxOverdraw(0.0);
+        overdrawDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(put("/api/fund/cancel-overdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(overdrawDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("No funds overdrawn to cancel"))
+                .andExpect(jsonPath("$.path").exists());
+    }
+
+    @Test
+    void testCompleteOverdrawWorkflow() throws Exception {
+        // 1. Create fund
+        Fund existingFund = new Fund();
+        existingFund.setBalance(1000.0);
+        existingFund.setOwner(testUser);
+        existingFund.setCanOverdraw(false);
+        existingFund.setMaxOverdraw(0.0);
+        existingFund = fundRepository.save(existingFund);
+
+        // 2. Request overdraw capabilities
+        OverdrawDto requestDto = new OverdrawDto();
+        requestDto.setId(existingFund.getId());
+        requestDto.setMaxOverdraw(500.0);
+        requestDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(put("/api/fund/request-overdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
+
+        // 3. Withdraw more than balance (using overdraw)
+        FundOpDto withdrawDto = new FundOpDto();
+        withdrawDto.setId(existingFund.getId());
+        withdrawDto.setBalance(1200.0); // 1000 + 200 overdraw
+        withdrawDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/withdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(withdrawDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
+
+        // 4. Deposit to restore positive balance
+        FundOpDto depositDto = new FundOpDto();
+        depositDto.setId(existingFund.getId());
+        depositDto.setBalance(300.0);
+        depositDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(post("/api/fund/deposit")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(depositDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
+
+        // 5. Cancel overdraw capabilities
+        OverdrawDto cancelDto = new OverdrawDto();
+        cancelDto.setId(existingFund.getId());
+        cancelDto.setMaxOverdraw(0.0);
+        cancelDto.setOwnerId(testUser.getId());
+
+        mockMvc.perform(put("/api/fund/cancel-overdraw")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cancelDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(Banking.COMPLETED.name()));
+
+        // Verify final state
+        Fund finalFund = fundRepository.findById(existingFund.getId()).orElse(null);
+        assertNotNull(finalFund);
+        assertEquals(100.0, finalFund.getBalance());
+        assertFalse(finalFund.canOverdraw());
+        assertEquals(0.0, finalFund.getMaxOverdraw());
     }
 
     private BankUser createTestUser(String name, String surname, String email, String password, BankRole role) {

@@ -76,6 +76,8 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
      */
     @Override
     public ResponseEntity<Banking> closeSavingsAccount(SavingDto dto) throws SavingException {
+        if(dto == null) throw new SavingException("Could not close savings. No savings to close.");
+
         ServiceUtil.checkUserAuthorized(dto, "Savings access unauthorized");
 
         Saving found = repository.findById(dto.getId())

@@ -40,6 +40,8 @@ public class BankUserService extends BaseService<BankUserDto, BankUser, BankUser
      */
     @Override
     public ResponseEntity<BankUserDto> create(BankUserDto dto) throws BaseException {
+        if(dto == null) throw new BaseException("Could not create BankUser: Nothing to create");
+
         try {
             PasswordedBankUserDto passwordedDto = dto.copy();
 

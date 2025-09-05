@@ -37,13 +37,15 @@ public abstract class BaseService<
 
     @Override
     public ResponseEntity<D> create(D dto) throws BaseException {
+        if(dto == null) throw new BaseException("Could not create " + entityClass.getSimpleName() + ": Nothing to create");
+
         E saved = repository.save(mapper.toEntity(dto));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(saved));
     }
 
     @Override
     public ResponseEntity<D> getById(long id) throws BaseException {
-        E found = repository.findById(id).orElseThrow(() -> new BaseException(entityClass.getName() + " not found"));
+        E found = repository.findById(id).orElseThrow(() -> new BaseException(entityClass.getSimpleName() + " not found"));
         return ResponseEntity.status(HttpStatus.FOUND).body(mapper.toDto(found));
     }
 
@@ -71,8 +73,10 @@ public abstract class BaseService<
 
     @Override
     public ResponseEntity<D> update(long id, D dto) throws BaseException {
+        if(dto == null) throw new BaseException("Could not update " + entityClass.getSimpleName() + ": Nothing to update.");
+
         E current = repository.findById(id).orElseThrow(() -> new BaseException(
-                "Could not update " + entityClass.getName() + ": Please create first."));
+                "Could not update " + entityClass.getSimpleName() + ": Please create first."));
 
         dto.setId(id);
         mapper.updateEntityFromDto(dto, current);
@@ -85,7 +89,7 @@ public abstract class BaseService<
     @Override
     public ResponseEntity<Boolean> deleteById(long id) throws BaseException {
         repository.findById(id).orElseThrow(() -> new BaseException(
-                "Could not delete " + entityClass.getName() + ": Nothing to delete."));
+                "Could not delete " + entityClass.getSimpleName() + ": Nothing to delete."));
 
         repository.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK).body(true);
@@ -93,8 +97,10 @@ public abstract class BaseService<
 
     @Override
     public ResponseEntity<Boolean> delete(D dto) throws BaseException {
+        if(dto == null) throw new BaseException("Could not delete " + entityClass.getSimpleName() + ": Nothing to delete.");
+
         E toDelete = repository.findOne(Example.of(mapper.toEntity(dto))).orElseThrow(() -> new BaseException(
-                "Could not delete " + entityClass.getName() + ": Nothing to delete."));
+                "Could not delete " + entityClass.getSimpleName() + ": Nothing to delete."));
 
         repository.delete(toDelete);
         return ResponseEntity.status(HttpStatus.OK).body(true);

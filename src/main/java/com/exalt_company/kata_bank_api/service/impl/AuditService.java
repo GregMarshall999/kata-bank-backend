@@ -26,9 +26,9 @@ import java.util.List;
 @Service
 public class AuditService implements IAuditService {
     private final AccountAuditRepository repository;
-    private BankUserRepository bankUserRepository;
-    private FundRepository fundRepository;
-    private SavingRepository savingRepository;
+    private final BankUserRepository bankUserRepository;
+    private final FundRepository fundRepository;
+    private final SavingRepository savingRepository;
 
     @Autowired
     public AuditService(AccountAuditRepository repository, BankUserRepository bankUserRepository,
@@ -39,6 +39,17 @@ public class AuditService implements IAuditService {
         this.savingRepository = savingRepository;
     }
 
+    /**
+     * Records an audit entry for a banking operation, tracking the operation details and balance changes.
+     * 
+     * @param operation the type of operation performed (DEPOSIT, WITHDRAW, OVERDRAW, etc.)
+     * @param amount the amount involved in the operation
+     * @param balanceBefore the account balance before the operation
+     * @param balanceAfter the account balance after the operation
+     * @param requestingUser the user who initiated the operation
+     * @param userFund the fund account involved (can be null if operation is on savings)
+     * @param userSaving the savings account involved (can be null if operation is on funds)
+     */
     @Override
     public void recordAudit(
             AuditOperation operation, double amount, double balanceBefore, double balanceAfter, BankUser requestingUser,
@@ -59,17 +70,20 @@ public class AuditService implements IAuditService {
     /**
      * We'll pick all the operations for the user account of this month.
      * It is in a page format for ease of display.
-     * @param accountType
-     * @param ownerId
-     * @param page
-     * @param size
-     * @return
-     * @throws AuditException
+     * @param accountType the type of account (FUND or SAVING)
+     * @param ownerId the unique identifier of the account owner
+     * @param page the page number for pagination (0-based)
+     * @param size the number of operations per page
+     * @return ResponseEntity containing AccountStatementDto with paginated operations and account balance
+     * @throws AuditException if account type is invalid, owner not found, or account not found
      */
     @Override
     public ResponseEntity<AccountStatementDto> requestStatement(String accountType, long ownerId, int page, int size)
             throws AuditException {
         try {
+            if(page < 0) throw new AuditException("Page number must be non-negative");
+            if(size <= 0) throw new AuditException("Page size must be positive");
+
             AccountType type = AccountType.valueOf(accountType);
 
             BankUser owner = bankUserRepository.findById(ownerId)
