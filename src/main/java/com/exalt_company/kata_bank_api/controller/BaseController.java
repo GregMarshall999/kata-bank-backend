@@ -105,16 +105,4 @@ public abstract class BaseController<D extends BaseDto, S extends IBaseService<D
     public ResponseEntity<Boolean> deleteById(@Parameter(description = "Unique identifier of the entity to delete", example = "1") @PathVariable long id) throws BaseException {
         return service.deleteById(id);
     }
-
-    @Operation(summary = "Delete entity by data", description = "Deletes an entity using the provided entity data")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Entity deleted successfully",
-                    content = @Content(schema = @Schema(implementation = Boolean.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request data"),
-            @ApiResponse(responseCode = "404", description = "Entity not found")
-    })
-    @DeleteMapping
-    public ResponseEntity<Boolean> delete(@Valid @RequestBody D dto) throws BaseException {
-        return service.delete(dto);
-    }
 }

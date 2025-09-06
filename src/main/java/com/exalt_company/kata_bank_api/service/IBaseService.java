@@ -18,5 +18,4 @@ public interface IBaseService<D extends BaseDto> {
     ResponseEntity<PageDto<D>> getPage(int page, int size);
     ResponseEntity<D> update(long id, D dto) throws BaseException;
     ResponseEntity<Boolean> deleteById(long id) throws BaseException;
-    ResponseEntity<Boolean> delete(D dto) throws BaseException;
 }

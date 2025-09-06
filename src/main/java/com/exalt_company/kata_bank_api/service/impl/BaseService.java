@@ -7,7 +7,6 @@ import com.exalt_company.kata_bank_api.exception.BaseException;
 import com.exalt_company.kata_bank_api.mapper.BaseMapper;
 import com.exalt_company.kata_bank_api.repository.BaseRepository;
 import com.exalt_company.kata_bank_api.service.IBaseService;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -37,7 +36,7 @@ public abstract class BaseService<
 
     @Override
     public ResponseEntity<D> create(D dto) throws BaseException {
-        if(dto == null) throw new BaseException("Could not create " + entityClass.getSimpleName() + ": Nothing to create");
+        if(dto == null) throw new BaseException("Could not create " + entityClass.getSimpleName() + ": Nothing to create", HttpStatus.BAD_REQUEST);
 
         E saved = repository.save(mapper.toEntity(dto));
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(saved));
@@ -45,7 +44,7 @@ public abstract class BaseService<
 
     @Override
     public ResponseEntity<D> getById(long id) throws BaseException {
-        E found = repository.findById(id).orElseThrow(() -> new BaseException(entityClass.getSimpleName() + " not found"));
+        E found = repository.findById(id).orElseThrow(() -> new BaseException(entityClass.getSimpleName() + " not found", HttpStatus.NOT_FOUND));
         return ResponseEntity.status(HttpStatus.FOUND).body(mapper.toDto(found));
     }
 
@@ -68,15 +67,15 @@ public abstract class BaseService<
         pageDto.setTotalElements(result.getTotalElements());
         pageDto.setNumberOfElements(result.getNumberOfElements());
 
-        return ResponseEntity.status(HttpStatus.FOUND).body(pageDto);
+        return ResponseEntity.status(HttpStatus.OK).body(pageDto);
     }
 
     @Override
     public ResponseEntity<D> update(long id, D dto) throws BaseException {
-        if(dto == null) throw new BaseException("Could not update " + entityClass.getSimpleName() + ": Nothing to update.");
+        if(dto == null) throw new BaseException("Could not update " + entityClass.getSimpleName() + ": Nothing to update", HttpStatus.BAD_REQUEST);
 
         E current = repository.findById(id).orElseThrow(() -> new BaseException(
-                "Could not update " + entityClass.getSimpleName() + ": Please create first."));
+                "Could not update " + entityClass.getSimpleName() + ": Please create first", HttpStatus.NOT_FOUND));
 
         dto.setId(id);
         mapper.updateEntityFromDto(dto, current);
@@ -89,20 +88,9 @@ public abstract class BaseService<
     @Override
     public ResponseEntity<Boolean> deleteById(long id) throws BaseException {
         repository.findById(id).orElseThrow(() -> new BaseException(
-                "Could not delete " + entityClass.getSimpleName() + ": Nothing to delete."));
+                "Could not delete " + entityClass.getSimpleName() + ": not found", HttpStatus.NOT_FOUND));
 
         repository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(true);
-    }
-
-    @Override
-    public ResponseEntity<Boolean> delete(D dto) throws BaseException {
-        if(dto == null) throw new BaseException("Could not delete " + entityClass.getSimpleName() + ": Nothing to delete.");
-
-        E toDelete = repository.findOne(Example.of(mapper.toEntity(dto))).orElseThrow(() -> new BaseException(
-                "Could not delete " + entityClass.getSimpleName() + ": Nothing to delete."));
-
-        repository.delete(toDelete);
         return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 }
