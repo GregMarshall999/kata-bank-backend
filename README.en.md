@@ -96,3 +96,8 @@ The statement must show:
 ## Good luck!
 
 ![hexagonal architecture](./assets/hexa-schema.png)
+
+[Update information](CHANGELOG.md) <br>
+[Test documentation](TEST.md) <br>
+[Environment variables guide](ENVIRONMENT_VARIABLES.md) <br>
+[Integration and deployment guide](CI_CD_README.md)
