@@ -29,8 +29,17 @@ public class SecurityConfig {
             "/webjars/**"
     };
 
-    private static final String[] crudEndpoints = {
-            "/api/bank-user/**"
+    private static final String[] clientEndpoints = {
+            "/api/audit-account/statement/**",
+            "/api/fund/deposit", "/api/fund/withdraw", "/api/fund/request-overdraw", "/api/fund/cancel-overdraw",
+            "/api/saving/open", "/api/saving/close", "/api/saving/deposit", "/api/saving/withdraw",
+    };
+
+    private static final String[] adminEndpoints = {
+            "/api/audit-account/**",
+            "/api/bank-user/**",
+            "/api/fund/**",
+            "/api/saving/**"
     };
 
     @Autowired
@@ -54,7 +63,8 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         requests -> requests.requestMatchers(allowedEndPoints).permitAll()
-                        .requestMatchers(crudEndpoints).hasAuthority(BankRole.ADMIN.name())
+                        .requestMatchers(clientEndpoints).hasAnyAuthority(BankRole.CLIENT.name(), BankRole.ADMIN.name())
+                        .requestMatchers(adminEndpoints).hasAuthority(BankRole.ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(

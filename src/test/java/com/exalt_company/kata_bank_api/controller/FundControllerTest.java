@@ -151,20 +151,6 @@ class FundControllerTest {
     }
 
     @Test
-    void testDelete_Success() throws Exception {
-        when(fundService.delete(any(FundDto.class)))
-                .thenReturn(ResponseEntity.ok(true));
-
-        ResponseEntity<Boolean> response = fundController.delete(testFund);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody());
-
-        verify(fundService, times(1)).delete(testFund);
-    }
-
-    @Test
     void testDeposit_Success() throws FundException {
         Banking expectedResult = Banking.DEPOSITED;
         when(fundService.deposit(any(FundOpDto.class)))
@@ -202,7 +188,7 @@ class FundControllerTest {
     void testDeposit_ServiceThrowsException() throws FundException {
         String errorMessage = "Fund not found";
         when(fundService.deposit(any(FundOpDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.deposit(testFundOp));
@@ -223,7 +209,7 @@ class FundControllerTest {
         invalidOp.setOwnerId(ownerId);
         
         when(fundService.deposit(any(FundOpDto.class)))
-                .thenThrow(new FundException(expectedErrorMessage));
+                .thenThrow(new FundException(expectedErrorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.deposit(invalidOp));
@@ -270,7 +256,7 @@ class FundControllerTest {
     void testWithdraw_ServiceThrowsException() throws FundException {
         String errorMessage = "Insufficient funds";
         when(fundService.withdraw(any(FundOpDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.withdraw(testFundOp));
@@ -290,7 +276,7 @@ class FundControllerTest {
         invalidOp.setOwnerId(ownerId);
         
         when(fundService.withdraw(any(FundOpDto.class)))
-                .thenThrow(new FundException(expectedErrorMessage));
+                .thenThrow(new FundException(expectedErrorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.withdraw(invalidOp));
@@ -304,7 +290,7 @@ class FundControllerTest {
         testFundOp.setBalance(2000.0);
         String errorMessage = "Insufficient funds";
         when(fundService.withdraw(any(FundOpDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.withdraw(testFundOp));
@@ -351,7 +337,7 @@ class FundControllerTest {
     void testRequestOverdrawCapabilities_ServiceThrowsException() throws FundException {
         String errorMessage = "Fund not found";
         when(fundService.requestOverdrawCapabilities(any(OverdrawDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.requestOverdrawCapabilities(testOverdraw));
@@ -372,7 +358,7 @@ class FundControllerTest {
         invalidOverdraw.setOwnerId(ownerId);
         
         when(fundService.requestOverdrawCapabilities(any(OverdrawDto.class)))
-                .thenThrow(new FundException(expectedErrorMessage));
+                .thenThrow(new FundException(expectedErrorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.requestOverdrawCapabilities(invalidOverdraw));
@@ -400,7 +386,7 @@ class FundControllerTest {
     void testCancelOverdrawCapabilities_ServiceThrowsException() throws FundException {
         String errorMessage = "Fund not found";
         when(fundService.cancelOverdrawCapabilities(any(OverdrawDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.cancelOverdrawCapabilities(testOverdraw));
@@ -413,7 +399,7 @@ class FundControllerTest {
     void testCancelOverdrawCapabilities_WithNegativeBalance() throws FundException {
         String errorMessage = "Cannot cancel overdraw with negative balance";
         when(fundService.cancelOverdrawCapabilities(any(OverdrawDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.cancelOverdrawCapabilities(testOverdraw));
@@ -427,7 +413,7 @@ class FundControllerTest {
         testOverdraw.setOwnerId(0L);
         String errorMessage = "Invalid owner ID";
         when(fundService.cancelOverdrawCapabilities(any(OverdrawDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.cancelOverdrawCapabilities(testOverdraw));
@@ -473,7 +459,7 @@ class FundControllerTest {
         testFundOp.setBalance(2000.0);
         String errorMessage = "Withdrawal exceeds overdraw limit";
         when(fundService.withdraw(any(FundOpDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> fundController.withdraw(testFundOp));

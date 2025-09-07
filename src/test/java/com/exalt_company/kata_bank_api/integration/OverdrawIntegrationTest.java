@@ -19,12 +19,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -64,14 +66,16 @@ class OverdrawIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
         bankUserRepository.deleteAll();
         fundRepository.deleteAll();
 
         testUser = createTestUser("test", "user", "testuser@example.com", "password123", BankRole.CLIENT);
         testUser = bankUserRepository.save(testUser);
         
-        validToken = jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
+        validToken = "Bearer " + jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
     }
 
     @Test
@@ -117,7 +121,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No funds to overdraw"))
+                .andExpect(jsonPath("$.message").value("No funds to overdraw: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -136,7 +140,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No funds to overdraw"))
+                .andExpect(jsonPath("$.message").value("No funds to overdraw: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -159,11 +163,11 @@ class OverdrawIntegrationTest {
                         .header("Authorization", validToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(overdrawDto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempted to access unauthorized funds"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Attempted to access unauthorized funds: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -217,7 +221,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Cannot cancel overdraw when balance is negative"))
+                .andExpect(jsonPath("$.message").value("Cannot cancel overdraw when balance is negative: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -236,7 +240,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No funds overdrawn to cancel"))
+                .andExpect(jsonPath("$.message").value("No funds overdrawn to cancel: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -255,7 +259,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No funds overdrawn to cancel"))
+                .andExpect(jsonPath("$.message").value("No funds overdrawn to cancel: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -308,7 +312,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than allowed"))
+                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than allowed: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -334,7 +338,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than available"))
+                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than available: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -456,7 +460,7 @@ class OverdrawIntegrationTest {
         mockMvc.perform(put("/api/fund/request-overdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(overdrawDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -469,7 +473,7 @@ class OverdrawIntegrationTest {
         mockMvc.perform(put("/api/fund/cancel-overdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(overdrawDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -522,7 +526,7 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for max overdraw"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -544,12 +548,9 @@ class OverdrawIntegrationTest {
                         .header("Authorization", validToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(overdrawDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for max overdraw"))
-                .andExpect(jsonPath("$.path").exists());
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
     }
 
     @Test
@@ -602,13 +603,12 @@ class OverdrawIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No funds overdrawn to cancel"))
+                .andExpect(jsonPath("$.message").value("Overdraw is not enabled: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
     void testCompleteOverdrawWorkflow() throws Exception {
-        // 1. Create fund
         Fund existingFund = new Fund();
         existingFund.setBalance(1000.0);
         existingFund.setOwner(testUser);
@@ -616,7 +616,6 @@ class OverdrawIntegrationTest {
         existingFund.setMaxOverdraw(0.0);
         existingFund = fundRepository.save(existingFund);
 
-        // 2. Request overdraw capabilities
         OverdrawDto requestDto = new OverdrawDto();
         requestDto.setId(existingFund.getId());
         requestDto.setMaxOverdraw(500.0);
@@ -629,10 +628,9 @@ class OverdrawIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
 
-        // 3. Withdraw more than balance (using overdraw)
         FundOpDto withdrawDto = new FundOpDto();
         withdrawDto.setId(existingFund.getId());
-        withdrawDto.setBalance(1200.0); // 1000 + 200 overdraw
+        withdrawDto.setBalance(1200.0);
         withdrawDto.setOwnerId(testUser.getId());
 
         mockMvc.perform(post("/api/fund/withdraw")
@@ -642,7 +640,6 @@ class OverdrawIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
 
-        // 4. Deposit to restore positive balance
         FundOpDto depositDto = new FundOpDto();
         depositDto.setId(existingFund.getId());
         depositDto.setBalance(300.0);
@@ -655,7 +652,6 @@ class OverdrawIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
 
-        // 5. Cancel overdraw capabilities
         OverdrawDto cancelDto = new OverdrawDto();
         cancelDto.setId(existingFund.getId());
         cancelDto.setMaxOverdraw(0.0);
@@ -668,7 +664,6 @@ class OverdrawIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.COMPLETED.name()));
 
-        // Verify final state
         Fund finalFund = fundRepository.findById(existingFund.getId()).orElse(null);
         assertNotNull(finalFund);
         assertEquals(100.0, finalFund.getBalance());

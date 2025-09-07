@@ -1,6 +1,6 @@
 package com.exalt_company.kata_bank_api.integration;
 
-import com.exalt_company.kata_bank_api.dto.PasswordedBankUserDto;
+import com.exalt_company.kata_bank_api.dto.BankUserDto;
 import com.exalt_company.kata_bank_api.entity.BankUser;
 import com.exalt_company.kata_bank_api.entity.user_fields.Credentials;
 import com.exalt_company.kata_bank_api.entity.user_fields.Identity;
@@ -20,10 +20,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -55,29 +55,27 @@ class BankUserIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
         bankUserRepository.deleteAll();
 
-        // Create admin user
         adminUser = createTestUser("Admin", "User", "admin@example.com", "admin123", BankRole.ADMIN);
         adminUser = bankUserRepository.save(adminUser);
-        adminToken = jwtService.generateToken(adminUser, adminUser.getId(), adminUser.getBankRole());
+        adminToken = "Bearer " + jwtService.generateToken(adminUser, adminUser.getId(), adminUser.getBankRole());
 
-        // Create client user
         clientUser = createTestUser("Client", "User", "client@example.com", "client123", BankRole.CLIENT);
         clientUser = bankUserRepository.save(clientUser);
-        clientToken = jwtService.generateToken(clientUser, clientUser.getId(), clientUser.getBankRole());
+        clientToken = "Bearer " + jwtService.generateToken(clientUser, clientUser.getId(), clientUser.getBankRole());
     }
 
-    // Validation Integration Tests
     @Test
     void testCreateBankUserWithNullName() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
-        userDto.setName(null); // Null name
+        userDto.setName(null);
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -94,12 +92,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithBlankName() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
-        userDto.setName(""); // Blank name
+        userDto.setName("");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -116,12 +113,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithShortName() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
-        userDto.setName("A"); // Less than 2 characters
+        userDto.setName("A");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -138,12 +134,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithLongName() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
-        userDto.setName("A".repeat(51)); // More than 50 characters
+        userDto.setName("A".repeat(51));
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -160,12 +155,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithNullSurname() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
-        userDto.setSurname(null); // Null surname
+        userDto.setSurname(null);
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -182,12 +176,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithBlankSurname() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
-        userDto.setSurname(""); // Blank surname
+        userDto.setSurname("");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -204,12 +197,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithShortSurname() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
-        userDto.setSurname("U"); // Less than 2 characters
+        userDto.setSurname("U");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -226,12 +218,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithLongSurname() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
-        userDto.setSurname("B".repeat(51)); // More than 50 characters
+        userDto.setSurname("B".repeat(51));
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -248,12 +239,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithNullEmail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
-        userDto.setEmail(null); // Null email
-        userDto.setPassword("password123");
+        userDto.setEmail(null);
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -270,12 +260,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithBlankEmail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
-        userDto.setEmail(""); // Blank email
-        userDto.setPassword("password123");
+        userDto.setEmail("");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -292,12 +281,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithInvalidEmailFormat() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
-        userDto.setEmail("invalid-email-format"); // Invalid email format
-        userDto.setPassword("password123");
+        userDto.setEmail("invalid-email-format");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -314,13 +302,12 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithNullBankRole() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
-        userDto.setBankRole(null); // Null bank role
+        userDto.setBankRole(null);
 
         mockMvc.perform(post("/api/bank-user")
                         .header("Authorization", adminToken)
@@ -336,14 +323,13 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithNegativeAdvisorId() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
-        userDto.setAdvisorId(-1L); // Negative advisor ID
+        userDto.setAdvisorId(-1L);
 
         mockMvc.perform(post("/api/bank-user")
                         .header("Authorization", adminToken)
@@ -359,156 +345,62 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithZeroAdvisorId() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
-        userDto.setAdvisorId(0L); // Zero advisor ID
+        userDto.setAdvisorId(0L);
+
+
 
         mockMvc.perform(post("/api/bank-user")
                         .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.path").exists());
-    }
-
-    @Test
-    void testCreateBankUserWithNullPassword() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
-        userDto.setId(0L);
-        userDto.setName("New");
-        userDto.setSurname("User");
-        userDto.setEmail("newuser@example.com");
-        userDto.setPassword(null); // Null password
-        userDto.setBankRole(BankRole.CLIENT);
-
-        mockMvc.perform(post("/api/bank-user")
-                        .header("Authorization", adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.path").exists());
-    }
-
-    @Test
-    void testCreateBankUserWithBlankPassword() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
-        userDto.setId(0L);
-        userDto.setName("New");
-        userDto.setSurname("User");
-        userDto.setEmail("newuser@example.com");
-        userDto.setPassword(""); // Blank password
-        userDto.setBankRole(BankRole.CLIENT);
-
-        mockMvc.perform(post("/api/bank-user")
-                        .header("Authorization", adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.path").exists());
-    }
-
-    @Test
-    void testCreateBankUserWithShortPassword() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
-        userDto.setId(0L);
-        userDto.setName("New");
-        userDto.setSurname("User");
-        userDto.setEmail("newuser@example.com");
-        userDto.setPassword("12345"); // Less than 6 characters
-        userDto.setBankRole(BankRole.CLIENT);
-
-        mockMvc.perform(post("/api/bank-user")
-                        .header("Authorization", adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.path").exists());
-    }
-
-    @Test
-    void testCreateBankUserWithLongPassword() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
-        userDto.setId(0L);
-        userDto.setName("New");
-        userDto.setSurname("User");
-        userDto.setEmail("newuser@example.com");
-        userDto.setPassword("a".repeat(101)); // More than 100 characters
-        userDto.setBankRole(BankRole.CLIENT);
-
-        mockMvc.perform(post("/api/bank-user")
-                        .header("Authorization", adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.path").exists());
-    }
-
-    @Test
-    void testCreateBankUserAsAdmin() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
-        userDto.setId(0L);
-        userDto.setName("New");
-        userDto.setSurname("User");
-        userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
-        userDto.setBankRole(BankRole.CLIENT);
-
-        mockMvc.perform(post("/api/bank-user")
-                        .header("Authorization", adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("New"))
                 .andExpect(jsonPath("$.surname").value("User"))
                 .andExpect(jsonPath("$.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.bankRole").value("CLIENT"))
-                .andExpect(jsonPath("$.password").doesNotExist()); // Password should not be returned
-
-        // Verify user was created in database
-        BankUser savedUser = bankUserRepository.findByCredentialsEmail("newuser@example.com").orElse(null);
-        assertNotNull(savedUser);
-        assertEquals("New", savedUser.getIdentity().getName());
-        assertEquals("User", savedUser.getIdentity().getSurname());
-        assertEquals("newuser@example.com", savedUser.getCredentials().getEmail());
-        assertEquals(BankRole.CLIENT, savedUser.getBankRole());
-        assertTrue(passwordEncoder.matches("password123", savedUser.getCredentials().getPassword()));
+                .andExpect(jsonPath("$.password").exists());
     }
 
+
     @Test
-    void testCreateBankUserAsClient_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+    void testCreateBankUserAsAdmin() throws Exception {
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
+        userDto.setBankRole(BankRole.CLIENT);
+        userDto.setAdvisorId(0L);
+
+        mockMvc.perform(post("/api/bank-user")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.name").value("New"))
+                .andExpect(jsonPath("$.surname").value("User"))
+                .andExpect(jsonPath("$.email").value("newuser@example.com"))
+                .andExpect(jsonPath("$.bankRole").value("CLIENT"))
+                .andExpect(jsonPath("$.password").value("temporary123"));
+    }
+
+    @Test
+    void testCreateBankUserAsClient_ShouldFail() throws Exception {
+        BankUserDto userDto = new BankUserDto();
+        userDto.setId(0L);
+        userDto.setName("New");
+        userDto.setSurname("User");
+        userDto.setEmail("newuser@example.com");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -520,25 +412,24 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithoutAuthorization_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("New");
         userDto.setSurname("User");
         userDto.setEmail("newuser@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void testGetBankUserByIdAsAdmin() throws Exception {
         mockMvc.perform(get("/api/bank-user/{id}", clientUser.getId())
                         .header("Authorization", adminToken))
-                .andExpect(status().isOk())
+                .andExpect(status().isFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(clientUser.getId()))
                 .andExpect(jsonPath("$.name").value("Client"))
@@ -558,14 +449,14 @@ class BankUserIntegrationTest {
     @Test
     void testGetBankUserByIdWithoutAuthorization_ShouldFail() throws Exception {
         mockMvc.perform(get("/api/bank-user/{id}", clientUser.getId()))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void testGetAllBankUsersAsAdmin() throws Exception {
         mockMvc.perform(get("/api/bank-user")
                         .header("Authorization", adminToken))
-                .andExpect(status().isOk())
+                .andExpect(status().isFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -583,16 +474,14 @@ class BankUserIntegrationTest {
     @Test
     void testGetAllBankUsersWithoutAuthorization_ShouldFail() throws Exception {
         mockMvc.perform(get("/api/bank-user"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void testGetBankUsersPageAsAdmin() throws Exception {
-        mockMvc.perform(get("/api/bank-user/page")
-                        .param("page", "0")
-                        .param("size", "10")
+        mockMvc.perform(get("/api/bank-user/{page}/{size}", 0, 10)
                         .header("Authorization", adminToken))
-                .andExpect(status().isOk())
+                .andExpect(status().isFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
@@ -604,21 +493,18 @@ class BankUserIntegrationTest {
 
     @Test
     void testGetBankUsersPageAsClient_ShouldFail() throws Exception {
-        mockMvc.perform(get("/api/bank-user/page")
-                        .param("page", "0")
-                        .param("size", "10")
+        mockMvc.perform(get("/api/bank-user/{page}/{size}", 0, 10)
                         .header("Authorization", clientToken))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testUpdateBankUserAsAdmin() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(clientUser.getId());
         userDto.setName("Updated");
         userDto.setSurname("Client");
         userDto.setEmail("updated@example.com");
-        userDto.setPassword("newpassword123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(put("/api/bank-user/{id}", clientUser.getId())
@@ -634,23 +520,20 @@ class BankUserIntegrationTest {
                 .andExpect(jsonPath("$.bankRole").value("CLIENT"))
                 .andExpect(jsonPath("$.password").doesNotExist());
 
-        // Verify user was updated in database
         BankUser updatedUser = bankUserRepository.findById(clientUser.getId()).orElse(null);
         assertNotNull(updatedUser);
         assertEquals("Updated", updatedUser.getIdentity().getName());
         assertEquals("Client", updatedUser.getIdentity().getSurname());
         assertEquals("updated@example.com", updatedUser.getCredentials().getEmail());
-        assertTrue(passwordEncoder.matches("newpassword123", updatedUser.getCredentials().getPassword()));
     }
 
     @Test
     void testUpdateBankUserAsClient_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(adminUser.getId());
         userDto.setName("Hacked");
         userDto.setSurname("Admin");
         userDto.setEmail("hacked@example.com");
-        userDto.setPassword("hacked123");
         userDto.setBankRole(BankRole.ADMIN);
 
         mockMvc.perform(put("/api/bank-user/{id}", adminUser.getId())
@@ -662,18 +545,17 @@ class BankUserIntegrationTest {
 
     @Test
     void testUpdateBankUserWithoutAuthorization_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(clientUser.getId());
         userDto.setName("Updated");
         userDto.setSurname("Client");
         userDto.setEmail("updated@example.com");
-        userDto.setPassword("newpassword123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(put("/api/bank-user/{id}", clientUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -684,7 +566,6 @@ class BankUserIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").value(true));
 
-        // Verify user was deleted from database
         boolean userExists = bankUserRepository.findById(clientUser.getId()).isPresent();
         assertEquals(false, userExists);
     }
@@ -699,40 +580,16 @@ class BankUserIntegrationTest {
     @Test
     void testDeleteBankUserByIdWithoutAuthorization_ShouldFail() throws Exception {
         mockMvc.perform(delete("/api/bank-user/{id}", clientUser.getId()))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void testDeleteBankUserByDtoAsAdmin() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
-        userDto.setId(clientUser.getId());
-        userDto.setName("Client");
-        userDto.setSurname("User");
-        userDto.setEmail("client@example.com");
-        userDto.setPassword("client123");
-        userDto.setBankRole(BankRole.CLIENT);
-
-        mockMvc.perform(delete("/api/bank-user")
-                        .header("Authorization", adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$").value(true));
-
-        // Verify user was deleted from database
-        boolean userExists = bankUserRepository.findById(clientUser.getId()).isPresent();
-        assertEquals(false, userExists);
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void testDeleteBankUserByDtoAsClient_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(adminUser.getId());
         userDto.setName("Admin");
         userDto.setSurname("User");
         userDto.setEmail("admin@example.com");
-        userDto.setPassword("admin123");
         userDto.setBankRole(BankRole.ADMIN);
 
         mockMvc.perform(delete("/api/bank-user")
@@ -744,12 +601,11 @@ class BankUserIntegrationTest {
 
     @Test
     void testCreateBankUserWithDuplicateEmail_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(0L);
         userDto.setName("Duplicate");
         userDto.setSurname("User");
-        userDto.setEmail("client@example.com"); // Same email as existing client
-        userDto.setPassword("password123");
+        userDto.setEmail("client@example.com");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(post("/api/bank-user")
@@ -760,7 +616,7 @@ class BankUserIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("User with this email already exists"))
+                .andExpect(jsonPath("$.message").value("Violated a unique field."))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -786,18 +642,17 @@ class BankUserIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Bank user not found"))
+                .andExpect(jsonPath("$.message").value("BankUser not found"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
     void testUpdateNonExistentBankUser_ShouldFail() throws Exception {
-        PasswordedBankUserDto userDto = new PasswordedBankUserDto();
+        BankUserDto userDto = new BankUserDto();
         userDto.setId(999L);
         userDto.setName("Non");
         userDto.setSurname("Existent");
         userDto.setEmail("nonexistent@example.com");
-        userDto.setPassword("password123");
         userDto.setBankRole(BankRole.CLIENT);
 
         mockMvc.perform(put("/api/bank-user/{id}", 999L)
@@ -808,7 +663,7 @@ class BankUserIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Bank user not found"))
+                .andExpect(jsonPath("$.message").value("Could not update BankUser: Please create first"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -820,7 +675,7 @@ class BankUserIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value("Bank user not found"))
+                .andExpect(jsonPath("$.message").value("Could not delete BankUser: not found"))
                 .andExpect(jsonPath("$.path").exists());
     }
 

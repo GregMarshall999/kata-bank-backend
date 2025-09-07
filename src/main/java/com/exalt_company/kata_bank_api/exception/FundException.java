@@ -1,7 +1,9 @@
 package com.exalt_company.kata_bank_api.exception;
 
-public class FundException extends Exception {
-    public FundException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+
+public class FundException extends BankApiException {
+    public FundException(String message, HttpStatus status) {
+        super(message, status);
     }
 }

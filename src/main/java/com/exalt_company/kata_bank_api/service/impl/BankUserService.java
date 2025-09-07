@@ -40,7 +40,7 @@ public class BankUserService extends BaseService<BankUserDto, BankUser, BankUser
      */
     @Override
     public ResponseEntity<BankUserDto> create(BankUserDto dto) throws BaseException {
-        if(dto == null) throw new BaseException("Could not create BankUser: Nothing to create");
+        if(dto == null) throw new BaseException("Could not create BankUser: Nothing to create", HttpStatus.BAD_REQUEST);
 
         try {
             PasswordedBankUserDto passwordedDto = dto.copy();
@@ -60,7 +60,7 @@ public class BankUserService extends BaseService<BankUserDto, BankUser, BankUser
 
             return ResponseEntity.status(HttpStatus.CREATED).body(savedCreated);
         } catch (IllegalAccessException e) {
-            throw new BaseException("A critical error has occured.");
+            throw new BaseException("A critical error has occured.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

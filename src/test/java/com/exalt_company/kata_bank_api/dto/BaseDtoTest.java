@@ -112,7 +112,6 @@ class BaseDtoTest {
         assertEquals(42L, baseDto.getId());
     }
 
-    // Validation Tests
     @Test
     void testValidIdWithZero() {
         baseDto.setId(0L);

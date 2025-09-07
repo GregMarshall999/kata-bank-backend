@@ -95,7 +95,7 @@ class AuthControllerTest {
     void testRegister_ServiceThrowsException() throws AuthException {
         String errorMessage = "User already exists";
         when(authService.register(any(RegisterRequest.class)))
-                .thenThrow(new AuthException(errorMessage));
+                .thenThrow(new AuthException(errorMessage, HttpStatus.BAD_REQUEST));
 
         AuthException exception = assertThrows(AuthException.class,
                 () -> authController.register(registerRequest));
@@ -121,7 +121,7 @@ class AuthControllerTest {
         invalidRequest.setSurname("null".equals(surname) ? null : surname);
         
         when(authService.register(any(RegisterRequest.class)))
-                .thenThrow(new AuthException(expectedErrorMessage));
+                .thenThrow(new AuthException(expectedErrorMessage, HttpStatus.BAD_REQUEST));
 
         AuthException exception = assertThrows(AuthException.class,
                 () -> authController.register(invalidRequest));
@@ -170,7 +170,7 @@ class AuthControllerTest {
     void testAuthenticate_InvalidCredentials() throws AuthException {
         String errorMessage = "Invalid credentials";
         when(authService.authenticate(any(AuthenticationRequest.class)))
-                .thenThrow(new AuthException(errorMessage));
+                .thenThrow(new AuthException(errorMessage, HttpStatus.UNAUTHORIZED));
 
         AuthException exception = assertThrows(AuthException.class,
                 () -> authController.authenticate(authenticationRequest));
@@ -192,7 +192,7 @@ class AuthControllerTest {
         invalidRequest.setPassword("null".equals(password) ? null : password);
         
         when(authService.authenticate(any(AuthenticationRequest.class)))
-                .thenThrow(new AuthException(expectedErrorMessage));
+                .thenThrow(new AuthException(expectedErrorMessage, HttpStatus.BAD_REQUEST));
 
         AuthException exception = assertThrows(AuthException.class,
                 () -> authController.authenticate(invalidRequest));
@@ -205,7 +205,7 @@ class AuthControllerTest {
     void testAuthenticate_UserNotFound() throws AuthException {
         String errorMessage = "User not found";
         when(authService.authenticate(any(AuthenticationRequest.class)))
-                .thenThrow(new AuthException(errorMessage));
+                .thenThrow(new AuthException(errorMessage, HttpStatus.BAD_REQUEST));
 
         AuthException exception = assertThrows(AuthException.class,
                 () -> authController.authenticate(authenticationRequest));

@@ -58,7 +58,7 @@ public class AccountAuditController {
             description = "Internal server error during audit retrieval"
         )
     })
-    @GetMapping("/{accountType}/{ownerId}/{page}/{size}")
+    @GetMapping("statement/{accountType}/{ownerId}/{page}/{size}")
     public ResponseEntity<AccountStatementDto> requestStatement(
             @Parameter(description = "Type of account (FUND or SAVING)", example = "FUND")
             @PathVariable String accountType, 

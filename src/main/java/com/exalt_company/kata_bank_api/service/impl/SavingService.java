@@ -47,17 +47,18 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
      */
     @Override
     public ResponseEntity<Banking> openSavingsAccount(SavingDto dto) throws SavingException {
-        if(dto.getMaxBalance() < 0) throw new SavingException("Wrong value for max balance");
+        if(dto.getMaxBalance() < 0) throw new SavingException("Wrong value for max balance", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(dto, "Savings access unauthorized");
 
         Saving found = repository.findById(dto.getId()).orElse(null);
-        if(found != null) throw new SavingException("Can't open same savings twice");
+        if(found != null) throw new SavingException("Can't open same savings twice", HttpStatus.BAD_REQUEST);
 
         BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+                .orElseThrow(() -> new SavingException("Could not find savings owner", HttpStatus.BAD_REQUEST));
 
-        if(repository.findByOwner(savingsOwner).isPresent()) throw new SavingException("User can only have one savings account");
+        if(repository.findByOwner(savingsOwner).isPresent() || dto.getId() != 0L)
+            throw new SavingException("User can only have one savings account", HttpStatus.BAD_REQUEST);
 
         Saving savedSavings = repository.save(mapper.toEntity(dto));
 
@@ -76,17 +77,17 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
      */
     @Override
     public ResponseEntity<Banking> closeSavingsAccount(SavingDto dto) throws SavingException {
-        if(dto == null) throw new SavingException("Could not close savings. No savings to close.");
+        if(dto == null) throw new SavingException("Could not close savings. No savings to close.", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(dto, "Savings access unauthorized");
 
         Saving found = repository.findById(dto.getId())
-                .orElseThrow(() -> new SavingException("Could not close non existing savings"));
+                .orElseThrow(() -> new SavingException("Could not close non existing savings", HttpStatus.BAD_REQUEST));
 
-        if(found.getBalance() != 0) throw new SavingException("Can not close savings if balance not empty");
+        if(found.getBalance() != 0) throw new SavingException("Can not close savings if balance not empty", HttpStatus.BAD_REQUEST);
 
         BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+                .orElseThrow(() -> new SavingException("Could not find savings owner", HttpStatus.BAD_REQUEST));
 
         List<AccountAudit> allSavingAudits = accountAuditRepository.findAllByUserSaving(found);
         allSavingAudits.forEach(accountAudit -> {
@@ -111,22 +112,22 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
      */
     @Override
     public ResponseEntity<Banking> deposit(SavingDto dto) throws SavingException {
-        if(dto == null || dto.getId() == 0L) throw new SavingException("Please open a savings account before depositing here");
-        if(dto.getBalance() < 0) throw new SavingException("Wrong value for balance");
+        if(dto == null || dto.getId() == 0L) throw new SavingException("Please open a savings account before depositing here", HttpStatus.BAD_REQUEST);
+        if(dto.getBalance() < 0) throw new SavingException("Wrong value for balance", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(dto, "Savings access unauthorized");
 
         Saving found = repository.findById(dto.getId())
-                .orElseThrow(() -> new SavingException("No savings to deposit"));
+                .orElseThrow(() -> new SavingException("No savings to deposit", HttpStatus.BAD_REQUEST));
 
         double before = found.getBalance();
         double after = found.getBalance() + dto.getBalance();
 
         if(after > found.getMaxBalance())
-            throw new SavingException("Savings cannot exceed the maximum allowed balance");
+            throw new SavingException("Savings cannot exceed the maximum allowed balance", HttpStatus.BAD_REQUEST);
 
         BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+                .orElseThrow(() -> new SavingException("Could not find savings owner", HttpStatus.BAD_REQUEST));
 
         found.setBalance(after);
 
@@ -147,21 +148,21 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
      */
     @Override
     public ResponseEntity<Banking> withdraw(SavingDto dto) throws SavingException {
-        if(dto == null || dto.getId() == 0L) throw new SavingException("No savings to withdraw from");
-        if(dto.getBalance() < 0) throw new SavingException("Wrong value for balance");
+        if(dto == null || dto.getId() == 0L) throw new SavingException("No savings to withdraw from", HttpStatus.BAD_REQUEST);
+        if(dto.getBalance() < 0) throw new SavingException("Wrong value for balance", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(dto, "Savings access unauthorized");
 
         Saving found = repository.findById(dto.getId())
-                .orElseThrow(() -> new SavingException("No savings to withdraw from"));
+                .orElseThrow(() -> new SavingException("No savings to withdraw from", HttpStatus.BAD_REQUEST));
 
         double before = found.getBalance();
         double after = found.getBalance() - dto.getBalance();
         if(after < 0)
-            throw new SavingException("Attempting to withdraw more than allowed");
+            throw new SavingException("Attempting to withdraw more than allowed", HttpStatus.BAD_REQUEST);
 
         BankUser savingsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new SavingException("Could not find savings owner"));
+                .orElseThrow(() -> new SavingException("Could not find savings owner", HttpStatus.BAD_REQUEST));
 
         found.setBalance(after);
         Saving savedSavings = repository.save(found);

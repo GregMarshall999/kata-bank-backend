@@ -67,7 +67,7 @@ public abstract class BaseService<
         pageDto.setTotalElements(result.getTotalElements());
         pageDto.setNumberOfElements(result.getNumberOfElements());
 
-        return ResponseEntity.status(HttpStatus.OK).body(pageDto);
+        return ResponseEntity.status(HttpStatus.FOUND).body(pageDto);
     }
 
     @Override

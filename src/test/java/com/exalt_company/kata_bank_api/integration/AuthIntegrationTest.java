@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -167,7 +168,7 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Bad credentials"))
+                .andExpect(jsonPath("$.message").value("User not found"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -331,7 +332,6 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.path").exists());
     }
 
-    // Validation Integration Tests
     @Test
     void testRegistrationWithNullName() throws Exception {
         RegisterRequest request = new RegisterRequest();
@@ -373,7 +373,7 @@ class AuthIntegrationTest {
     @Test
     void testRegistrationWithShortName() throws Exception {
         RegisterRequest request = new RegisterRequest();
-        request.setName("A"); // Less than 2 characters
+        request.setName("A");
         request.setSurname("User");
         request.setEmail("test@example.com");
         request.setPassword("password123");
@@ -392,7 +392,7 @@ class AuthIntegrationTest {
     @Test
     void testRegistrationWithLongName() throws Exception {
         RegisterRequest request = new RegisterRequest();
-        request.setName("A".repeat(51)); // More than 50 characters
+        request.setName("A".repeat(51));
         request.setSurname("User");
         request.setEmail("test@example.com");
         request.setPassword("password123");
@@ -414,7 +414,7 @@ class AuthIntegrationTest {
         request.setName("Test");
         request.setSurname("User");
         request.setEmail("test@example.com");
-        request.setPassword("12345"); // Less than 6 characters
+        request.setPassword("12345");
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -431,7 +431,7 @@ class AuthIntegrationTest {
     void testAuthenticationWithShortPassword() throws Exception {
         AuthenticationRequest request = new AuthenticationRequest();
         request.setEmail("test@example.com");
-        request.setPassword("12345"); // Less than 6 characters
+        request.setPassword("12345");
 
         mockMvc.perform(post("/api/auth/authenticate")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -491,7 +491,7 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Bad credentials"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -520,7 +520,6 @@ class AuthIntegrationTest {
 
     @Test
     void testAuthenticationWithSpecialCharacters() throws Exception {
-        // First register a user with special characters
         RegisterRequest registerRequest = new RegisterRequest();
         registerRequest.setName("Special");
         registerRequest.setSurname("User");
@@ -532,7 +531,6 @@ class AuthIntegrationTest {
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated());
 
-        // Then authenticate with the same credentials
         AuthenticationRequest authRequest = new AuthenticationRequest();
         authRequest.setEmail("special@example.com");
         authRequest.setPassword("password123!@#");

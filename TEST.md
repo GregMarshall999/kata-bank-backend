@@ -14,6 +14,7 @@ src/test/java/com/exalt_company/kata_bank_api/
 ├── entity/                                   # Entity layer tests
 │   ├── AccountAuditTest.java                 # AccountAudit entity tests
 │   ├── BankUserTest.java                     # BankUser entity tests
+│   ├── BaseEntityTest.java                   # Base entity tests
 │   ├── FundTest.java                         # Fund entity tests
 │   ├── FundOverdrawTest.java                 # Fund overdraw functionality tests
 │   ├── SavingTest.java                       # Saving entity tests
@@ -21,42 +22,65 @@ src/test/java/com/exalt_company/kata_bank_api/
 │       ├── IdentityTest.java                 # Identity embedded class tests
 │       └── CredentialsTest.java              # Credentials embedded class tests
 ├── service/                                  # Service layer tests
-│   ├── AuditServiceTest.java                 # Audit service tests
+│   ├── AuditServiceTest.java                 # Audit service tests (including statement functionality)
 │   ├── AuthServiceTest.java                  # Authentication service tests
+│   ├── BankUserServiceTest.java              # Bank user service tests
+│   ├── BaseServiceTest.java                  # Base service tests
 │   ├── FundServiceTest.java                  # Fund service tests (including overdraw)
 │   └── SavingServiceTest.java                # Saving service tests
 ├── repository/                               # Repository layer tests
 │   ├── AccountAuditRepositoryTest.java       # AccountAudit repository tests
-│   └── BankUserRepositoryTest.java           # BankUser repository tests
+│   ├── BankUserRepositoryTest.java           # BankUser repository tests
+│   ├── FundRepositoryTest.java               # Fund repository tests
+│   └── SavingRepositoryTest.java             # Saving repository tests
 ├── controller/                               # Controller layer tests
-│   └── AccountAuditControllerTest.java       # AccountAudit controller tests
+│   ├── AccountAuditControllerTest.java       # AccountAudit controller tests (statement endpoints)
+│   ├── AuthControllerTest.java               # Authentication controller tests
+│   ├── BankUserControllerTest.java           # Bank user controller tests
+│   ├── BaseControllerTest.java               # Base controller tests
+│   ├── FundControllerTest.java               # Fund controller tests
+│   └── SavingControllerTest.java             # Saving controller tests
 ├── dto/                                      # DTO tests
 │   ├── auth/                                 # Authentication DTOs
 │   │   ├── AuthenticationRequestTest.java    # Authentication request DTO tests
-│   │   └── AuthenticationResponseTest.java   # Authentication response DTO tests
+│   │   ├── AuthenticationResponseTest.java   # Authentication response DTO tests
+│   │   └── RegisterRequestTest.java          # Registration request DTO tests
 │   ├── fund/                                 # Fund DTOs
+│   │   ├── BaseFundDtoTest.java              # Base fund DTO tests
+│   │   ├── FundDtoTest.java                  # Fund DTO tests
+│   │   ├── FundOpDtoTest.java                # Fund operation DTO tests
 │   │   └── OverdrawDtoTest.java              # Overdraw DTO tests
-│   └── statement/                            # Statement DTOs
-│       ├── AccountStatementDtoTest.java      # Account statement DTO tests
-│       └── OperationDtoTest.java             # Operation DTO tests
+│   ├── statement/                            # Statement DTOs
+│   │   ├── AccountStatementDtoTest.java      # Account statement DTO tests
+│   │   └── OperationDtoTest.java             # Operation DTO tests
+│   ├── BankUserDtoTest.java                  # Bank user DTO tests
+│   ├── BaseDtoTest.java                      # Base DTO tests
+│   ├── PageDtoTest.java                      # Page DTO tests
+│   ├── PasswordedBankUserDtoTest.java        # Passworded bank user DTO tests
+│   └── SavingDtoTest.java                    # Saving DTO tests
 ├── enums/                                    # Enum tests
 │   ├── AccountTypeTest.java                  # AccountType enum tests
 │   ├── AuditOperationTest.java               # AuditOperation enum tests
 │   └── BankRoleTest.java                     # BankRole enum tests
 ├── exception/                                # Exception handling tests
-│   ├── AccountAuditExceptionTest.java        # AccountAudit exception tests
+│   ├── AuditExceptionTest.java               # Audit exception tests
 │   ├── AuthExceptionTest.java                # Authentication exception tests
+│   ├── BankApiExceptionTest.java             # Bank API exception tests
 │   ├── BaseExceptionTest.java                # Base exception tests
-│   ├── FundExceptionTest.java                # Fund exception tests
-│   ├── SavingExceptionTest.java              # Saving exception tests
 │   ├── ErrorResponseTest.java                # Error response DTO tests
-│   └── GlobalExceptionHandlerTest.java       # Global exception handler tests
-└── integration/                              # Integration tests
-    ├── AccountAuditIntegrationTest.java      # End-to-end audit tests
-    ├── AuthIntegrationTest.java              # End-to-end authentication tests
-    ├── FundIntegrationTest.java              # End-to-end fund management tests
-    ├── OverdrawIntegrationTest.java          # End-to-end overdraw functionality tests
-    └── SavingIntegrationTest.java            # End-to-end saving operations tests
+│   ├── FundExceptionTest.java                # Fund exception tests
+│   ├── GlobalExceptionHandlerTest.java       # Global exception handler tests
+│   └── SavingExceptionTest.java              # Saving exception tests
+├── integration/                              # Integration tests
+│   ├── AccountAuditIntegrationTest.java      # End-to-end audit and statement tests
+│   ├── AuthIntegrationTest.java              # End-to-end authentication tests
+│   ├── BankUserIntegrationTest.java          # End-to-end bank user management tests
+│   ├── FundIntegrationTest.java              # End-to-end fund management tests
+│   ├── OverdrawIntegrationTest.java          # End-to-end overdraw functionality tests
+│   ├── SavingIntegrationTest.java            # End-to-end saving operations tests
+│   └── SecurityIntegrationTest.java          # End-to-end security and authorization tests
+└── security/                                 # Security tests
+    └── SecurityConfigTest.java               # Security configuration tests
 ```
 
 ## Test Configuration
@@ -164,6 +188,9 @@ mvn test -Dtest="*Auth*" -DfailIfNoTests=false
 
 # Run statement-related tests
 mvn test -Dtest="*Statement*" -DfailIfNoTests=false
+
+# Run audit-related tests (including statement functionality)
+mvn test -Dtest="*Audit*" -DfailIfNoTests=false
 ```
 
 ### Running Individual Test Classes
@@ -210,24 +237,36 @@ mvn test -Dtest=AuthExceptionTest
 # Run statement-related test classes
 mvn test -Dtest=AccountStatementDtoTest
 mvn test -Dtest=OperationDtoTest
+
+# Run bank user-related test classes
+mvn test -Dtest=BankUserServiceTest
+mvn test -Dtest=BankUserIntegrationTest
+mvn test -Dtest=BankUserControllerTest
+mvn test -Dtest=BankUserDtoTest
+
+# Run security-related test classes
+mvn test -Dtest=SecurityConfigTest
+mvn test -Dtest=SecurityIntegrationTest
 ```
 
 ## Test Coverage
 
-The test suite provides comprehensive coverage for:
+The test suite provides coverage for:
 
-- **Entity Layer**: 100% coverage of entity classes and embedded fields including AccountAudit, BankUser, Fund, Saving, and user field classes
-- **Service Layer**: Business logic testing with mocked dependencies for Audit, Auth, Fund, and Saving services
-- **Repository Layer**: Database operation testing with H2 for AccountAudit and BankUser repositories
-- **Controller Layer**: REST endpoint testing for AccountAudit operations
-- **DTO Layer**: Data transfer object validation for authentication, fund operations, and account statements
+- **Entity Layer**: 100% coverage of entity classes and embedded fields including AccountAudit, BankUser, Fund, Saving, BaseEntity, and user field classes
+- **Service Layer**: Business logic testing with mocked dependencies for Audit, Auth, BankUser, Base, Fund, and Saving services
+- **Repository Layer**: Database operation testing with H2 for AccountAudit, BankUser, Fund, and Saving repositories
+- **Controller Layer**: REST endpoint testing for AccountAudit, Auth, BankUser, Base, Fund, and Saving operations
+- **DTO Layer**: Data transfer object validation for authentication, fund operations, account statements, bank user management, and savings operations
 - **Enum Layer**: Enum value and behavior testing for AccountType, AuditOperation, and BankRole
-- **Exception Layer**: Exception handling and error response testing for all custom exceptions
-- **Integration Layer**: End-to-end flow testing for authentication, fund management, savings operations, and audit operations
-- **Overdraw Banking**: Comprehensive testing of overdraw functionality including request, cancel, and withdraw operations
+- **Exception Layer**: Exception handling and error response testing for all custom exceptions including Audit, Auth, BankApi, Base, Fund, and Saving exceptions
+- **Integration Layer**: End-to-end flow testing for authentication, bank user management, fund management, savings operations, audit operations, overdraw functionality, and security
+- **Security Layer**: Security configuration and authorization testing for all endpoints and operations
+- **Overdraw Banking**: Testing of overdraw functionality including request, cancel, and withdraw operations
 - **Savings Banking**: Complete testing of savings account operations including open, close, deposit, and withdraw with max balance validation
-- **Audit System**: Full testing of audit operations, repository operations, and controller endpoints
-- **Statement System**: Complete testing of account statement and operation DTOs
+- **Audit System**: Full testing of audit operations, repository operations, controller endpoints, and statement generation
+- **Statement System**: Complete testing of account statement and operation DTOs with comprehensive validation scenarios
+- **Bank User Management**: Complete testing of user registration, authentication, and management operations
 
 ## Security Testing
 
@@ -241,8 +280,11 @@ The test suite includes security-focused tests:
 - Fund operation authorization
 - Overdraw operation authorization and validation
 - Savings operation authorization and validation
-- Audit operation authorization
+- Audit operation authorization and statement access control
 - Controller endpoint security
+- Bank user management authorization
+- Security configuration validation
+- Cross-user resource access prevention
 
 ## Performance Considerations
 
@@ -251,6 +293,7 @@ The test suite includes security-focused tests:
 - Repository tests use @SpringBootTest for database integration
 - Test data is minimal and focused
 - Controller tests use MockMvc for isolated endpoint testing
+- Statement tests use pagination to handle large datasets efficiently
 
 ## Troubleshooting
 
@@ -301,5 +344,5 @@ Potential improvements for the test suite:
 6. **Database Migration Tests**: Test schema evolution scenarios
 7. **Savings Interest Tests**: Add tests for interest calculation if implemented
 8. **Savings Transfer Tests**: Add tests for transfers between savings accounts
-9. **User Management Tests**: Add comprehensive tests for user CRUD operations
+9. **User Management Tests**: Add tests for user CRUD operations
 10. **Security Penetration Tests**: Add security vulnerability testing

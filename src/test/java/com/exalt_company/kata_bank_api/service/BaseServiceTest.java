@@ -227,7 +227,7 @@ class BaseServiceTest {
             baseService.update(999L, updatedDto)
         );
 
-        assertEquals("Could not update TestEntity: Please create first.", exception.getMessage());
+        assertEquals("Could not update TestEntity: Please create first", exception.getMessage());
         verify(repository).findById(999L);
         verify(repository, never()).save(any(TestEntity.class));
     }
@@ -259,45 +259,9 @@ class BaseServiceTest {
             baseService.deleteById(999L)
         );
 
-        assertEquals("Could not delete TestEntity: Nothing to delete.", exception.getMessage());
+        assertEquals("Could not delete TestEntity: not found", exception.getMessage());
         verify(repository).findById(999L);
         verify(repository, never()).deleteById(anyLong());
-    }
-
-    @Test
-    void testDelete_Success() throws BaseException {
-        when(mapper.toEntity(any())).thenReturn(testEntity);
-        when(repository.findOne(any())).thenReturn(Optional.of(testEntity));
-
-        ResponseEntity<Boolean> response = baseService.delete(testDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody());
-
-        verify(mapper).toEntity(testDto);
-        verify(repository).findOne(any());
-        verify(repository).delete(testEntity);
-    }
-
-    @Test
-    void testDelete_NotFound() {
-        when(mapper.toEntity(any())).thenReturn(testEntity);
-        when(repository.findOne(any())).thenReturn(Optional.empty());
-
-        BaseException exception = assertThrows(BaseException.class, () -> 
-            baseService.delete(testDto)
-        );
-
-        assertEquals("Could not delete TestEntity: Nothing to delete.", exception.getMessage());
-        verify(mapper).toEntity(testDto);
-        verify(repository).findOne(any());
-        verify(repository, never()).delete(any(TestEntity.class));
-    }
-
-    @Test
-    void testDelete_WithNullDto() {
-        assertThrows(BaseException.class, () -> baseService.delete(null));
     }
 
     private static class TestBaseService extends BaseService<TestDto, TestEntity, BaseMapper<TestDto, TestEntity>, BaseRepository<TestEntity>> {

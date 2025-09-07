@@ -36,7 +36,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleAuthException() {
-        AuthException authException = new AuthException("Authentication failed");
+        AuthException authException = new AuthException("Authentication failed", HttpStatus.UNAUTHORIZED);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuthException(authException, webRequest);
 
@@ -44,7 +44,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().status());
-        assertEquals("UNAUTHORIZED", response.getBody().error());
+        assertEquals("Unauthorized", response.getBody().error());
         assertEquals("Authentication failed", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
@@ -52,7 +52,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleBaseException() {
-        BaseException baseException = new BaseException("Resource not found");
+        BaseException baseException = new BaseException("Resource not found", HttpStatus.NOT_FOUND);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleBaseException(baseException, webRequest);
 
@@ -68,7 +68,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleFundException() {
-        FundException fundException = new FundException("Insufficient funds");
+        FundException fundException = new FundException("Insufficient funds", HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleFundException(fundException, webRequest);
 
@@ -77,14 +77,14 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().status());
         assertEquals("Bad Request", response.getBody().error());
-        assertEquals("Insufficient funds REFUSED", response.getBody().message());
+        assertEquals("Insufficient funds: REFUSED", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
     }
 
     @Test
     void testHandleFundExceptionWithNullMessage() {
-        FundException fundException = new FundException(null);
+        FundException fundException = new FundException(null, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleFundException(fundException, webRequest);
 
@@ -93,7 +93,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().status());
         assertEquals("Bad Request", response.getBody().error());
-        assertEquals("null REFUSED", response.getBody().message());
+        assertEquals("null: REFUSED", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
     }
@@ -116,7 +116,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleAuthExceptionWithNullMessage() {
-        AuthException authException = new AuthException(null);
+        AuthException authException = new AuthException(null, HttpStatus.UNAUTHORIZED);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuthException(authException, webRequest);
 
@@ -124,13 +124,13 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().status());
-        assertEquals("UNAUTHORIZED", response.getBody().error());
+        assertEquals("Unauthorized", response.getBody().error());
         assertNull(response.getBody().message());
     }
 
     @Test
     void testHandleBaseExceptionWithEmptyMessage() {
-        BaseException baseException = new BaseException("");
+        BaseException baseException = new BaseException("", HttpStatus.NOT_FOUND);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleBaseException(baseException, webRequest);
 
@@ -144,11 +144,11 @@ class GlobalExceptionHandlerTest {
 
     @ParameterizedTest
     @CsvSource({
-            "Insufficient savings balance, Insufficient savings balance REFUSED",
-            "Maximum balance exceeded, Maximum balance exceeded REFUSED"
+            "Insufficient savings balance, Insufficient savings balance: REFUSED",
+            "Maximum balance exceeded, Maximum balance exceeded: REFUSED"
     })
     void testHandleSavingException(String savingExceptionString, String responseMessage) {
-        SavingException savingException = new SavingException(savingExceptionString);
+        SavingException savingException = new SavingException(savingExceptionString, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleSavingException(savingException, webRequest);
 
@@ -164,7 +164,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleSavingExceptionWithNullMessage() {
-        SavingException savingException = new SavingException(null);
+        SavingException savingException = new SavingException(null, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleSavingException(savingException, webRequest);
 
@@ -173,7 +173,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().status());
         assertEquals("Bad Request", response.getBody().error());
-        assertEquals("null REFUSED", response.getBody().message());
+        assertEquals("null: REFUSED", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
     }
@@ -197,7 +197,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleAuthExceptionWithEmptyMessage() {
-        AuthException authException = new AuthException("");
+        AuthException authException = new AuthException("", HttpStatus.UNAUTHORIZED);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuthException(authException, webRequest);
 
@@ -205,7 +205,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().status());
-        assertEquals("UNAUTHORIZED", response.getBody().error());
+        assertEquals("Unauthorized", response.getBody().error());
         assertEquals("", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
@@ -239,7 +239,7 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().status());
         assertEquals("Bad Request", response.getBody().error());
-        assertEquals("Invalid JSON format", response.getBody().message());
+        assertEquals("", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
     }
@@ -247,7 +247,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void testHandleBaseExceptionWithLongMessage() {
         String longMessage = "This is a very long base exception message that contains detailed information about what went wrong during the base functionality processing. It should be properly handled and displayed to the user.";
-        BaseException baseException = new BaseException(longMessage);
+        BaseException baseException = new BaseException(longMessage, HttpStatus.NOT_FOUND);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleBaseException(baseException, webRequest);
 
@@ -264,7 +264,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void testHandleAuthExceptionWithSpecialCharacters() {
         String messageWithSpecialChars = "Authentication failed: Invalid credentials! @#$%^&*()";
-        AuthException authException = new AuthException(messageWithSpecialChars);
+        AuthException authException = new AuthException(messageWithSpecialChars, HttpStatus.UNAUTHORIZED);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuthException(authException, webRequest);
 
@@ -272,8 +272,24 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(401, response.getBody().status());
-        assertEquals("UNAUTHORIZED", response.getBody().error());
+        assertEquals("Unauthorized", response.getBody().error());
         assertEquals(messageWithSpecialChars, response.getBody().message());
+        assertEquals("uri=/api/test", response.getBody().path());
+        assertNotNull(response.getBody().timestamp());
+    }
+
+    @Test
+    void testHandleAuthExceptionWithBadRequestStatus() {
+        AuthException authException = new AuthException("Bad request", HttpStatus.BAD_REQUEST);
+
+        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuthException(authException, webRequest);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(400, response.getBody().status());
+        assertEquals("Bad Request", response.getBody().error());
+        assertEquals("Bad request", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
     }
@@ -281,7 +297,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void testHandleFundExceptionWithUnicodeCharacters() {
         String messageWithUnicode = "Insufficient funds: Montant insuffisant";
-        FundException fundException = new FundException(messageWithUnicode);
+        FundException fundException = new FundException(messageWithUnicode, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleFundException(fundException, webRequest);
 
@@ -290,14 +306,14 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().status());
         assertEquals("Bad Request", response.getBody().error());
-        assertEquals(messageWithUnicode + " REFUSED", response.getBody().message());
+        assertEquals(messageWithUnicode + ": REFUSED", response.getBody().message());
         assertEquals("uri=/api/test", response.getBody().path());
         assertNotNull(response.getBody().timestamp());
     }
 
     @Test
     void testHandleAuditException() {
-        AuditException auditException = new AuditException("Audit operation failed");
+        AuditException auditException = new AuditException("Audit operation failed", HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuditException(auditException, webRequest);
 
@@ -313,7 +329,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleAuditExceptionWithNullMessage() {
-        AuditException auditException = new AuditException(null);
+        AuditException auditException = new AuditException(null, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuditException(auditException, webRequest);
 
@@ -329,7 +345,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void testHandleAuditExceptionWithEmptyMessage() {
-        AuditException auditException = new AuditException("");
+        AuditException auditException = new AuditException("", HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuditException(auditException, webRequest);
 
@@ -350,7 +366,7 @@ class GlobalExceptionHandlerTest {
             "Audit record creation failed, Audit record creation failed"
     })
     void testHandleAuditExceptionWithDifferentMessages(String auditExceptionMessage, String expectedResponseMessage) {
-        AuditException auditException = new AuditException(auditExceptionMessage);
+        AuditException auditException = new AuditException(auditExceptionMessage, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuditException(auditException, webRequest);
 
@@ -367,7 +383,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void testHandleAuditExceptionWithLongMessage() {
         String longMessage = "This is a very long audit exception message that contains detailed information about what went wrong during the audit operation processing. It should be properly handled and displayed to the user without any truncation or modification.";
-        AuditException auditException = new AuditException(longMessage);
+        AuditException auditException = new AuditException(longMessage, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuditException(auditException, webRequest);
 
@@ -384,7 +400,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void testHandleAuditExceptionWithSpecialCharacters() {
         String messageWithSpecialChars = "Audit failed: Invalid operation! @#$%^&*()";
-        AuditException auditException = new AuditException(messageWithSpecialChars);
+        AuditException auditException = new AuditException(messageWithSpecialChars, HttpStatus.BAD_REQUEST);
 
         ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleAuditException(auditException, webRequest);
 

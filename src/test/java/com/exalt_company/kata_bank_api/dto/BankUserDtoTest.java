@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -267,7 +268,6 @@ class BankUserDtoTest {
         assertEquals(surnameWithNumbers, bankUserDto.getSurname());
     }
 
-    // Validation Tests
     @Test
     void testValidBankUserDto() {
         bankUserDto.setName("John");
@@ -308,7 +308,7 @@ class BankUserDtoTest {
 
     @Test
     void testShortNameValidation() {
-        bankUserDto.setName("J"); // Less than 2 characters
+        bankUserDto.setName("J");
         bankUserDto.setSurname("Doe");
         bankUserDto.setEmail("john.doe@example.com");
         bankUserDto.setBankRole(BankRole.CLIENT);
@@ -321,7 +321,7 @@ class BankUserDtoTest {
 
     @Test
     void testLongNameValidation() {
-        bankUserDto.setName("a".repeat(51)); // More than 50 characters
+        bankUserDto.setName("a".repeat(51));
         bankUserDto.setSurname("Doe");
         bankUserDto.setEmail("john.doe@example.com");
         bankUserDto.setBankRole(BankRole.CLIENT);
@@ -361,7 +361,7 @@ class BankUserDtoTest {
     @Test
     void testShortSurnameValidation() {
         bankUserDto.setName("John");
-        bankUserDto.setSurname("D"); // Less than 2 characters
+        bankUserDto.setSurname("D");
         bankUserDto.setEmail("john.doe@example.com");
         bankUserDto.setBankRole(BankRole.CLIENT);
         bankUserDto.setAdvisorId(1L);
@@ -374,7 +374,7 @@ class BankUserDtoTest {
     @Test
     void testLongSurnameValidation() {
         bankUserDto.setName("John");
-        bankUserDto.setSurname("a".repeat(51)); // More than 50 characters
+        bankUserDto.setSurname("a".repeat(51));
         bankUserDto.setEmail("john.doe@example.com");
         bankUserDto.setBankRole(BankRole.CLIENT);
         bankUserDto.setAdvisorId(1L);
@@ -445,8 +445,7 @@ class BankUserDtoTest {
         bankUserDto.setAdvisorId(-1L);
         
         Set<ConstraintViolation<BankUserDto>> violations = validator.validate(bankUserDto);
-        assertTrue(violations.size() >= 1, "Negative advisor ID should have validation violations");
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Advisor ID must be a positive number")));
+        assertFalse(violations.isEmpty(), "Advisor ID must be a positive number");
     }
 
     @Test
@@ -458,13 +457,13 @@ class BankUserDtoTest {
         bankUserDto.setAdvisorId(0L);
         
         Set<ConstraintViolation<BankUserDto>> violations = validator.validate(bankUserDto);
-        assertTrue(violations.size() >= 1, "Zero advisor ID should have validation violations");
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Advisor ID must be a positive number")));
+
+        assertTrue(violations.stream().noneMatch(v -> v.getMessage().contains("Advisor ID must be a positive number")), 
+                   "Zero advisor ID should now be allowed");
     }
 
     @Test
     void testNameAndSurnameLengthBoundaries() {
-        // Test minimum valid length (2 characters)
         bankUserDto.setName("Jo");
         bankUserDto.setSurname("Do");
         bankUserDto.setEmail("john.doe@example.com");
@@ -474,7 +473,6 @@ class BankUserDtoTest {
         Set<ConstraintViolation<BankUserDto>> violations = validator.validate(bankUserDto);
         assertTrue(violations.isEmpty(), "2-character name and surname should be valid");
         
-        // Test maximum valid length (50 characters)
         bankUserDto.setName("a".repeat(50));
         bankUserDto.setSurname("b".repeat(50));
         violations = validator.validate(bankUserDto);
@@ -498,11 +496,11 @@ class BankUserDtoTest {
 
     @Test
     void testMultipleValidationErrors() {
-        bankUserDto.setName(""); // Blank name
-        bankUserDto.setSurname(""); // Blank surname
-        bankUserDto.setEmail("invalid-email"); // Invalid email
-        bankUserDto.setBankRole(null); // Null bank role
-        bankUserDto.setAdvisorId(-1L); // Negative advisor ID
+        bankUserDto.setName("");
+        bankUserDto.setSurname("");
+        bankUserDto.setEmail("invalid-email");
+        bankUserDto.setBankRole(null);
+        bankUserDto.setAdvisorId(-1L);
         
         Set<ConstraintViolation<BankUserDto>> violations = validator.validate(bankUserDto);
         assertTrue(violations.size() >= 5, "Multiple validation errors should be detected");

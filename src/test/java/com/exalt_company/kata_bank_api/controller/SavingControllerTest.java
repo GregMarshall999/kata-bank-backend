@@ -135,20 +135,6 @@ class SavingControllerTest {
     }
 
     @Test
-    void testDelete_Success() throws Exception {
-        when(savingService.delete(any(SavingDto.class)))
-                .thenReturn(ResponseEntity.ok(true));
-
-        ResponseEntity<Boolean> response = savingController.delete(testSaving);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody());
-
-        verify(savingService, times(1)).delete(testSaving);
-    }
-
-    @Test
     void testOpenSavingsAccount_Success() throws SavingException {
         Banking expectedResult = Banking.COMPLETED;
         when(savingService.openSavingsAccount(any(SavingDto.class)))
@@ -187,7 +173,7 @@ class SavingControllerTest {
     void testOpenSavingsAccount_ServiceThrowsException() throws SavingException {
         String errorMessage = "Savings account already exists";
         when(savingService.openSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.openSavingsAccount(testSaving));
@@ -201,7 +187,7 @@ class SavingControllerTest {
         testSaving.setMaxBalance(-100.0);
         String errorMessage = "Max balance cannot be negative";
         when(savingService.openSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.openSavingsAccount(testSaving));
@@ -215,7 +201,7 @@ class SavingControllerTest {
         testSaving.setMaxBalance(0.0);
         String errorMessage = "Max balance must be positive";
         when(savingService.openSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.openSavingsAccount(testSaving));
@@ -229,7 +215,7 @@ class SavingControllerTest {
         testSaving.setOwnerId(0L);
         String errorMessage = "Invalid owner ID";
         when(savingService.openSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.openSavingsAccount(testSaving));
@@ -257,7 +243,7 @@ class SavingControllerTest {
     void testCloseSavingsAccount_ServiceThrowsException() throws SavingException {
         String errorMessage = "Savings account not found";
         when(savingService.closeSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.closeSavingsAccount(testSaving));
@@ -271,7 +257,7 @@ class SavingControllerTest {
         testSaving.setBalance(500.0);
         String errorMessage = "Cannot close account with non-zero balance";
         when(savingService.closeSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.closeSavingsAccount(testSaving));
@@ -285,7 +271,7 @@ class SavingControllerTest {
         testSaving.setOwnerId(0L);
         String errorMessage = "Invalid owner ID";
         when(savingService.closeSavingsAccount(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.closeSavingsAccount(testSaving));
@@ -332,7 +318,7 @@ class SavingControllerTest {
     void testDeposit_ServiceThrowsSavingException() throws FundException, SavingException {
         String errorMessage = "Savings account not found";
         when(savingService.deposit(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.deposit(testSaving));
@@ -345,7 +331,7 @@ class SavingControllerTest {
     void testDeposit_ServiceThrowsFundException() throws FundException, SavingException {
         String errorMessage = "Fund operation failed";
         when(savingService.deposit(any(SavingDto.class)))
-                .thenThrow(new FundException(errorMessage));
+                .thenThrow(new FundException(errorMessage, HttpStatus.BAD_REQUEST));
 
         FundException exception = assertThrows(FundException.class,
                 () -> savingController.deposit(testSaving));
@@ -359,7 +345,7 @@ class SavingControllerTest {
         testSaving.setBalance(0.0);
         String errorMessage = "Deposit amount must be positive";
         when(savingService.deposit(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.deposit(testSaving));
@@ -373,7 +359,7 @@ class SavingControllerTest {
         testSaving.setBalance(-100.0);
         String errorMessage = "Deposit amount must be positive";
         when(savingService.deposit(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.deposit(testSaving));
@@ -387,7 +373,7 @@ class SavingControllerTest {
         testSaving.setBalance(15000.0);
         String errorMessage = "Deposit would exceed maximum balance limit";
         when(savingService.deposit(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.deposit(testSaving));
@@ -401,7 +387,7 @@ class SavingControllerTest {
         testSaving.setOwnerId(0L);
         String errorMessage = "Invalid owner ID";
         when(savingService.deposit(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.deposit(testSaving));
@@ -448,7 +434,7 @@ class SavingControllerTest {
     void testWithdraw_ServiceThrowsException() throws SavingException {
         String errorMessage = "Savings account not found";
         when(savingService.withdraw(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.withdraw(testSaving));
@@ -462,7 +448,7 @@ class SavingControllerTest {
         testSaving.setBalance(0.0);
         String errorMessage = "Withdrawal amount must be positive";
         when(savingService.withdraw(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.withdraw(testSaving));
@@ -476,7 +462,7 @@ class SavingControllerTest {
         testSaving.setBalance(-100.0);
         String errorMessage = "Withdrawal amount must be positive";
         when(savingService.withdraw(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.withdraw(testSaving));
@@ -490,7 +476,7 @@ class SavingControllerTest {
         testSaving.setBalance(2000.0);
         String errorMessage = "Insufficient balance";
         when(savingService.withdraw(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.withdraw(testSaving));
@@ -504,7 +490,7 @@ class SavingControllerTest {
         testSaving.setOwnerId(0L);
         String errorMessage = "Invalid owner ID";
         when(savingService.withdraw(any(SavingDto.class)))
-                .thenThrow(new SavingException(errorMessage));
+                .thenThrow(new SavingException(errorMessage, HttpStatus.BAD_REQUEST));
 
         SavingException exception = assertThrows(SavingException.class,
                 () -> savingController.withdraw(testSaving));

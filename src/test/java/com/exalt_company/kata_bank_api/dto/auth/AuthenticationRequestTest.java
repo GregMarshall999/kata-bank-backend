@@ -111,7 +111,6 @@ class AuthenticationRequestTest {
         assertEquals(passwordWithUnicode, request.getPassword());
     }
 
-    // Validation Tests
     @Test
     void testValidAuthenticationRequest() {
         request.setEmail("test@example.com");
@@ -174,7 +173,7 @@ class AuthenticationRequestTest {
     @Test
     void testShortPasswordValidation() {
         request.setEmail("test@example.com");
-        request.setPassword("12345"); // Less than 6 characters
+        request.setPassword("12345");
         
         Set<ConstraintViolation<AuthenticationRequest>> violations = validator.validate(request);
         assertTrue(violations.size() >= 1, "Short password should have validation violations");
@@ -184,7 +183,7 @@ class AuthenticationRequestTest {
     @Test
     void testLongPasswordValidation() {
         request.setEmail("test@example.com");
-        request.setPassword("a".repeat(101)); // More than 100 characters
+        request.setPassword("a".repeat(101));
         
         Set<ConstraintViolation<AuthenticationRequest>> violations = validator.validate(request);
         assertTrue(violations.size() >= 1, "Long password should have validation violations");
@@ -234,14 +233,12 @@ class AuthenticationRequestTest {
 
     @Test
     void testPasswordLengthBoundaries() {
-        // Test minimum valid length (6 characters)
         request.setEmail("test@example.com");
         request.setPassword("123456");
         
         Set<ConstraintViolation<AuthenticationRequest>> violations = validator.validate(request);
         assertTrue(violations.isEmpty(), "6-character password should be valid");
         
-        // Test maximum valid length (100 characters)
         request.setPassword("a".repeat(100));
         violations = validator.validate(request);
         assertTrue(violations.isEmpty(), "100-character password should be valid");
@@ -250,7 +247,7 @@ class AuthenticationRequestTest {
     @Test
     void testMultipleValidationErrors() {
         request.setEmail("invalid-email");
-        request.setPassword("123"); // Too short
+        request.setPassword("123");
         
         Set<ConstraintViolation<AuthenticationRequest>> violations = validator.validate(request);
         assertTrue(violations.size() >= 2, "Multiple validation errors should be detected");

@@ -19,12 +19,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,14 +63,16 @@ class FundIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
         bankUserRepository.deleteAll();
         fundRepository.deleteAll();
 
         testUser = createTestUser("test", "user", "testuser@example.com", "password123", BankRole.CLIENT);
         testUser = bankUserRepository.save(testUser);
         
-        validToken = jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
+        validToken = "Bearer " + jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
     }
 
     @Test
@@ -138,7 +142,7 @@ class FundIntegrationTest {
         FundOpDto fundOpDto = new FundOpDto();
         fundOpDto.setId(0L);
         fundOpDto.setBalance(100.0);
-        fundOpDto.setOwnerId(-1L); // Negative owner ID
+        fundOpDto.setOwnerId(-1L);
 
         mockMvc.perform(post("/api/fund/deposit")
                         .header("Authorization", validToken)
@@ -156,7 +160,7 @@ class FundIntegrationTest {
     void testWithdrawWithZeroBalance() throws Exception {
         FundOpDto fundOpDto = new FundOpDto();
         fundOpDto.setId(0L);
-        fundOpDto.setBalance(0.0); // Zero balance
+        fundOpDto.setBalance(0.0);
         fundOpDto.setOwnerId(testUser.getId());
 
         mockMvc.perform(post("/api/fund/withdraw")
@@ -231,7 +235,7 @@ class FundIntegrationTest {
         mockMvc.perform(post("/api/fund/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fundDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -244,7 +248,7 @@ class FundIntegrationTest {
         mockMvc.perform(post("/api/fund/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fundDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -261,11 +265,11 @@ class FundIntegrationTest {
                         .header("Authorization", validToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(fundDto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempted to access unauthorized funds"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Attempted to access unauthorized funds: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -289,7 +293,7 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than available"))
+                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than available: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -308,7 +312,7 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No balance to withdraw from"))
+                .andExpect(jsonPath("$.message").value("No balance to withdraw from: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -327,7 +331,7 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No balance to withdraw from"))
+                .andExpect(jsonPath("$.message").value("No balance to withdraw from: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -379,7 +383,7 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -403,7 +407,7 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -427,7 +431,7 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -451,13 +455,12 @@ class FundIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
     void testCompleteFundWorkflow() throws Exception {
-        // 1. Create initial fund through deposit
         FundDto initialDeposit = new FundDto();
         initialDeposit.setId(0L);
         initialDeposit.setBalance(2000.0);
@@ -470,7 +473,6 @@ class FundIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
 
-        // Get the created fund
         Fund createdFund = fundRepository.findAll().stream()
                 .filter(fund -> fund.getOwner().getId() == testUser.getId())
                 .findFirst()
@@ -478,7 +480,6 @@ class FundIntegrationTest {
         assertNotNull(createdFund);
         assertEquals(2000.0, createdFund.getBalance());
 
-        // 2. Make additional deposit
         FundDto additionalDeposit = new FundDto();
         additionalDeposit.setId(createdFund.getId());
         additionalDeposit.setBalance(500.0);
@@ -491,7 +492,6 @@ class FundIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
 
-        // 3. Make withdrawal
         FundDto withdrawal = new FundDto();
         withdrawal.setId(createdFund.getId());
         withdrawal.setBalance(300.0);
@@ -504,7 +504,6 @@ class FundIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
 
-        // Verify final balance
         Fund finalFund = fundRepository.findById(createdFund.getId()).orElse(null);
         assertNotNull(finalFund);
         assertEquals(2200.0, finalFund.getBalance());

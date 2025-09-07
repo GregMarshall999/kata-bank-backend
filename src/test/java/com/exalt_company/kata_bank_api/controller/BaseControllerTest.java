@@ -106,7 +106,7 @@ class BaseControllerTest {
     void testCreate_ServiceThrowsException() throws BaseException {
         String errorMessage = "Entity already exists";
         when(baseService.create(any(TestDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.create(testDto));
@@ -137,7 +137,7 @@ class BaseControllerTest {
         long entityId = 999L;
         String errorMessage = "Entity not found";
         when(baseService.getById(entityId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.getById(entityId));
@@ -151,7 +151,7 @@ class BaseControllerTest {
         long entityId = 0L;
         String errorMessage = "Invalid entity ID";
         when(baseService.getById(entityId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.getById(entityId));
@@ -165,7 +165,7 @@ class BaseControllerTest {
         long entityId = -1L;
         String errorMessage = "Invalid entity ID";
         when(baseService.getById(entityId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.getById(entityId));
@@ -312,7 +312,7 @@ class BaseControllerTest {
         long entityId = 999L;
         String errorMessage = "Entity not found";
         when(baseService.update(eq(entityId), any(TestDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.update(entityId, testDto));
@@ -327,7 +327,7 @@ class BaseControllerTest {
         testDto.setName(null);
         String errorMessage = "Name cannot be null";
         when(baseService.update(eq(entityId), any(TestDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.update(entityId, testDto));
@@ -356,7 +356,7 @@ class BaseControllerTest {
         long entityId = 999L;
         String errorMessage = "Entity not found";
         when(baseService.deleteById(entityId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.deleteById(entityId));
@@ -370,54 +370,13 @@ class BaseControllerTest {
         long entityId = 0L;
         String errorMessage = "Invalid entity ID";
         when(baseService.deleteById(entityId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> testBaseController.deleteById(entityId));
 
         assertEquals(errorMessage, exception.getMessage());
         verify(baseService, times(1)).deleteById(entityId);
-    }
-
-    @Test
-    void testDelete_Success() throws BaseException {
-        when(baseService.delete(any(TestDto.class)))
-                .thenReturn(ResponseEntity.ok(true));
-
-        ResponseEntity<Boolean> response = testBaseController.delete(testDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody());
-
-        verify(baseService, times(1)).delete(testDto);
-    }
-
-    @Test
-    void testDelete_EntityNotFound() throws BaseException {
-        String errorMessage = "Entity not found";
-        when(baseService.delete(any(TestDto.class)))
-                .thenThrow(new BaseException(errorMessage));
-
-        BaseException exception = assertThrows(BaseException.class,
-                () -> testBaseController.delete(testDto));
-
-        assertEquals(errorMessage, exception.getMessage());
-        verify(baseService, times(1)).delete(testDto);
-    }
-
-    @Test
-    void testDelete_WithInvalidData() throws BaseException {
-        testDto.setId(0L);
-        String errorMessage = "Entity ID cannot be null";
-        when(baseService.delete(any(TestDto.class)))
-                .thenThrow(new BaseException(errorMessage));
-
-        BaseException exception = assertThrows(BaseException.class,
-                () -> testBaseController.delete(testDto));
-
-        assertEquals(errorMessage, exception.getMessage());
-        verify(baseService, times(1)).delete(testDto);
     }
 
     private static class TestBaseController extends BaseController<TestDto, IBaseService<TestDto>> {

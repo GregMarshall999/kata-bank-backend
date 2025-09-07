@@ -106,7 +106,7 @@ class FundServiceTest {
         ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(Banking.DEPOSITED, response.getBody());
 
         verify(mapper).toEntity(fundOpDto);
@@ -122,7 +122,6 @@ class FundServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(testFund));
         when(repository.save(any(Fund.class))).thenReturn(testFund);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(repository.findByOwner(testUser)).thenReturn(Optional.empty());
 
         ResponseEntity<Banking> response = fundService.deposit(fundOpDto);
 
@@ -156,6 +155,8 @@ class FundServiceTest {
 
     @Test
     void testDeposit_UserAlreadyHasFund_ThrowsException() {
+        fundOpDto.setId(0L);
+
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getCredentials()).thenReturn(1L);
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
@@ -185,7 +186,6 @@ class FundServiceTest {
         when(authentication.getCredentials()).thenReturn(1L);
         when(repository.findById(1L)).thenReturn(Optional.empty());
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(repository.findByOwner(testUser)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->
             fundService.deposit(fundOpDto)
@@ -478,9 +478,16 @@ class FundServiceTest {
 
     @Test
     void testCancelOverdrawCapabilities_NonExistentUser_ThrowsException() {
+        Fund fundWithOverdraw = new Fund();
+        fundWithOverdraw.setId(1L);
+        fundWithOverdraw.setBalance(1000.0);
+        fundWithOverdraw.setOwner(testUser);
+        fundWithOverdraw.setCanOverdraw(true);
+        fundWithOverdraw.setMaxOverdraw(500.0);
+
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getCredentials()).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(testFund));
+        when(repository.findById(1L)).thenReturn(Optional.of(fundWithOverdraw));
         when(bankUserRepository.findById(1L)).thenReturn(Optional.empty());
 
         FundException exception = assertThrows(FundException.class, () ->

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.lang.reflect.Field;
@@ -46,7 +46,7 @@ public class BankUserDto extends BaseDto {
 
     @Schema(description = "ID of the advisor assigned to this user (if applicable)", 
             example = "1")
-    @Positive(message = "Advisor ID must be a positive number")
+    @PositiveOrZero(message = "Advisor ID must be a non-negative number")
     private long advisorId;
 
     public String getName() {

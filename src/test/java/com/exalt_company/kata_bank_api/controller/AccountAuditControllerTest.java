@@ -121,7 +121,7 @@ class AccountAuditControllerTest {
         int size = 10;
 
         when(auditService.requestStatement(type, id, page, size))
-                .thenThrow(new AuditException(message));
+                .thenThrow(new AuditException(message, HttpStatus.BAD_REQUEST));
 
         AuditException exception = assertThrows(AuditException.class,
                 () -> controller.requestStatement(type, id, page, size));
@@ -140,7 +140,7 @@ class AccountAuditControllerTest {
     })
     void testRequestStatement_InvalidAccountTypes(String accountType, long ownerId, int page, int size, String expectedErrorMessage) throws AuditException {
         when(auditService.requestStatement(accountType, ownerId, page, size))
-                .thenThrow(new AuditException(expectedErrorMessage));
+                .thenThrow(new AuditException(expectedErrorMessage, HttpStatus.BAD_REQUEST));
 
         AuditException exception = assertThrows(AuditException.class,
                 () -> controller.requestStatement(accountType, ownerId, page, size));

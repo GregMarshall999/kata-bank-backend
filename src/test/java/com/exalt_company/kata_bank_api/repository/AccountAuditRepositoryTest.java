@@ -352,7 +352,6 @@ class AccountAuditRepositoryTest {
 
     @Test
     void testFindAllByUserSaving() {
-        // Create audit records for the test saving
         AccountAudit savingAudit1 = new AccountAudit();
         savingAudit1.setOperation(AuditOperation.OPEN);
         savingAudit1.setAmount(0.0);
@@ -373,7 +372,6 @@ class AccountAuditRepositoryTest {
         savingAudit2.setUserSaving(testSaving);
         auditRepository.save(savingAudit2);
 
-        // Create another saving and audit for it
         Saving otherSaving = new Saving();
         otherSaving.setBalance(1000.0);
         otherSaving.setOwner(testUser);
@@ -390,7 +388,6 @@ class AccountAuditRepositoryTest {
         otherSavingAudit.setUserSaving(otherSaving);
         auditRepository.save(otherSavingAudit);
 
-        // Test finding audits by specific saving
         List<AccountAudit> testSavingAudits = auditRepository.findAllByUserSaving(testSaving);
 
         assertEquals(2, testSavingAudits.size());

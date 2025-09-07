@@ -260,7 +260,6 @@ class SavingDtoTest {
         assertEquals(Double.NaN, savingDto.getMaxBalance());
     }
 
-    // Validation Tests
     @Test
     void testValidSavingDto() {
         savingDto.setBalance(1000.0);
@@ -339,7 +338,7 @@ class SavingDtoTest {
     @Test
     void testMaxBalanceMinimumValue() {
         savingDto.setBalance(1000.0);
-        savingDto.setMaxBalance(0.01); // Minimum valid value
+        savingDto.setMaxBalance(0.01);
         savingDto.setOwnerId(1L);
         
         Set<ConstraintViolation<SavingDto>> violations = validator.validate(savingDto);
@@ -358,9 +357,9 @@ class SavingDtoTest {
 
     @Test
     void testMultipleValidationErrors() {
-        savingDto.setBalance(-100.0); // Negative balance
-        savingDto.setMaxBalance(0.0); // Zero max balance
-        savingDto.setOwnerId(-1L); // Negative owner ID
+        savingDto.setBalance(-100.0);
+        savingDto.setMaxBalance(0.0);
+        savingDto.setOwnerId(-1L);
         
         Set<ConstraintViolation<SavingDto>> violations = validator.validate(savingDto);
         assertTrue(violations.size() >= 3, "Multiple validation errors should be detected");

@@ -1,7 +1,9 @@
 package com.exalt_company.kata_bank_api.exception;
 
-public class SavingException extends Exception {
-    public SavingException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+
+public class SavingException extends BankApiException {
+    public SavingException(String message, HttpStatus status) {
+        super(message, status);
     }
 }

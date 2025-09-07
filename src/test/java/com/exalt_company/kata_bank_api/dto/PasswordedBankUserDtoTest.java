@@ -228,7 +228,6 @@ class PasswordedBankUserDtoTest {
         assertEquals(passwordWithNewlines, passwordedBankUserDto.getPassword());
     }
 
-    // Validation Tests
     @Test
     void testValidPasswordedBankUserDto() {
         passwordedBankUserDto.setName("John");
@@ -277,7 +276,7 @@ class PasswordedBankUserDtoTest {
         passwordedBankUserDto.setEmail("john.doe@example.com");
         passwordedBankUserDto.setBankRole(BankRole.CLIENT);
         passwordedBankUserDto.setAdvisorId(1L);
-        passwordedBankUserDto.setPassword("12345"); // Less than 6 characters
+        passwordedBankUserDto.setPassword("12345");
         
         Set<ConstraintViolation<PasswordedBankUserDto>> violations = validator.validate(passwordedBankUserDto);
         assertTrue(violations.size() >= 1, "Short password should have validation violations");
@@ -291,7 +290,7 @@ class PasswordedBankUserDtoTest {
         passwordedBankUserDto.setEmail("john.doe@example.com");
         passwordedBankUserDto.setBankRole(BankRole.CLIENT);
         passwordedBankUserDto.setAdvisorId(1L);
-        passwordedBankUserDto.setPassword("a".repeat(101)); // More than 100 characters
+        passwordedBankUserDto.setPassword("a".repeat(101));
         
         Set<ConstraintViolation<PasswordedBankUserDto>> violations = validator.validate(passwordedBankUserDto);
         assertTrue(violations.size() >= 1, "Long password should have validation violations");
@@ -306,12 +305,10 @@ class PasswordedBankUserDtoTest {
         passwordedBankUserDto.setBankRole(BankRole.CLIENT);
         passwordedBankUserDto.setAdvisorId(1L);
         
-        // Test minimum valid length (6 characters)
         passwordedBankUserDto.setPassword("123456");
         Set<ConstraintViolation<PasswordedBankUserDto>> violations = validator.validate(passwordedBankUserDto);
         assertTrue(violations.isEmpty(), "6-character password should be valid");
         
-        // Test maximum valid length (100 characters)
         passwordedBankUserDto.setPassword("a".repeat(100));
         violations = validator.validate(passwordedBankUserDto);
         assertTrue(violations.isEmpty(), "100-character password should be valid");
@@ -319,12 +316,11 @@ class PasswordedBankUserDtoTest {
 
     @Test
     void testInheritedValidationFromBankUserDto() {
-        // Test that validation from parent class BankUserDto is also applied
-        passwordedBankUserDto.setName(""); // Blank name
-        passwordedBankUserDto.setSurname(""); // Blank surname
-        passwordedBankUserDto.setEmail("invalid-email"); // Invalid email
-        passwordedBankUserDto.setBankRole(null); // Null bank role
-        passwordedBankUserDto.setAdvisorId(-1L); // Negative advisor ID
+        passwordedBankUserDto.setName("");
+        passwordedBankUserDto.setSurname("");
+        passwordedBankUserDto.setEmail("invalid-email");
+        passwordedBankUserDto.setBankRole(null);
+        passwordedBankUserDto.setAdvisorId(-1L);
         passwordedBankUserDto.setPassword("TempPass123!");
         
         Set<ConstraintViolation<PasswordedBankUserDto>> violations = validator.validate(passwordedBankUserDto);
@@ -333,12 +329,12 @@ class PasswordedBankUserDtoTest {
 
     @Test
     void testMultipleValidationErrors() {
-        passwordedBankUserDto.setName(""); // Blank name
-        passwordedBankUserDto.setSurname(""); // Blank surname
-        passwordedBankUserDto.setEmail("invalid-email"); // Invalid email
-        passwordedBankUserDto.setBankRole(null); // Null bank role
-        passwordedBankUserDto.setAdvisorId(-1L); // Negative advisor ID
-        passwordedBankUserDto.setPassword("123"); // Too short password
+        passwordedBankUserDto.setName("");
+        passwordedBankUserDto.setSurname("");
+        passwordedBankUserDto.setEmail("invalid-email");
+        passwordedBankUserDto.setBankRole(null);
+        passwordedBankUserDto.setAdvisorId(-1L);
+        passwordedBankUserDto.setPassword("123");
         
         Set<ConstraintViolation<PasswordedBankUserDto>> violations = validator.validate(passwordedBankUserDto);
         assertTrue(violations.size() >= 6, "Multiple validation errors should be detected");

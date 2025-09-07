@@ -156,33 +156,28 @@ class AuthServiceTest {
 
     @Test
     void testAuthenticateUserNotFound() {
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(null);
         when(repository.findByCredentialsEmail("test@example.com"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> authService.authenticate(authenticationRequest));
+        assertThrows(AuthException.class, () -> authService.authenticate(authenticationRequest));
         
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(authenticationManager, never()).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(repository).findByCredentialsEmail("test@example.com");
     }
 
     @Test
     void testAuthenticateAuthenticationFailure() {
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Authentication failed"));
-
         assertThrows(AuthException.class, () -> {
             try {
                 authService.authenticate(authenticationRequest);
             } catch (AuthException e) {
-                assertEquals("Bad credentials", e.getMessage());
+                assertEquals("User not found", e.getMessage());
+                assertEquals(HttpStatus.BAD_REQUEST, e.getStatus());
                 throw e;
             }
         });
-        
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(repository, never()).findByCredentialsEmail(anyString());
+
+        verify(authenticationManager, never()).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 
     @Test
@@ -195,6 +190,7 @@ class AuthServiceTest {
                 authService.register(registerRequest);
             } catch (AuthException e) {
                 assertEquals("User with this email already exists", e.getMessage());
+                assertEquals(HttpStatus.BAD_REQUEST, e.getStatus());
                 throw e;
             }
         });
@@ -263,15 +259,13 @@ class AuthServiceTest {
     @Test
     void testAuthenticateWithEmptyEmail() {
         authenticationRequest.setEmail("");
-        
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(null);
+
         when(repository.findByCredentialsEmail(""))
                 .thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> authService.authenticate(authenticationRequest));
+        assertThrows(AuthException.class, () -> authService.authenticate(authenticationRequest));
         
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(authenticationManager, never()).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(repository).findByCredentialsEmail("");
     }
 

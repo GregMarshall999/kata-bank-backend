@@ -3,6 +3,7 @@ package com.exalt_company.kata_bank_api.exception;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.HttpStatus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -25,28 +26,31 @@ class SavingExceptionTest {
             "Saving exception with mixed content: 123 ABC !@# éèê 中文"
     })
     void testConstructor(String message) {
-        SavingException savingException = new SavingException(message);
+        SavingException savingException = new SavingException(message, HttpStatus.BAD_REQUEST);
 
         assertNotNull(savingException);
         assertEquals(message, savingException.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, savingException.getStatus());
     }
 
     @Test
     void testSavingExceptionWithNullMessage() {
         String message = null;
 
-        SavingException savingException = new SavingException(message);
+        SavingException savingException = new SavingException(message, HttpStatus.BAD_REQUEST);
 
         assertNotNull(savingException);
         assertNull(savingException.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, savingException.getStatus());
     }
 
     @Test
     void testSavingExceptionToString() {
         String message = "Saving exception toString test";
-        SavingException savingException = new SavingException(message);
+        SavingException savingException = new SavingException(message, HttpStatus.BAD_REQUEST);
 
         assertNotNull(savingException);
+        assertEquals(HttpStatus.BAD_REQUEST, savingException.getStatus());
         String toString = savingException.toString();
         assertNotNull(toString);
         assertTrue(toString.contains("SavingException"));
@@ -57,10 +61,11 @@ class SavingExceptionTest {
     void testSavingExceptionWithVeryLongMessage() {
         String message = "a".repeat(10000);
 
-        SavingException savingException = new SavingException(message);
+        SavingException savingException = new SavingException(message, HttpStatus.BAD_REQUEST);
 
         assertNotNull(savingException);
         assertEquals(message, savingException.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, savingException.getStatus());
     }
 
     @Test
@@ -68,25 +73,29 @@ class SavingExceptionTest {
         String message1 = "First saving exception";
         String message2 = "Second saving exception";
 
-        SavingException exception1 = new SavingException(message1);
-        SavingException exception2 = new SavingException(message2);
+        SavingException exception1 = new SavingException(message1, HttpStatus.BAD_REQUEST);
+        SavingException exception2 = new SavingException(message2, HttpStatus.FORBIDDEN);
 
         assertNotNull(exception1);
         assertNotNull(exception2);
         assertEquals(message1, exception1.getMessage());
         assertEquals(message2, exception2.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, exception1.getStatus());
+        assertEquals(HttpStatus.FORBIDDEN, exception2.getStatus());
         assertNotEquals(exception1.getMessage(), exception2.getMessage());
+        assertNotEquals(exception1.getStatus(), exception2.getStatus());
     }
 
     @Test
     void testSavingExceptionWithCause() {
         String message = "Saving exception with cause";
         Exception cause = new RuntimeException("Root cause");
-        SavingException savingException = new SavingException(message);
+        SavingException savingException = new SavingException(message, HttpStatus.BAD_REQUEST);
         savingException.initCause(cause);
 
         assertNotNull(savingException);
         assertEquals(message, savingException.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, savingException.getStatus());
         assertEquals(cause, savingException.getCause());
     }
 
@@ -104,8 +113,24 @@ class SavingExceptionTest {
             "Withdrawal not allowed from this saving account"
     })
     void testSavingExceptionRealisticScenarios(String errorMessage) {
-        SavingException savingException = new SavingException(errorMessage);
+        SavingException savingException = new SavingException(errorMessage, HttpStatus.BAD_REQUEST);
         assertNotNull(savingException);
         assertEquals(errorMessage, savingException.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, savingException.getStatus());
+    }
+
+    @Test
+    void testSavingExceptionWithDifferentHttpStatuses() {
+        SavingException badRequestException = new SavingException("Bad request", HttpStatus.BAD_REQUEST);
+        SavingException forbiddenException = new SavingException("Forbidden", HttpStatus.FORBIDDEN);
+        SavingException conflictException = new SavingException("Conflict", HttpStatus.CONFLICT);
+
+        assertEquals(HttpStatus.BAD_REQUEST, badRequestException.getStatus());
+        assertEquals(HttpStatus.FORBIDDEN, forbiddenException.getStatus());
+        assertEquals(HttpStatus.CONFLICT, conflictException.getStatus());
+        
+        assertEquals("Bad request", badRequestException.getMessage());
+        assertEquals("Forbidden", forbiddenException.getMessage());
+        assertEquals("Conflict", conflictException.getMessage());
     }
 }

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "Data Transfer Object for savings account operations")
 public class SavingDto extends BaseDto {
@@ -11,7 +12,7 @@ public class SavingDto extends BaseDto {
     @Schema(description = "Current balance in the savings account", 
             example = "1000.50", 
             minimum = "0")
-    @DecimalMin(value = "0.0", message = "Balance must be non-negative")
+    @PositiveOrZero(message = "Balance must be non-negative")
     private double balance;
     
     @Schema(description = "Maximum allowed balance for the savings account. Deposits cannot exceed this limit.", 

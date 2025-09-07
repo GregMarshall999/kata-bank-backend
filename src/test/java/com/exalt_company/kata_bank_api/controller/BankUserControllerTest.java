@@ -126,7 +126,7 @@ class BankUserControllerTest {
     void testCreate_ServiceThrowsException() throws BaseException {
         String errorMessage = "User already exists";
         when(bankUserService.create(any(BankUserDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.create(testBankUser));
@@ -157,7 +157,7 @@ class BankUserControllerTest {
         long userId = 999L;
         String errorMessage = "User not found";
         when(bankUserService.getById(userId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.getById(userId));
@@ -171,7 +171,7 @@ class BankUserControllerTest {
         long userId = 0L;
         String errorMessage = "Invalid user ID";
         when(bankUserService.getById(userId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.getById(userId));
@@ -185,7 +185,7 @@ class BankUserControllerTest {
         long userId = -1L;
         String errorMessage = "Invalid user ID";
         when(bankUserService.getById(userId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.getById(userId));
@@ -338,7 +338,7 @@ class BankUserControllerTest {
         long userId = 999L;
         String errorMessage = "User not found";
         when(bankUserService.update(eq(userId), any(BankUserDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.update(userId, testBankUser));
@@ -367,7 +367,7 @@ class BankUserControllerTest {
         long userId = 999L;
         String errorMessage = "User not found";
         when(bankUserService.deleteById(userId))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.deleteById(userId));
@@ -377,38 +377,11 @@ class BankUserControllerTest {
     }
 
     @Test
-    void testDelete_Success() throws BaseException {
-        when(bankUserService.delete(any(BankUserDto.class)))
-                .thenReturn(ResponseEntity.ok(true));
-
-        ResponseEntity<Boolean> response = bankUserController.delete(testBankUser);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody());
-
-        verify(bankUserService, times(1)).delete(testBankUser);
-    }
-
-    @Test
-    void testDelete_UserNotFound() throws BaseException {
-        String errorMessage = "User not found";
-        when(bankUserService.delete(any(BankUserDto.class)))
-                .thenThrow(new BaseException(errorMessage));
-
-        BaseException exception = assertThrows(BaseException.class,
-                () -> bankUserController.delete(testBankUser));
-
-        assertEquals(errorMessage, exception.getMessage());
-        verify(bankUserService, times(1)).delete(testBankUser);
-    }
-
-    @Test
     void testCreate_WithNullName() throws BaseException {
         testBankUser.setName(null);
         String errorMessage = "Name cannot be null";
         when(bankUserService.create(any(BankUserDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.create(testBankUser));
@@ -422,7 +395,7 @@ class BankUserControllerTest {
         testBankUser.setEmail("");
         String errorMessage = "Email cannot be empty";
         when(bankUserService.create(any(BankUserDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.create(testBankUser));
@@ -436,7 +409,7 @@ class BankUserControllerTest {
         testBankUser.setBankRole(null);
         String errorMessage = "Bank role cannot be null";
         when(bankUserService.create(any(BankUserDto.class)))
-                .thenThrow(new BaseException(errorMessage));
+                .thenThrow(new BaseException(errorMessage, HttpStatus.BAD_REQUEST));
 
         BaseException exception = assertThrows(BaseException.class,
                 () -> bankUserController.create(testBankUser));

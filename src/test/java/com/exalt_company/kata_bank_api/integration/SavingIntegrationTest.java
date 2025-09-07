@@ -18,12 +18,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -60,14 +62,16 @@ class SavingIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
         bankUserRepository.deleteAll();
         savingRepository.deleteAll();
 
         testUser = createTestUser("test", "user", "testuser@example.com", "password123", BankRole.CLIENT);
         testUser = bankUserRepository.save(testUser);
         
-        validToken = jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
+        validToken = "Bearer " + jwtService.generateToken(testUser, testUser.getId(), testUser.getBankRole());
     }
 
     @Test
@@ -96,10 +100,8 @@ class SavingIntegrationTest {
         assertEquals(testUser.getId(), savedSaving.getOwner().getId());
     }
 
-    // Validation Integration Tests
     @Test
     void testOpenSavingsAccountWithNullMaxBalance() throws Exception {
-        // Create JSON with null maxBalance field
         String jsonWithNullMaxBalance = """
                 {
                     "id": 0,
@@ -126,7 +128,7 @@ class SavingIntegrationTest {
         SavingDto savingDto = new SavingDto();
         savingDto.setId(0L);
         savingDto.setBalance(0.0);
-        savingDto.setMaxBalance(0.0); // Zero max balance
+        savingDto.setMaxBalance(0.0);
         savingDto.setOwnerId(testUser.getId());
 
         mockMvc.perform(post("/api/saving/open")
@@ -143,7 +145,6 @@ class SavingIntegrationTest {
 
     @Test
     void testOpenSavingsAccountWithNullOwnerId() throws Exception {
-        // Create JSON with null ownerId field
         String jsonWithNullOwnerId = """
                 {
                     "id": 0,
@@ -171,7 +172,7 @@ class SavingIntegrationTest {
         savingDto.setId(0L);
         savingDto.setBalance(0.0);
         savingDto.setMaxBalance(10000.0);
-        savingDto.setOwnerId(0L); // Zero owner ID
+        savingDto.setOwnerId(0L);
 
         mockMvc.perform(post("/api/saving/open")
                         .header("Authorization", validToken)
@@ -191,7 +192,7 @@ class SavingIntegrationTest {
         savingDto.setId(0L);
         savingDto.setBalance(0.0);
         savingDto.setMaxBalance(10000.0);
-        savingDto.setOwnerId(-1L); // Negative owner ID
+        savingDto.setOwnerId(-1L);
 
         mockMvc.perform(post("/api/saving/open")
                         .header("Authorization", validToken)
@@ -221,7 +222,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for max balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -240,17 +241,16 @@ class SavingIntegrationTest {
                         .header("Authorization", validToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(savingDto)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.timestamp").exists())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempted to access unauthorized savings"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Attempted to access unauthorized savings: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
     @Test
     void testDepositSuccess() throws Exception {
-        // First create a savings account
         Saving existingSaving = new Saving();
         existingSaving.setBalance(1000.0);
         existingSaving.setMaxBalance(5000.0);
@@ -286,7 +286,7 @@ class SavingIntegrationTest {
 
         SavingDto savingDto = new SavingDto();
         savingDto.setId(existingSaving.getId());
-        savingDto.setBalance(1000.0); // This would make total 2000, exceeding max of 1500
+        savingDto.setBalance(1000.0);
         savingDto.setMaxBalance(1500.0);
         savingDto.setOwnerId(testUser.getId());
 
@@ -298,7 +298,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Savings cannot exceed the maximum allowed balance"))
+                .andExpect(jsonPath("$.message").value("Savings cannot exceed the maximum allowed balance: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -318,7 +318,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Please open a savings account before depositing here"))
+                .andExpect(jsonPath("$.message").value("Please open a savings account before depositing here: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -344,7 +344,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -385,7 +385,7 @@ class SavingIntegrationTest {
 
         SavingDto savingDto = new SavingDto();
         savingDto.setId(existingSaving.getId());
-        savingDto.setBalance(1000.0); // This would make balance negative
+        savingDto.setBalance(1000.0);
         savingDto.setMaxBalance(5000.0);
         savingDto.setOwnerId(testUser.getId());
 
@@ -397,7 +397,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than allowed"))
+                .andExpect(jsonPath("$.message").value("Attempting to withdraw more than allowed: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -417,7 +417,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("No savings to withdraw from"))
+                .andExpect(jsonPath("$.message").value("No savings to withdraw from: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -443,7 +443,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -469,7 +469,6 @@ class SavingIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").value(Banking.COMPLETED.name()));
 
-        // Verify the saving account was deleted
         boolean savingExists = savingRepository.findById(existingSaving.getId()).isPresent();
         assertEquals(false, savingExists);
     }
@@ -496,7 +495,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Can not close savings if balance not empty"))
+                .andExpect(jsonPath("$.message").value("Can not close savings if balance not empty: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -516,7 +515,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Could not close non existing savings"))
+                .andExpect(jsonPath("$.message").value("Could not close non existing savings: REFUSED"))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -587,7 +586,7 @@ class SavingIntegrationTest {
         mockMvc.perform(post("/api/saving/open")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(savingDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -601,7 +600,7 @@ class SavingIntegrationTest {
         mockMvc.perform(post("/api/saving/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(savingDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -615,7 +614,7 @@ class SavingIntegrationTest {
         mockMvc.perform(post("/api/saving/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(savingDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -629,7 +628,7 @@ class SavingIntegrationTest {
         mockMvc.perform(post("/api/saving/close")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(savingDto)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -648,7 +647,7 @@ class SavingIntegrationTest {
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Wrong value for max balance"))
+                .andExpect(jsonPath("$.message", containsString("Validation failed for argument")))
                 .andExpect(jsonPath("$.path").exists());
     }
 
@@ -732,7 +731,6 @@ class SavingIntegrationTest {
 
     @Test
     void testMultipleSavingsAccountsForSameUser() throws Exception {
-        // First savings account
         SavingDto savingDto1 = new SavingDto();
         savingDto1.setId(0L);
         savingDto1.setBalance(0.0);
@@ -746,7 +744,6 @@ class SavingIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
 
-        // Second savings account
         SavingDto savingDto2 = new SavingDto();
         savingDto2.setId(0L);
         savingDto2.setBalance(0.0);
@@ -757,14 +754,17 @@ class SavingIntegrationTest {
                         .header("Authorization", validToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(savingDto2)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message", containsString("User can only have one savings account: REFUSED")))
+                .andExpect(jsonPath("$.path").exists());
 
-        // Verify both accounts were created
         long savingsCount = savingRepository.findAll().stream()
                 .filter(saving -> saving.getOwner().getId() == testUser.getId())
                 .count();
-        assertEquals(2, savingsCount);
+        assertEquals(1, savingsCount);
     }
 
     @Test
@@ -777,7 +777,7 @@ class SavingIntegrationTest {
 
         SavingDto savingDto = new SavingDto();
         savingDto.setId(existingSaving.getId());
-        savingDto.setBalance(1000.0); // Exact max balance
+        savingDto.setBalance(1000.0);
         savingDto.setMaxBalance(1000.0);
         savingDto.setOwnerId(testUser.getId());
 
@@ -804,7 +804,7 @@ class SavingIntegrationTest {
 
         SavingDto savingDto = new SavingDto();
         savingDto.setId(existingSaving.getId());
-        savingDto.setBalance(1000.0); // Exact current balance
+        savingDto.setBalance(1000.0);
         savingDto.setMaxBalance(5000.0);
         savingDto.setOwnerId(testUser.getId());
 
@@ -823,7 +823,6 @@ class SavingIntegrationTest {
 
     @Test
     void testCompleteSavingsWorkflow() throws Exception {
-        // 1. Open savings account
         SavingDto openDto = new SavingDto();
         openDto.setId(0L);
         openDto.setBalance(0.0);
@@ -837,14 +836,12 @@ class SavingIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").value(Banking.AUTHORIZED.name()));
 
-        // Get the created saving account
         Saving createdSaving = savingRepository.findAll().stream()
                 .filter(saving -> saving.getOwner().getId() == testUser.getId())
                 .findFirst()
                 .orElse(null);
         assertNotNull(createdSaving);
 
-        // 2. Deposit money
         SavingDto depositDto = new SavingDto();
         depositDto.setId(createdSaving.getId());
         depositDto.setBalance(2000.0);
@@ -858,7 +855,6 @@ class SavingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.DEPOSITED.name()));
 
-        // 3. Withdraw some money
         SavingDto withdrawDto = new SavingDto();
         withdrawDto.setId(createdSaving.getId());
         withdrawDto.setBalance(500.0);
@@ -872,7 +868,6 @@ class SavingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
 
-        // 4. Withdraw remaining money to close account
         SavingDto finalWithdrawDto = new SavingDto();
         finalWithdrawDto.setId(createdSaving.getId());
         finalWithdrawDto.setBalance(1500.0);
@@ -886,7 +881,6 @@ class SavingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.WITHDREW.name()));
 
-        // 5. Close the account
         SavingDto closeDto = new SavingDto();
         closeDto.setId(createdSaving.getId());
         closeDto.setBalance(0.0);
@@ -900,7 +894,6 @@ class SavingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(Banking.COMPLETED.name()));
 
-        // Verify the account was closed
         boolean savingExists = savingRepository.findById(createdSaving.getId()).isPresent();
         assertEquals(false, savingExists);
     }

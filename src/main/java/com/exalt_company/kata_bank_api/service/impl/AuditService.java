@@ -14,6 +14,7 @@ import com.exalt_company.kata_bank_api.repository.BankUserRepository;
 import com.exalt_company.kata_bank_api.repository.FundRepository;
 import com.exalt_company.kata_bank_api.repository.SavingRepository;
 import com.exalt_company.kata_bank_api.service.IAuditService;
+import com.exalt_company.kata_bank_api.util.ServiceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -81,13 +82,15 @@ public class AuditService implements IAuditService {
     public ResponseEntity<AccountStatementDto> requestStatement(String accountType, long ownerId, int page, int size)
             throws AuditException {
         try {
-            if(page < 0) throw new AuditException("Page number must be non-negative");
-            if(size <= 0) throw new AuditException("Page size must be positive");
+            if(page < 0) throw new AuditException("Page number must be non-negative", HttpStatus.BAD_REQUEST);
+            if(size <= 0) throw new AuditException("Page size must be positive", HttpStatus.BAD_REQUEST);
+
+            ServiceUtil.checkUserAuthorized(ownerId, "Statement access unauthorized");
 
             AccountType type = AccountType.valueOf(accountType);
 
             BankUser owner = bankUserRepository.findById(ownerId)
-                    .orElseThrow(() -> new AuditException("Can't find funds owner"));
+                    .orElseThrow(() -> new AuditException("Can't find funds owner", HttpStatus.BAD_REQUEST));
 
             AccountStatementDto dto = new AccountStatementDto();
             Page<AccountAudit> audits;
@@ -96,17 +99,17 @@ public class AuditService implements IAuditService {
             switch (type) {
                 case FUND -> {
                     ownerFunds = fundRepository.findByOwner(owner)
-                            .orElseThrow(() -> new AuditException("Could not find user's funds"));
+                            .orElseThrow(() -> new AuditException("Could not find user's funds", HttpStatus.BAD_REQUEST));
                     audits = repository.findByUserFundOwnerCurrentMonth(owner, PageRequest.of(page, size));
                     dto.setAccountBalance(ownerFunds.getBalance());
                 }
                 case SAVING -> {
                     ownerSavings = savingRepository.findByOwner(owner)
-                            .orElseThrow(() -> new AuditException("Could not find user's Savings"));
+                            .orElseThrow(() -> new AuditException("Could not find user's Savings", HttpStatus.BAD_REQUEST));
                     audits = repository.findByUserSavingOwnerCurrentMonth(owner, PageRequest.of(page, size));
                     dto.setAccountBalance(ownerSavings.getBalance());
                 }
-                default -> throw new AuditException("A critical error has occurred! Please check accountType value"); //Lets be honest lads, if we ever reach this, pandemonium will follow our doom
+                default -> throw new AuditException("A critical error has occurred! Please check accountType value", HttpStatus.INTERNAL_SERVER_ERROR); //Lets be honest lads, if we ever reach this, pandemonium will follow our doom
             }
 
             //I might rework this later...
@@ -139,7 +142,7 @@ public class AuditService implements IAuditService {
 
             return ResponseEntity.status(HttpStatus.OK).body(dto);
         } catch (IllegalArgumentException e) {
-            throw new AuditException("Wrong account type");
+            throw new AuditException("Wrong account type", HttpStatus.BAD_REQUEST);
         }
     }
 }

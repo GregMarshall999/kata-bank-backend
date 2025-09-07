@@ -345,7 +345,6 @@ class RegisterRequestTest {
         }
     }
 
-    // Validation Tests
     @Test
     void testValidRegisterRequest() {
         registerRequest.setName("John");
@@ -383,7 +382,7 @@ class RegisterRequestTest {
 
     @Test
     void testShortNameValidation() {
-        registerRequest.setName("J"); // Less than 2 characters
+        registerRequest.setName("J");
         registerRequest.setSurname("Doe");
         registerRequest.setEmail("john.doe@example.com");
         registerRequest.setPassword("password123");
@@ -395,7 +394,7 @@ class RegisterRequestTest {
 
     @Test
     void testLongNameValidation() {
-        registerRequest.setName("a".repeat(51)); // More than 50 characters
+        registerRequest.setName("a".repeat(51));
         registerRequest.setSurname("Doe");
         registerRequest.setEmail("john.doe@example.com");
         registerRequest.setPassword("password123");
@@ -432,7 +431,7 @@ class RegisterRequestTest {
     @Test
     void testShortSurnameValidation() {
         registerRequest.setName("John");
-        registerRequest.setSurname("D"); // Less than 2 characters
+        registerRequest.setSurname("D");
         registerRequest.setEmail("john.doe@example.com");
         registerRequest.setPassword("password123");
         
@@ -444,7 +443,7 @@ class RegisterRequestTest {
     @Test
     void testLongSurnameValidation() {
         registerRequest.setName("John");
-        registerRequest.setSurname("a".repeat(51)); // More than 50 characters
+        registerRequest.setSurname("a".repeat(51));
         registerRequest.setEmail("john.doe@example.com");
         registerRequest.setPassword("password123");
         
@@ -455,7 +454,6 @@ class RegisterRequestTest {
 
     @Test
     void testNameAndSurnameLengthBoundaries() {
-        // Test minimum valid length (2 characters)
         registerRequest.setName("Jo");
         registerRequest.setSurname("Do");
         registerRequest.setEmail("john.doe@example.com");
@@ -464,7 +462,6 @@ class RegisterRequestTest {
         Set<ConstraintViolation<RegisterRequest>> violations = validator.validate(registerRequest);
         assertTrue(violations.isEmpty(), "2-character name and surname should be valid");
         
-        // Test maximum valid length (50 characters)
         registerRequest.setName("a".repeat(50));
         registerRequest.setSurname("b".repeat(50));
         violations = validator.validate(registerRequest);
@@ -488,7 +485,7 @@ class RegisterRequestTest {
         registerRequest.setName("John");
         registerRequest.setSurname("Doe");
         registerRequest.setEmail("john.doe@example.com");
-        registerRequest.setPassword("123"); // Too short
+        registerRequest.setPassword("123");
         
         Set<ConstraintViolation<RegisterRequest>> violations = validator.validate(registerRequest);
         assertTrue(violations.size() >= 1, "Short password should have validation violations");
@@ -497,10 +494,10 @@ class RegisterRequestTest {
 
     @Test
     void testMultipleValidationErrors() {
-        registerRequest.setName(""); // Blank name
-        registerRequest.setSurname(""); // Blank surname
-        registerRequest.setEmail("invalid-email"); // Invalid email
-        registerRequest.setPassword("123"); // Too short password
+        registerRequest.setName("");
+        registerRequest.setSurname("");
+        registerRequest.setEmail("invalid-email");
+        registerRequest.setPassword("123");
         
         Set<ConstraintViolation<RegisterRequest>> violations = validator.validate(registerRequest);
         assertTrue(violations.size() >= 4, "Multiple validation errors should be detected");

@@ -44,39 +44,42 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      */
     @Override
     public ResponseEntity<Banking> deposit(FundOpDto dto) throws FundException {
-        if(dto == null) throw new FundException("Wrong request body");
-        if(dto.getBalance() < 0) throw new FundException("Wrong value for balance");
+        if(dto == null) throw new FundException("Wrong request body", HttpStatus.BAD_REQUEST);
+        if(dto.getBalance() < 0) throw new FundException("Wrong value for balance", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(dto, "No authorization for deposits");
 
         BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new FundException("Could not find funds owner"));
+                .orElseThrow(() -> new FundException("Could not find funds owner", HttpStatus.BAD_REQUEST));
 
-        if(repository.findByOwner(fundsOwner).isPresent()) throw new FundException("User can only have one funds account");
+        if(dto.getId() == 0L && repository.findByOwner(fundsOwner).isPresent()) throw new FundException("User can only have one funds account", HttpStatus.BAD_REQUEST);
 
         double before;
         double after;
         Fund savedFunds;
+        HttpStatus status;
         if(dto.getId() == 0L) {
             savedFunds = repository.save(mapper.toEntity(dto));
             before = 0;
             after = savedFunds.getBalance();
+            status = HttpStatus.CREATED;
         }
         else {
             Fund found = repository.findById(dto.getId()).orElseThrow(
-                    () -> new FundException("No balance to add funds"));
+                    () -> new FundException("No balance to add funds", HttpStatus.BAD_REQUEST));
 
             before = found.getBalance();
             after = found.getBalance() + dto.getBalance();
 
             found.setBalance(after);
             savedFunds = repository.save(found);
+            status = HttpStatus.OK;
         }
 
         auditService.recordAudit(
                 AuditOperation.DEPOSIT, dto.getBalance(), before, after, fundsOwner, savedFunds, null);
 
-        return ResponseEntity.status(HttpStatus.OK).body(Banking.DEPOSITED);
+        return ResponseEntity.status(status).body(Banking.DEPOSITED);
     }
 
     /**
@@ -89,25 +92,25 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      */
     @Override
     public ResponseEntity<Banking> withdraw(FundOpDto dto) throws FundException {
-        if(dto == null || dto.getId() == 0L) throw new FundException("No balance to withdraw from");
-        if(dto.getBalance() < 0) throw new FundException("Wrong value for balance");
+        if(dto == null || dto.getId() == 0L) throw new FundException("No balance to withdraw from", HttpStatus.BAD_REQUEST);
+        if(dto.getBalance() < 0) throw new FundException("Wrong value for balance", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(dto, "No authorization for withdrawals");
 
         Fund found = repository.findById(dto.getId()).orElseThrow(
-                () -> new FundException("No balance to withdraw from"));
+                () -> new FundException("No balance to withdraw from", HttpStatus.BAD_REQUEST));
 
         double before = found.getBalance();
         double after = found.getBalance() - dto.getBalance();
 
         if(!found.canOverdraw() && after < 0)
-            throw new FundException("Attempting to withdraw more than available");
+            throw new FundException("Attempting to withdraw more than available", HttpStatus.BAD_REQUEST);
 
         if(found.canOverdraw() && after < -found.getMaxOverdraw())
-            throw new FundException("Attempting to withdraw more than allowed");
+            throw new FundException("Attempting to withdraw more than allowed", HttpStatus.BAD_REQUEST);
 
         BankUser fundsOwner = bankUserRepository.findById(dto.getOwnerId())
-                .orElseThrow(() -> new FundException("Could not find funds owner"));
+                .orElseThrow(() -> new FundException("Could not find funds owner", HttpStatus.BAD_REQUEST));
 
         found.setBalance(after);
         Fund savedFunds = repository.save(found);
@@ -126,18 +129,18 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      */
     @Override
     public ResponseEntity<Banking> requestOverdrawCapabilities(OverdrawDto overdrawDto) throws FundException {
-        if(overdrawDto.getId() == 0L) throw new FundException("No funds to overdraw");
+        if(overdrawDto.getId() == 0L) throw new FundException("No funds to overdraw", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(overdrawDto, "No authorization for overdraws");
 
         Fund found = repository.findById(overdrawDto.getId())
-                .orElseThrow(() -> new FundException("No funds to overdraw"));
+                .orElseThrow(() -> new FundException("No funds to overdraw", HttpStatus.BAD_REQUEST));
 
         found.setCanOverdraw(true);
         found.setMaxOverdraw(overdrawDto.getMaxOverdraw());
 
         BankUser fundsOwner = bankUserRepository.findById(overdrawDto.getOwnerId())
-                .orElseThrow(() -> new FundException("Could not find funds owner"));
+                .orElseThrow(() -> new FundException("Could not find funds owner", HttpStatus.BAD_REQUEST));
 
         Fund savedFunds = repository.save(found);
 
@@ -156,21 +159,23 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
      */
     @Override
     public ResponseEntity<Banking> cancelOverdrawCapabilities(OverdrawDto overdrawDto) throws FundException {
-        if(overdrawDto.getId() == 0L) throw new FundException("No funds overdrawn to cancel");
+        if(overdrawDto.getId() == 0L) throw new FundException("No funds overdrawn to cancel", HttpStatus.BAD_REQUEST);
 
         ServiceUtil.checkUserAuthorized(overdrawDto, "No authorization for overdraw cancellation");
 
         Fund found = repository.findById(overdrawDto.getId())
-                .orElseThrow(() -> new FundException("No funds overdrawn to cancel"));
+                .orElseThrow(() -> new FundException("No funds overdrawn to cancel", HttpStatus.BAD_REQUEST));
+
+        if(!found.canOverdraw()) throw new FundException("Overdraw is not enabled", HttpStatus.BAD_REQUEST);
 
         if(found.getBalance() < 0)
-            throw new FundException("Cannot cancel overdraw when balance is negative");
+            throw new FundException("Cannot cancel overdraw when balance is negative", HttpStatus.BAD_REQUEST);
 
         found.setMaxOverdraw(0D);
         found.setCanOverdraw(false);
 
         BankUser fundsOwner = bankUserRepository.findById(overdrawDto.getOwnerId())
-                .orElseThrow(() -> new FundException("Could not find funds owner"));
+                .orElseThrow(() -> new FundException("Could not find funds owner", HttpStatus.BAD_REQUEST));
 
         Fund savedFunds = repository.save(found);
 

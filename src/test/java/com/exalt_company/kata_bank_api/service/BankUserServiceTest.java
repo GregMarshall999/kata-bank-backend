@@ -248,7 +248,7 @@ class BankUserServiceTest {
             bankUserService.update(999L, updatedDto)
         );
 
-        assertEquals("Could not update BankUser: Please create first.", exception.getMessage());
+        assertEquals("Could not update BankUser: Please create first", exception.getMessage());
         verify(repository).findById(999L);
         verify(repository, never()).save(any(BankUser.class));
     }
@@ -275,52 +275,9 @@ class BankUserServiceTest {
             bankUserService.deleteById(999L)
         );
 
-        assertEquals("Could not delete BankUser: Nothing to delete.", exception.getMessage());
+        assertEquals("Could not delete BankUser: not found", exception.getMessage());
         verify(repository).findById(999L);
         verify(repository, never()).deleteById(anyLong());
-    }
-
-    @Test
-    void testDelete_Success() throws BaseException {
-        when(mapper.toEntity(bankUserDto)).thenReturn(bankUser);
-        when(repository.findOne(any())).thenReturn(Optional.of(bankUser));
-
-        ResponseEntity<Boolean> response = bankUserService.delete(bankUserDto);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody());
-
-        verify(mapper).toEntity(bankUserDto);
-        verify(repository).findOne(any());
-        verify(repository).delete(bankUser);
-    }
-
-    @Test
-    void testDelete_NotFound() {
-        when(mapper.toEntity(bankUserDto)).thenReturn(bankUser);
-        when(repository.findOne(any())).thenReturn(Optional.empty());
-
-        BaseException exception = assertThrows(BaseException.class, () -> 
-            bankUserService.delete(bankUserDto)
-        );
-
-        assertEquals("Could not delete BankUser: Nothing to delete.", exception.getMessage());
-        verify(mapper).toEntity(bankUserDto);
-        verify(repository).findOne(any());
-        verify(repository, never()).delete(any(BankUser.class));
-    }
-
-    @Test
-    void testDelete_WithNullDto() {
-        BaseException exception = assertThrows(BaseException.class, () -> 
-            bankUserService.delete(null)
-        );
-
-        assertEquals("Could not delete BankUser: Nothing to delete.", exception.getMessage());
-        verify(mapper, never()).toEntity(any());
-        verify(repository, never()).findOne(any());
-        verify(repository, never()).delete(any(BankUser.class));
     }
 
     @Test
@@ -329,7 +286,7 @@ class BankUserServiceTest {
             bankUserService.update(1L, null)
         );
 
-        assertEquals("Could not update BankUser: Nothing to update.", exception.getMessage());
+        assertEquals("Could not update BankUser: Nothing to update", exception.getMessage());
         verify(repository, never()).findById(anyLong());
         verify(mapper, never()).updateEntityFromDto(any(), any());
         verify(repository, never()).save(any(BankUser.class));

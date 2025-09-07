@@ -88,15 +88,16 @@ class SavingServiceTest {
         savingDto.setMaxBalance(5000.0);
         savingDto.setOwnerId(1L);
 
-        // Setup SecurityContext mock
         SecurityContextHolder.setContext(securityContext);
     }
 
     @Test
     void testOpenSavingsAccountSuccess() throws SavingException {
+        savingDto.setId(0L);
+
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getCredentials()).thenReturn(1L);
-        when(repository.findById(1L)).thenReturn(Optional.empty());
+        when(repository.findById(0L)).thenReturn(Optional.empty());
         when(bankUserRepository.findById(1L)).thenReturn(Optional.of(testSaving.getOwner()));
         when(repository.findByOwner(testSaving.getOwner())).thenReturn(Optional.empty());
         when(mapper.toEntity(savingDto)).thenReturn(testSaving);
@@ -108,7 +109,7 @@ class SavingServiceTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(Banking.AUTHORIZED, response.getBody());
 
-        verify(repository).findById(1L);
+        verify(repository).findById(0L);
         verify(bankUserRepository).findById(1L);
         verify(repository).findByOwner(testSaving.getOwner());
         verify(auditService).recordAudit(any(AuditOperation.class), anyDouble(), anyDouble(), anyDouble(), any(BankUser.class), any(), any(Saving.class));

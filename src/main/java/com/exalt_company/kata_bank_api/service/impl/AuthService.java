@@ -44,7 +44,7 @@ public class AuthService implements IAuthService {
     @Override
     public ResponseEntity<AuthenticationResponse> register(RegisterRequest request) throws AuthException {
         if (repository.findByCredentialsEmail(request.getEmail()).isPresent()) {
-            throw new AuthException("User with this email already exists");
+            throw new AuthException("User with this email already exists", HttpStatus.BAD_REQUEST);
         }
 
         BankUser user = new BankUser();
@@ -59,7 +59,7 @@ public class AuthService implements IAuthService {
         try {
             credentials.setPassword(encoder.encode(request.getPassword()));
         } catch (IllegalArgumentException e) {
-            throw new AuthException("Password can not be more than 72 bytes");
+            throw new AuthException("Password can not be more than 72 bytes", HttpStatus.BAD_REQUEST);
         }
 
         user.setIdentity(identity);
@@ -85,14 +85,14 @@ public class AuthService implements IAuthService {
      */
     @Override
     public ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) throws AuthException {
+        BankUser user = repository.findByCredentialsEmail(request.getEmail())
+                .orElseThrow(() -> new AuthException("User not found", HttpStatus.BAD_REQUEST));
+
         try {
             manager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         } catch (BadCredentialsException e) {
-            throw new AuthException("Bad credentials");
+            throw new AuthException("Bad credentials", HttpStatus.BAD_REQUEST);
         }
-
-        BankUser user = repository.findByCredentialsEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         String token = service.generateToken(user, user.getId(), user.getBankRole());
 
