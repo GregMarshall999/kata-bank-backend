@@ -101,13 +101,7 @@ Ce relevé devra faire apparaître :
 
 # Implémentation
 
-[Les changements (EN)](CHANGELOG.md) <br>
-[Informations sur les tests (EN)](TEST.md) <br>
-[Les paramètres de production (EN)](ENVIRONMENT_VARIABLES.md) <br>
-[L'intégration et déployment continue (EN)](CI_CD_README.md)
-
-
-
-
-
-
+[Les changements](CHANGELOG.md) <br>
+[Informations sur les tests](TEST.md) <br>
+[Les paramètres de production](ENVIRONMENT_VARIABLES.md) <br>
+[L'intégration et déployment continue](CI_CD_README.md)

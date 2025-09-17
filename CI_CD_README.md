@@ -1,88 +1,88 @@
-# CI/CD Setup for Kata Bank API
+# Configuration CI/CD pour l'API Kata Bank
 
-This document describes the CI/CD pipeline setup for the Kata Bank API project using GitLab CI/CD.
+Ce document décrit la configuration du pipeline CI/CD pour le projet API Kata Bank utilisant GitLab CI/CD.
 
-## Overview
+## Aperçu
 
-The CI/CD pipeline includes the following stages:
-1. **Validate** - Code quality checks and dependency validation
-2. **Build** - Compilation and packaging
-3. **Test** - Unit and integration tests
-4. **Security** - Security scanning and code analysis
-5. **Deploy** - Deployment to staging and production environments
+Le pipeline CI/CD comprend les étapes suivantes :
+1. **Validate** - Vérifications de qualité du code et validation des dépendances
+2. **Build** - Compilation et empaquetage
+3. **Test** - Tests unitaires et d'intégration
+4. **Security** - Analyse de sécurité et analyse du code
+5. **Deploy** - Déploiement vers les environnements de staging et de production
 
-## Pipeline Stages
+## Étapes du Pipeline
 
-### 1. Validate Stage
-- Maven project structure validation
-- Dependency vulnerability checks
-- Code style validation (if configured)
+### 1. Étape Validate
+- Validation de la structure du projet Maven
+- Vérifications des vulnérabilités des dépendances
+- Validation du style de code (si configuré)
 
-### 2. Build Stage
-- Compiles the application
-- Runs unit tests
-- Creates JAR package
-- Builds Docker image (for main branch)
+### 2. Étape Build
+- Compile l'application
+- Exécute les tests unitaires
+- Crée le package JAR
+- Construit l'image Docker (pour la branche principale)
 
-### 3. Test Stage
-- Integration tests with MySQL database
-- Test coverage reporting
+### 3. Étape Test
+- Tests d'intégration avec la base de données MySQL
+- Rapport de couverture de tests
 
-### 4. Security Stage
-- OWASP dependency vulnerability scanning
-- SonarQube code quality analysis
+### 4. Étape Security
+- Analyse des vulnérabilités des dépendances OWASP
+- Analyse de qualité du code SonarQube
 
-### 5. Deploy Stage
-- Manual deployment to staging environment
-- Manual deployment to production environment
+### 5. Étape Deploy
+- Déploiement manuel vers l'environnement de staging
+- Déploiement manuel vers l'environnement de production
 
-## Prerequisites
+## Prérequis
 
-### GitLab Variables
-Set the following variables in your GitLab project settings (Settings > CI/CD > Variables):
+### Variables GitLab
+Définissez les variables suivantes dans les paramètres de votre projet GitLab (Settings > CI/CD > Variables) :
 
-#### Required Variables:
-- `SONAR_HOST_URL` - SonarQube server URL
-- `SONAR_TOKEN` - SonarQube authentication token
+#### Variables Requises :
+- `SONAR_HOST_URL` - URL du serveur SonarQube
+- `SONAR_TOKEN` - Token d'authentification SonarQube
 
-#### Optional Variables:
-- `DATABASE_URL` - Production database URL
-- `DATABASE_USERNAME` - Production database username
-- `DATABASE_PASSWORD` - Production database password
-- `JWT_SECRET` - Production JWT secret
+#### Variables Optionnelles :
+- `DATABASE_URL` - URL de la base de données de production
+- `DATABASE_USERNAME` - Nom d'utilisateur de la base de données de production
+- `DATABASE_PASSWORD` - Mot de passe de la base de données de production
+- `JWT_SECRET` - Secret JWT de production
 
-## Local Development
+## Développement Local
 
-### Using Docker Compose
+### Utilisation de Docker Compose
 
-1. **Start the application with all services:**
+1. **Démarrer l'application avec tous les services :**
    ```bash
    docker-compose up -d
    ```
 
-2. **View logs:**
+2. **Voir les logs :**
    ```bash
    docker-compose logs -f kata-bank-api
    ```
 
-3. **Stop all services:**
+3. **Arrêter tous les services :**
    ```bash
    docker-compose down
    ```
 
-4. **Rebuild and start:**
+4. **Reconstruire et démarrer :**
    ```bash
    docker-compose up --build -d
    ```
 
-### Manual Docker Build
+### Construction Docker Manuelle
 
-1. **Build the Docker image:**
+1. **Construire l'image Docker :**
    ```bash
    docker build -t kata-bank-api .
    ```
 
-2. **Run the container:**
+2. **Exécuter le conteneur :**
    ```bash
    docker run -p 8080:8080 \
      -e DATABASE_URL=jdbc:mysql://host.docker.internal:3306/kata_bank \
@@ -91,167 +91,167 @@ Set the following variables in your GitLab project settings (Settings > CI/CD > 
      kata-bank-api
    ```
 
-## Environment Configuration
+## Configuration de l'Environnement
 
-### Development Environment
-- Profile: `dev`
-- Database: Local MySQL
-- Logging: DEBUG level
-- Swagger: Enabled
+### Environnement de Développement
+- Profil : `dev`
+- Base de données : MySQL local
+- Journalisation : Niveau DEBUG
+- Swagger : Activé
 
-### Docker Environment
-- Profile: `docker`
-- Database: MySQL container
-- Logging: INFO level
-- Swagger: Enabled
+### Environnement Docker
+- Profil : `docker`
+- Base de données : Conteneur MySQL
+- Journalisation : Niveau INFO
+- Swagger : Activé
 
-### Production Environment
-- Profile: `prod`
-- Database: Production MySQL
-- Logging: WARN level
-- Swagger: Disabled
-- Security: Enhanced
+### Environnement de Production
+- Profil : `prod`
+- Base de données : MySQL de production
+- Journalisation : Niveau WARN
+- Swagger : Désactivé
+- Sécurité : Renforcée
 
-## Kubernetes Deployment
+## Déploiement Kubernetes
 
-### Prerequisites
-- Kubernetes cluster
-- kubectl configured
-- Helm (optional)
+### Prérequis
+- Cluster Kubernetes
+- kubectl configuré
+- Helm (optionnel)
 
-### Deployment Steps
+### Étapes de Déploiement
 
-1. **Create namespace:**
+1. **Créer le namespace :**
    ```bash
    kubectl create namespace kata-bank
    ```
 
-2. **Create secrets:**
+2. **Créer les secrets :**
    ```bash
    kubectl apply -f k8s/secrets.yaml -n kata-bank
    ```
 
-3. **Deploy application:**
+3. **Déployer l'application :**
    ```bash
    kubectl apply -f k8s/deployment.yaml -n kata-bank
    kubectl apply -f k8s/service.yaml -n kata-bank
    ```
 
-4. **Check deployment:**
+4. **Vérifier le déploiement :**
    ```bash
    kubectl get pods -n kata-bank
    kubectl get services -n kata-bank
    ```
 
-## Security Considerations
+## Considérations de Sécurité
 
-### Docker Security
-- Non-root user in container
-- Minimal base image (JRE only)
-- Health checks implemented
-- Resource limits defined
+### Sécurité Docker
+- Utilisateur non-root dans le conteneur
+- Image de base minimale (JRE uniquement)
+- Vérifications de santé implémentées
+- Limites de ressources définies
 
-### Kubernetes Security
-- Secrets for sensitive data
-- Resource limits and requests
-- Liveness and readiness probes
-- Network policies (recommended)
+### Sécurité Kubernetes
+- Secrets pour les données sensibles
+- Limites et demandes de ressources
+- Sondes de liveness et readiness
+- Politiques réseau (recommandé)
 
-### Application Security
-- JWT secrets in environment variables
-- Database credentials in secrets
-- HTTPS enforcement
-- Input validation
+### Sécurité de l'Application
+- Secrets JWT dans les variables d'environnement
+- Identifiants de base de données dans les secrets
+- Application HTTPS
+- Validation des entrées
 
-## Monitoring and Logging
+## Surveillance et Journalisation
 
-### Health Checks
-- Application health endpoint: `/actuator/health`
-- Database connectivity check
-- Disk space monitoring
+### Vérifications de Santé
+- Point de terminaison de santé de l'application : `/actuator/health`
+- Vérification de connectivité de la base de données
+- Surveillance de l'espace disque
 
-### Metrics
-- Prometheus metrics enabled
-- Application metrics exposed
-- Custom business metrics (can be added)
+### Métriques
+- Métriques Prometheus activées
+- Métriques d'application exposées
+- Métriques métier personnalisées (peuvent être ajoutées)
 
-### Logging
-- Structured logging
-- Log rotation
-- Different log levels per environment
+### Journalisation
+- Journalisation structurée
+- Rotation des logs
+- Différents niveaux de log par environnement
 
-## Troubleshooting
+## Dépannage
 
-### Common Issues
+### Problèmes Courants
 
-1. **Build fails with dependency issues:**
+1. **La construction échoue avec des problèmes de dépendances :**
    ```bash
    mvn clean install -U
    ```
 
-2. **Docker build fails:**
-   - Check Docker daemon is running
-   - Ensure sufficient disk space
-   - Verify Dockerfile syntax
+2. **La construction Docker échoue :**
+   - Vérifier que le démon Docker fonctionne
+   - S'assurer d'avoir suffisamment d'espace disque
+   - Vérifier la syntaxe du Dockerfile
 
-3. **Database connection issues:**
-   - Verify database is running
-   - Check connection string
-   - Ensure network connectivity
+3. **Problèmes de connexion à la base de données :**
+   - Vérifier que la base de données fonctionne
+   - Vérifier la chaîne de connexion
+   - S'assurer de la connectivité réseau
 
-4. **Kubernetes deployment issues:**
+4. **Problèmes de déploiement Kubernetes :**
    ```bash
    kubectl describe pod <pod-name> -n kata-bank
    kubectl logs <pod-name> -n kata-bank
    ```
 
-### Debug Commands
+### Commandes de Débogage
 
-1. **Check pipeline status:**
+1. **Vérifier le statut du pipeline :**
    - GitLab CI/CD > Pipelines
 
-2. **View build artifacts:**
-   - Download JAR files from pipeline artifacts
+2. **Voir les artefacts de construction :**
+   - Télécharger les fichiers JAR depuis les artefacts du pipeline
 
-3. **Test locally:**
+3. **Tester localement :**
    ```bash
    mvn spring-boot:run -Dspring.profiles.active=dev
    ```
 
-## Best Practices
+## Bonnes Pratiques
 
-### Code Quality
-- Write unit tests for all new features
-- Maintain test coverage above 80%
-- Follow coding standards
-- Use meaningful commit messages
+### Qualité du Code
+- Écrire des tests unitaires pour toutes les nouvelles fonctionnalités
+- Maintenir une couverture de tests au-dessus de 80%
+- Suivre les standards de codage
+- Utiliser des messages de commit significatifs
 
-### Security
-- Never commit secrets to repository
-- Use environment variables for configuration
-- Regularly update dependencies
-- Scan for vulnerabilities
+### Sécurité
+- Ne jamais commiter de secrets dans le dépôt
+- Utiliser des variables d'environnement pour la configuration
+- Mettre à jour régulièrement les dépendances
+- Scanner les vulnérabilités
 
 ### Performance
-- Monitor resource usage
-- Optimize database queries
-- Use connection pooling
-- Implement caching where appropriate
+- Surveiller l'utilisation des ressources
+- Optimiser les requêtes de base de données
+- Utiliser le pooling de connexions
+- Implémenter la mise en cache quand approprié
 
 ## Support
 
-For issues related to:
-- **CI/CD Pipeline**: Check GitLab CI/CD documentation
-- **Docker**: Refer to Docker documentation
-- **Kubernetes**: Check Kubernetes documentation
-- **Application**: Review Spring Boot documentation
+Pour les problèmes liés à :
+- **Pipeline CI/CD** : Consulter la documentation GitLab CI/CD
+- **Docker** : Se référer à la documentation Docker
+- **Kubernetes** : Consulter la documentation Kubernetes
+- **Application** : Examiner la documentation Spring Boot
 
-## Contributing
+## Contribution
 
-When contributing to this project:
-1. Create a feature branch
-2. Write tests for new functionality
-3. Ensure all tests pass
-4. Create a merge request
-5. Wait for CI/CD pipeline to complete
-6. Request code review
+Lors de la contribution à ce projet :
+1. Créer une branche de fonctionnalité
+2. Écrire des tests pour la nouvelle fonctionnalité
+3. S'assurer que tous les tests passent
+4. Créer une demande de fusion
+5. Attendre que le pipeline CI/CD se termine
+6. Demander une révision de code

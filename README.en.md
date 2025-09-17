@@ -97,7 +97,7 @@ The statement must show:
 
 ![hexagonal architecture](./assets/hexa-schema.png)
 
-[Update information](CHANGELOG.md) <br>
-[Test documentation](TEST.md) <br>
-[Environment variables guide](ENVIRONMENT_VARIABLES.md) <br>
-[Integration and deployment guide](CI_CD_README.md)
+[Update information](CHANGELOG.en.md) <br>
+[Test documentation](TEST.en.md) <br>
+[Environment variables guide](ENVIRONMENT_VARIABLES.en.md) <br>
+[Integration and deployment guide](CI_CD_README.en.md)

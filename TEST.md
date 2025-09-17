@@ -1,126 +1,126 @@
-# Bank API - Test Documentation
+# API Bancaire - Documentation des tests
 
-## Overview
+## Aperçu
 
-This document serves as a guide for the Bank API.
-The test suite is designed to ensure the reliability, security, and functionality of the banking application through multiple testing layers.
+Ce document sert de guide pour l'API Bancaire.
+La suite de tests est conçue pour garantir la fiabilité, la sécurité et la fonctionnalité de l'application bancaire via plusieurs couches de tests.
 
-## Test Structure
+## Structure des tests
 
-The test suite follows a layered testing approach with the following structure:
+La suite de tests suit une approche par couches avec la structure suivante :
 
 ```
 src/test/java/com/exalt_company/kata_bank_api/
-├── entity/                                   # Entity layer tests
-│   ├── AccountAuditTest.java                 # AccountAudit entity tests
-│   ├── BankUserTest.java                     # BankUser entity tests
-│   ├── BaseEntityTest.java                   # Base entity tests
-│   ├── FundTest.java                         # Fund entity tests
-│   ├── FundOverdrawTest.java                 # Fund overdraw functionality tests
-│   ├── SavingTest.java                       # Saving entity tests
-│   └── user_fields/                          # Embedded field tests
-│       ├── IdentityTest.java                 # Identity embedded class tests
-│       └── CredentialsTest.java              # Credentials embedded class tests
-├── service/                                  # Service layer tests
-│   ├── AuditServiceTest.java                 # Audit service tests (including statement functionality)
-│   ├── AuthServiceTest.java                  # Authentication service tests
-│   ├── BankUserServiceTest.java              # Bank user service tests
-│   ├── BaseServiceTest.java                  # Base service tests
-│   ├── FundServiceTest.java                  # Fund service tests (including overdraw)
-│   └── SavingServiceTest.java                # Saving service tests
-├── repository/                               # Repository layer tests
-│   ├── AccountAuditRepositoryTest.java       # AccountAudit repository tests
-│   ├── BankUserRepositoryTest.java           # BankUser repository tests
-│   ├── FundRepositoryTest.java               # Fund repository tests
-│   └── SavingRepositoryTest.java             # Saving repository tests
-├── controller/                               # Controller layer tests
-│   ├── AccountAuditControllerTest.java       # AccountAudit controller tests (statement endpoints)
-│   ├── AuthControllerTest.java               # Authentication controller tests
-│   ├── BankUserControllerTest.java           # Bank user controller tests
-│   ├── BaseControllerTest.java               # Base controller tests
-│   ├── FundControllerTest.java               # Fund controller tests
-│   └── SavingControllerTest.java             # Saving controller tests
-├── dto/                                      # DTO tests
-│   ├── auth/                                 # Authentication DTOs
-│   │   ├── AuthenticationRequestTest.java    # Authentication request DTO tests
-│   │   ├── AuthenticationResponseTest.java   # Authentication response DTO tests
-│   │   └── RegisterRequestTest.java          # Registration request DTO tests
-│   ├── fund/                                 # Fund DTOs
-│   │   ├── BaseFundDtoTest.java              # Base fund DTO tests
-│   │   ├── FundDtoTest.java                  # Fund DTO tests
-│   │   ├── FundOpDtoTest.java                # Fund operation DTO tests
-│   │   └── OverdrawDtoTest.java              # Overdraw DTO tests
-│   ├── statement/                            # Statement DTOs
-│   │   ├── AccountStatementDtoTest.java      # Account statement DTO tests
-│   │   └── OperationDtoTest.java             # Operation DTO tests
-│   ├── BankUserDtoTest.java                  # Bank user DTO tests
-│   ├── BaseDtoTest.java                      # Base DTO tests
-│   ├── PageDtoTest.java                      # Page DTO tests
-│   ├── PasswordedBankUserDtoTest.java        # Passworded bank user DTO tests
-│   └── SavingDtoTest.java                    # Saving DTO tests
-├── enums/                                    # Enum tests
-│   ├── AccountTypeTest.java                  # AccountType enum tests
-│   ├── AuditOperationTest.java               # AuditOperation enum tests
-│   └── BankRoleTest.java                     # BankRole enum tests
-├── exception/                                # Exception handling tests
-│   ├── AuditExceptionTest.java               # Audit exception tests
-│   ├── AuthExceptionTest.java                # Authentication exception tests
-│   ├── BankApiExceptionTest.java             # Bank API exception tests
-│   ├── BaseExceptionTest.java                # Base exception tests
-│   ├── ErrorResponseTest.java                # Error response DTO tests
-│   ├── FundExceptionTest.java                # Fund exception tests
-│   ├── GlobalExceptionHandlerTest.java       # Global exception handler tests
-│   └── SavingExceptionTest.java              # Saving exception tests
-├── integration/                              # Integration tests
-│   ├── AccountAuditIntegrationTest.java      # End-to-end audit and statement tests
-│   ├── AuthIntegrationTest.java              # End-to-end authentication tests
-│   ├── BankUserIntegrationTest.java          # End-to-end bank user management tests
-│   ├── FundIntegrationTest.java              # End-to-end fund management tests
-│   ├── OverdrawIntegrationTest.java          # End-to-end overdraw functionality tests
-│   ├── SavingIntegrationTest.java            # End-to-end saving operations tests
-│   └── SecurityIntegrationTest.java          # End-to-end security and authorization tests
-└── security/                                 # Security tests
-    └── SecurityConfigTest.java               # Security configuration tests
+├── entity/                                   # Tests de la couche entité
+│   ├── AccountAuditTest.java                 # Tests de l'entité AccountAudit
+│   ├── BankUserTest.java                     # Tests de l'entité BankUser
+│   ├── BaseEntityTest.java                   # Tests de l'entité de base
+│   ├── FundTest.java                         # Tests de l'entité Fund
+│   ├── FundOverdrawTest.java                 # Tests de la fonctionnalité de découvert
+│   ├── SavingTest.java                       # Tests de l'entité Saving
+│   └── user_fields/                          # Tests des champs embarqués
+│       ├── IdentityTest.java                 # Tests de la classe embarquée Identity
+│       └── CredentialsTest.java              # Tests de la classe embarquée Credentials
+├── service/                                  # Tests de la couche service
+│   ├── AuditServiceTest.java                 # Tests du service d'audit (incluant les relevés)
+│   ├── AuthServiceTest.java                  # Tests du service d'authentification
+│   ├── BankUserServiceTest.java              # Tests du service utilisateur bancaire
+│   ├── BaseServiceTest.java                  # Tests du service de base
+│   ├── FundServiceTest.java                  # Tests du service Fund (incluant le découvert)
+│   └── SavingServiceTest.java                # Tests du service Saving
+├── repository/                               # Tests de la couche repository
+│   ├── AccountAuditRepositoryTest.java       # Tests du repository AccountAudit
+│   ├── BankUserRepositoryTest.java           # Tests du repository BankUser
+│   ├── FundRepositoryTest.java               # Tests du repository Fund
+│   └── SavingRepositoryTest.java             # Tests du repository Saving
+├── controller/                               # Tests de la couche contrôleur
+│   ├── AccountAuditControllerTest.java       # Tests du contrôleur AccountAudit (resources de relevés)
+│   ├── AuthControllerTest.java               # Tests du contrôleur d'authentification
+│   ├── BankUserControllerTest.java           # Tests du contrôleur utilisateur bancaire
+│   ├── BaseControllerTest.java               # Tests du contrôleur de base
+│   ├── FundControllerTest.java               # Tests du contrôleur Fund
+│   └── SavingControllerTest.java             # Tests du contrôleur Saving
+├── dto/                                      # Tests des DTO
+│   ├── auth/                                 # DTO d'authentification
+│   │   ├── AuthenticationRequestTest.java    # Tests du DTO de demande d'authentification
+│   │   ├── AuthenticationResponseTest.java   # Tests du DTO de réponse d'authentification
+│   │   └── RegisterRequestTest.java          # Tests du DTO de demande d'inscription
+│   ├── fund/                                 # DTO de Fund
+│   │   ├── BaseFundDtoTest.java              # Tests du DTO de base Fund
+│   │   ├── FundDtoTest.java                  # Tests du DTO Fund
+│   │   ├── FundOpDtoTest.java                # Tests du DTO d'opération Fund
+│   │   └── OverdrawDtoTest.java              # Tests du DTO de découvert
+│   ├── statement/                            # DTO de relevé
+│   │   ├── AccountStatementDtoTest.java      # Tests du DTO de relevé de compte
+│   │   └── OperationDtoTest.java             # Tests du DTO d'opération
+│   ├── BankUserDtoTest.java                  # Tests du DTO utilisateur bancaire
+│   ├── BaseDtoTest.java                      # Tests du DTO de base
+│   ├── PageDtoTest.java                      # Tests du DTO de pagination
+│   ├── PasswordedBankUserDtoTest.java        # Tests du DTO utilisateur avec mot de passe
+│   └── SavingDtoTest.java                    # Tests du DTO Saving
+├── enums/                                    # Tests des énumérations
+│   ├── AccountTypeTest.java                  # Tests de l'énumération AccountType
+│   ├── AuditOperationTest.java               # Tests de l'énumération AuditOperation
+│   └── BankRoleTest.java                     # Tests de l'énumération BankRole
+├── exception/                                # Tests de gestion des exceptions
+│   ├── AuditExceptionTest.java               # Tests de l'exception Audit
+│   ├── AuthExceptionTest.java                # Tests de l'exception d'authentification
+│   ├── BankApiExceptionTest.java             # Tests de l'exception Bank API
+│   ├── BaseExceptionTest.java                # Tests de l'exception de base
+│   ├── ErrorResponseTest.java                # Tests du DTO de réponse d'erreur
+│   ├── FundExceptionTest.java                # Tests de l'exception Fund
+│   ├── GlobalExceptionHandlerTest.java       # Tests du gestionnaire global d'exceptions
+│   └── SavingExceptionTest.java              # Tests de l'exception Saving
+├── integration/                              # Tests d'intégration
+│   ├── AccountAuditIntegrationTest.java      # Tests de bout en bout d'audit et de relevés
+│   ├── AuthIntegrationTest.java              # Tests de bout en bout d'authentification
+│   ├── BankUserIntegrationTest.java          # Tests de bout en bout de gestion des utilisateurs
+│   ├── FundIntegrationTest.java              # Tests de bout en bout de gestion des fonds
+│   ├── OverdrawIntegrationTest.java          # Tests de bout en bout de la fonctionnalité de découvert
+│   ├── SavingIntegrationTest.java            # Tests de bout en bout des opérations d'épargne
+│   └── SecurityIntegrationTest.java          # Tests de bout en bout de la sécurité et de l'autorisation
+└── security/                                 # Tests de sécurité
+    └── SecurityConfigTest.java               # Tests de la configuration de sécurité
 ```
 
-## Test Configuration
+## Configuration des tests
 
-### Test Properties
+### Propriétés de test
 
-The test suite uses a dedicated test configuration file: `src/test/resources/application-test.properties`
+La suite de tests utilise un fichier de configuration dédié : `src/test/resources/application-test.properties`
 
 ```properties
-# H2 In-Memory Database Configuration
+# Configuration de la base H2 en mémoire
 spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
 spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
 
-# JPA/Hibernate Configuration
+# Configuration JPA/Hibernate
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.defer-datasource-initialization=true
 
-# H2 Console (for debugging)
+# Console H2 (pour le débogage)
 spring.h2.console.enabled=true
 spring.h2.console.path=/h2-console
 
-# JWT Configuration
+# Configuration JWT
 security.jwt.secret=dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlEb05vdFVzZUluUHJvZHVjdGlvbg==
 security.jwt.expiration=86400000
 
-# Logging Configuration
+# Configuration des logs
 logging.level.com.exalt_company.kata_bank_api=DEBUG
 logging.level.org.springframework.security=DEBUG
 logging.level.org.hibernate.SQL=DEBUG
 logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
 ```
 
-### Dependencies
+### Dépendances
 
-The test suite requires the following dependencies (already included in pom.xml):
+La suite de tests requiert les dépendances suivantes (déjà incluses dans `pom.xml`) :
 
 ```xml
 <!-- Spring Boot Test Starter -->
@@ -137,7 +137,7 @@ The test suite requires the following dependencies (already included in pom.xml)
     <scope>test</scope>
 </dependency>
 
-<!-- H2 Database for Testing -->
+<!-- Base de données H2 pour les tests -->
 <dependency>
     <groupId>com.h2database</groupId>
     <artifactId>h2</artifactId>
@@ -145,204 +145,206 @@ The test suite requires the following dependencies (already included in pom.xml)
 </dependency>
 ```
 
-## Running Tests
+## Exécution des tests
 
-### Running All Tests
+### Exécuter tous les tests
 
 ```bash
 mvn test
 ```
 
-### Running Specific Test Categories
+### Exécuter des catégories de tests spécifiques
 
 ```bash
-# Run only unit tests
+# N'exécuter que les tests unitaires
 mvn test -Dtest="*Test" -DfailIfNoTests=false
 
-# Run only integration tests
+# N'exécuter que les tests d'intégration
 mvn test -Dtest="*IntegrationTest" -DfailIfNoTests=false
 
-# Run only entity tests
+# N'exécuter que les tests d'entité
 mvn test -Dtest="*Test" -DfailIfNoTests=false
 
-# Run only service tests
+# N'exécuter que les tests de services
 mvn test -Dtest="*ServiceTest" -DfailIfNoTests=false
 
-# Run only exception tests
+# N'exécuter que les tests d'exceptions
 mvn test -Dtest="*ExceptionTest" -DfailIfNoTests=false
 
-# Run only overdraw-related tests
+# N'exécuter que les tests liés au découvert
 mvn test -Dtest="*Overdraw*" -DfailIfNoTests=false
 
-# Run fund-related tests (including overdraw)
+# N'exécuter que les tests liés à Fund (incluant le découvert)
 mvn test -Dtest="*Fund*" -DfailIfNoTests=false
 
-# Run saving-related tests
+# N'exécuter que les tests liés à Saving
 mvn test -Dtest="*Saving*" -DfailIfNoTests=false
 
-# Run audit-related tests
+# N'exécuter que les tests liés à l'audit
 mvn test -Dtest="*Audit*" -DfailIfNoTests=false
 
-# Run authentication-related tests
+# N'exécuter que les tests liés à l'authentification
 mvn test -Dtest="*Auth*" -DfailIfNoTests=false
 
-# Run statement-related tests
+# N'exécuter que les tests liés aux relevés
 mvn test -Dtest="*Statement*" -DfailIfNoTests=false
 
-# Run audit-related tests (including statement functionality)
+# N'exécuter que les tests liés à l'audit (incluant les relevés)
 mvn test -Dtest="*Audit*" -DfailIfNoTests=false
 ```
 
-### Running Individual Test Classes
+### Exécuter des classes de test individuelles
 
 ```bash
-# Run specific test class
+# Exécuter une classe de test spécifique
 mvn test -Dtest=BankUserTest
 
-# Run specific test method
+# Exécuter une méthode de test spécifique
 mvn test -Dtest=BankUserTest#testBankUserCreation
 
-# Run overdraw-related test classes
+# Exécuter les classes de tests liées au découvert
 mvn test -Dtest=FundServiceTest
 mvn test -Dtest=OverdrawIntegrationTest
 mvn test -Dtest=FundOverdrawTest
 mvn test -Dtest=OverdrawDtoTest
 
-# Run specific overdraw test methods
+# Exécuter des méthodes de test spécifiques au découvert
 mvn test -Dtest=FundServiceTest#testRequestOverdrawCapabilitiesSuccess
 mvn test -Dtest=OverdrawIntegrationTest#testWithdrawWithOverdrawEnabledSuccess
 
-# Run saving-related test classes
+# Exécuter les classes de tests liées à l'épargne
 mvn test -Dtest=SavingServiceTest
 mvn test -Dtest=SavingIntegrationTest
 mvn test -Dtest=SavingTest
 mvn test -Dtest=SavingExceptionTest
 
-# Run specific saving test methods
+# Exécuter des méthodes de test spécifiques à l'épargne
 mvn test -Dtest=SavingServiceTest#testOpenSavingsAccountSuccess
 mvn test -Dtest=SavingIntegrationTest#testCompleteSavingsWorkflow
 
-# Run audit-related test classes
+# Exécuter les classes de tests liées à l'audit
 mvn test -Dtest=AuditServiceTest
 mvn test -Dtest=AuditIntegrationTest
 mvn test -Dtest=AccountAuditTest
 mvn test -Dtest=AccountAuditRepositoryTest
 mvn test -Dtest=AccountAuditControllerTest
 
-# Run authentication-related test classes
+# Exécuter les classes de tests liées à l'authentification
 mvn test -Dtest=AuthServiceTest
 mvn test -Dtest=AuthIntegrationTest
 mvn test -Dtest=AuthExceptionTest
 
-# Run statement-related test classes
+# Exécuter les classes de tests liées aux relevés
 mvn test -Dtest=AccountStatementDtoTest
 mvn test -Dtest=OperationDtoTest
 
-# Run bank user-related test classes
+# Exécuter les classes de tests liées aux utilisateurs bancaires
 mvn test -Dtest=BankUserServiceTest
 mvn test -Dtest=BankUserIntegrationTest
 mvn test -Dtest=BankUserControllerTest
 mvn test -Dtest=BankUserDtoTest
 
-# Run security-related test classes
+# Exécuter les classes de tests liées à la sécurité
 mvn test -Dtest=SecurityConfigTest
 mvn test -Dtest=SecurityIntegrationTest
 ```
 
-## Test Coverage
+## Couverture des tests
 
-The test suite provides coverage for:
+La suite de tests couvre :
 
-- **Entity Layer**: 100% coverage of entity classes and embedded fields including AccountAudit, BankUser, Fund, Saving, BaseEntity, and user field classes
-- **Service Layer**: Business logic testing with mocked dependencies for Audit, Auth, BankUser, Base, Fund, and Saving services
-- **Repository Layer**: Database operation testing with H2 for AccountAudit, BankUser, Fund, and Saving repositories
-- **Controller Layer**: REST endpoint testing for AccountAudit, Auth, BankUser, Base, Fund, and Saving operations
-- **DTO Layer**: Data transfer object validation for authentication, fund operations, account statements, bank user management, and savings operations
-- **Enum Layer**: Enum value and behavior testing for AccountType, AuditOperation, and BankRole
-- **Exception Layer**: Exception handling and error response testing for all custom exceptions including Audit, Auth, BankApi, Base, Fund, and Saving exceptions
-- **Integration Layer**: End-to-end flow testing for authentication, bank user management, fund management, savings operations, audit operations, overdraw functionality, and security
-- **Security Layer**: Security configuration and authorization testing for all endpoints and operations
-- **Overdraw Banking**: Testing of overdraw functionality including request, cancel, and withdraw operations
-- **Savings Banking**: Complete testing of savings account operations including open, close, deposit, and withdraw with max balance validation
-- **Audit System**: Full testing of audit operations, repository operations, controller endpoints, and statement generation
-- **Statement System**: Complete testing of account statement and operation DTOs with comprehensive validation scenarios
-- **Bank User Management**: Complete testing of user registration, authentication, and management operations
+- **Couche Entité** : 100% de couverture des classes entités et champs embarqués, incluant AccountAudit, BankUser, Fund, Saving, BaseEntity et les classes de champs utilisateur
+- **Couche Service** : Tests de la logique métier avec dépendances mockées pour les services Audit, Auth, BankUser, Base, Fund et Saving
+- **Couche Repository** : Tests des opérations base de données avec H2 pour les repositories AccountAudit, BankUser, Fund et Saving
+- **Couche Contrôleur** : Tests des resources REST pour AccountAudit, Auth, BankUser, Base, Fund et Saving
+- **Couche DTO** : Validation des objets de transfert pour l'authentification, les opérations de fonds, les relevés de compte, la gestion des utilisateurs et les opérations d'épargne
+- **Couche Enum** : Tests des valeurs et comportements des énumérations AccountType, AuditOperation et BankRole
+- **Couche Exception** : Tests de gestion des exceptions et des réponses d'erreur pour toutes les exceptions personnalisées incluant Audit, Auth, BankApi, Base, Fund et Saving
+- **Couche Intégration** : Tests de bout en bout pour l'authentification, la gestion des utilisateurs, la gestion des fonds, les opérations d'épargne, les opérations d'audit, la fonctionnalité de découvert et la sécurité
+- **Sécurité** : Tests de configuration de sécurité et d'autorisation pour tous les resources et opérations
+- **Découvert bancaire** : Tests de la fonctionnalité de découvert incluant demande, annulation et retrait
+- **Épargne bancaire** : Tests complets des opérations de compte d'épargne incluant ouverture, fermeture, dépôt et retrait avec validation de solde maximum
+- **Système d'audit** : Tests complets des opérations d'audit, des opérations repository, des resources contrôleur et de la génération de relevés
+- **Système de relevés** : Tests complets des relevés de compte et DTO d'opérations avec scénarios de validation complets
+- **Gestion des utilisateurs bancaires** : Tests complets de l'inscription, de l'authentification et des opérations de gestion
 
-## Security Testing
+## Tests de sécurité
 
-The test suite includes security-focused tests:
+La suite inclut des tests orientés sécurité :
 
-- JWT token generation and validation
-- Password encoding and verification
-- Role-based access control
-- Authentication failure scenarios
-- User registration security
-- Fund operation authorization
-- Overdraw operation authorization and validation
-- Savings operation authorization and validation
-- Audit operation authorization and statement access control
-- Controller endpoint security
-- Bank user management authorization
-- Security configuration validation
-- Cross-user resource access prevention
+- Génération et validation de jetons JWT
+- Encodage et vérification des mots de passe
+- Contrôle d'accès basé sur les rôles
+- Scénarios d'échec d'authentification
+- Sécurisation de l'inscription utilisateur
+- Autorisation des opérations de fonds
+- Autorisation et validation des opérations de découvert
+- Autorisation et validation des opérations d'épargne
+- Autorisation des opérations d'audit et contrôle d'accès aux relevés
+- Sécurité des resources contrôleur
+- Autorisation pour la gestion des utilisateurs bancaires
+- Validation de la configuration de sécurité
+- Prévention de l'accès inter-utilisateurs aux ressources
 
-## Performance Considerations
+##  Performance
 
-- Tests use in-memory H2 database for fast execution
-- Integration tests use @SpringBootTest for full application context
-- Repository tests use @SpringBootTest for database integration
-- Test data is minimal and focused
-- Controller tests use MockMvc for isolated endpoint testing
-- Statement tests use pagination to handle large datasets efficiently
+- Les tests utilisent une base H2 en mémoire pour une exécution rapide
+- Les tests d'intégration utilisent @SpringBootTest pour un contexte applicatif complet
+- Les tests repository utilisent @SpringBootTest pour l'intégration base de données
+- Les données de test sont minimales et ciblées
+- Les tests contrôleur utilisent MockMvc pour des resources isolés
+- Les tests de relevés utilisent la pagination pour gérer efficacement les grands jeux de données
 
-## Troubleshooting
+## Dépannage
 
-### Common Issues
+### Problèmes courants
 
-1. **Test Database Connection Issues**
-   - Ensure H2 dependency is included
-   - Check application-test.properties configuration
-   - Verify @SpringBootTest configuration for integration tests
+1. **Problèmes de connexion à la base de test**
+   - Vérifier que la dépendance H2 est incluse
+   - Vérifier la configuration `application-test.properties`
+   - Vérifier la configuration @SpringBootTest pour les tests d'intégration
 
-2. **Integration Test Failures**
-   - Check @SpringBootTest configuration
-   - Ensure proper test data setup and cleanup
-   - Verify database schema initialization
+2. **Échecs des tests d'intégration**
+   - Vérifier la configuration @SpringBootTest
+   - Assurer une mise en place et un nettoyage corrects des données de test
+   - Vérifier l'initialisation du schéma de base de données
 
-3. **JWT Token Issues**
-   - Check JWT secret configuration in test properties
-   - Verify token expiration settings
-   - Ensure proper token format in test requests
+3. **Problèmes de jetons JWT**
+   - Vérifier la configuration du secret JWT dans les propriétés de test
+   - Vérifier les paramètres d'expiration des jetons
+   - S'assurer du bon format du jeton dans les requêtes de test
 
-### Debugging Tests
+### Débogage des tests
 
-1. **Enable Debug Logging**
+1. **Activer les logs de débogage**
    ```properties
    logging.level.com.exalt_company.kata_bank_api=DEBUG
    logging.level.org.hibernate.SQL=DEBUG
    logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
    ```
 
-2. **Use H2 Console**
-   - Access at http://localhost:8080/h2-console during tests
-   - JDBC URL: jdbc:h2:mem:testdb
+2. **Utiliser la console H2**
+   - Accès via http://localhost:8080/h2-console pendant les tests
+   - JDBC URL : jdbc:h2:mem:testdb
 
-3. **Run Tests in IDE**
-   - Use IDE test runners for better debugging
-   - Set breakpoints in test methods
-   - Use @SpringBootTest for full context integration tests
+3. **Exécuter les tests dans l'IDE**
+   - Utiliser les runners de tests de l'IDE pour un meilleur débogage
+   - Placer des points d'arrêt dans les méthodes de test
+   - Utiliser @SpringBootTest pour les tests d'intégration à contexte complet
 
-## Future Enhancements
+## Améliorations futures
 
-Potential improvements for the test suite:
+Améliorations potentielles pour la suite de tests :
 
-1. **Additional Controller Tests**: Add dedicated controller layer tests for remaining controllers
-2. **Performance Tests**: Add load testing for critical endpoints
-3. **Contract Tests**: Implement consumer-driven contract testing
-4. **Mutation Testing**: Add mutation testing for better test quality
-5. **API Documentation Tests**: Test OpenAPI/Swagger documentation
-6. **Database Migration Tests**: Test schema evolution scenarios
-7. **Savings Interest Tests**: Add tests for interest calculation if implemented
-8. **Savings Transfer Tests**: Add tests for transfers between savings accounts
-9. **User Management Tests**: Add tests for user CRUD operations
-10. **Security Penetration Tests**: Add security vulnerability testing
+1. **Tests de contrôleurs supplémentaires** : Ajouter des tests dédiés pour les contrôleurs restants
+2. **Tests de performance** : Ajouter des tests de charge pour les resources critiques
+3. **Tests de contrat** : Mettre en place des tests de contrat orientés consommateur
+4. **Mutation testing** : Ajouter des tests de mutation pour une meilleure qualité de tests
+5. **Tests de documentation d'API** : Tester la documentation OpenAPI/Swagger
+6. **Tests de migration de base de données** : Tester les scénarios d'évolution de schéma
+7. **Tests d'intérêts d'épargne** : Ajouter des tests pour le calcul des intérêts si implémenté
+8. **Tests de virement d'épargne** : Ajouter des tests pour les virements entre comptes d'épargne
+9. **Tests de gestion des utilisateurs** : Ajouter des tests pour les opérations CRUD utilisateur
+10. **Tests de sécurité offensive** : Ajouter des tests de vulnérabilités de sécurité
+
+
