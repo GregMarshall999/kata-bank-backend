@@ -3,7 +3,7 @@ package com.exalt_company.user_domain.api;
 import com.exalt_company.user_domain.api.resource.AuthenticationResponse;
 import com.exalt_company.user_domain.api.resource.SignInUser;
 import com.exalt_company.user_domain.api.resource.SignUpUser;
-import com.exalt_company.user_domain.exception.AuthenticationException;
+import com.exalt_company.user_domain.shared.exception.AuthenticationException;
 
 /**
  * For login and signup purposes

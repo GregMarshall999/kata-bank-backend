@@ -5,8 +5,8 @@ import com.exalt_company.user_domain.api.resource.AuthenticationResponse;
 import com.exalt_company.user_domain.api.resource.SignInUser;
 import com.exalt_company.user_domain.api.resource.SignUpUser;
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
-import com.exalt_company.user_domain.exception.AuthenticationException;
-import com.exalt_company.user_domain.exception.BankUserException;
+import com.exalt_company.user_domain.shared.exception.AuthenticationException;
+import com.exalt_company.user_domain.shared.exception.BankUserException;
 import com.exalt_company.user_domain.spi.Authentication;
 import com.exalt_company.user_domain.spi.BankUsers;
 

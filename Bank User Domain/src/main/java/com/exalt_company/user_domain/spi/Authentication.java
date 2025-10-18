@@ -1,7 +1,7 @@
 package com.exalt_company.user_domain.spi;
 
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
-import com.exalt_company.user_domain.exception.AuthenticationException;
+import com.exalt_company.user_domain.shared.exception.AuthenticationException;
 
 /**
  * SPI port for authentication requests

@@ -2,7 +2,7 @@ package com.exalt_company.user_domain.api;
 
 import com.exalt_company.user_domain.domain.account.AdminResponse;
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
-import com.exalt_company.user_domain.domain.shared.Page;
+import com.exalt_company.user_domain.shared.Page;
 
 import java.util.UUID;
 

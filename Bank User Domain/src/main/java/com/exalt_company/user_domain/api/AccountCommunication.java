@@ -3,7 +3,7 @@ package com.exalt_company.user_domain.api;
 import com.exalt_company.user_domain.domain.message.CondensedMessage;
 import com.exalt_company.user_domain.domain.message.Message;
 import com.exalt_company.user_domain.domain.message.MessageStatus;
-import com.exalt_company.user_domain.domain.shared.Page;
+import com.exalt_company.user_domain.shared.Page;
 
 import java.util.UUID;
 

@@ -1,7 +1,7 @@
 package com.exalt_company.user_domain.spi;
 
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
-import com.exalt_company.user_domain.exception.BankUserException;
+import com.exalt_company.user_domain.shared.exception.BankUserException;
 
 /**
  * SPI port for Bank User Account requests
