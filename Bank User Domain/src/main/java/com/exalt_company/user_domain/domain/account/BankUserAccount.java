@@ -1,15 +1,35 @@
 package com.exalt_company.user_domain.domain.account;
 
+import com.exalt_company.user_domain.api.resource.SignUpUser;
+import com.exalt_company.user_domain.domain.shared.BankRole;
+
 import java.util.UUID;
 
 public class BankUserAccount {
-    private UUID id = UUID.randomUUID();
+    private UUID id;
 
     private String name;
     private String surname;
     private String email;
 
     private BankRole role;
+
+    public BankUserAccount(String name, String surname, String email) {
+        this.name = name;
+        this.surname = surname;
+        this.email = email;
+
+        role = BankRole.CLIENT;
+    }
+
+    /**
+     * Maps the name, surname and email of the API SignUpUser resource
+     * @param user signup user
+     * @return mapped BankUserAccount object
+     */
+    public static BankUserAccount fromSignUp(SignUpUser user) {
+        return new BankUserAccount(user.name(), user.surname(), user.email());
+    }
 
     public UUID getId() {
         return id;
