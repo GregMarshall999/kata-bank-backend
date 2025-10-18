@@ -26,12 +26,29 @@
     <packaging>pom</packaging>
 
     <properties>
+        <assertj.version>3.27.6</assertj.version>
         <java.version>17</java.version>
+        <jupiter.version>6.0.0</jupiter.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.version>3.9.0</maven.compiler.version>
         <maven.surefire.version>3.5.4</maven.surefire.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
