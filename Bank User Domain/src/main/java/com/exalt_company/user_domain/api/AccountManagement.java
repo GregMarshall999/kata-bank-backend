@@ -7,6 +7,7 @@ import com.exalt_company.user_domain.domain.shared.Page;
 import java.util.UUID;
 
 public interface AccountManagement {
+    AdminResponse createCustomAccount(BankUserAccount user);
     AdminResponse deleteAccount(UUID userId);
     AdminResponse editAccount(UUID userId, BankUserAccount user);
     Page<BankUserAccount> listAccounts(int page, int size);
