@@ -8,6 +8,19 @@ import com.exalt_company.user_domain.shared.exception.AuthenticationException;
  * @param <T> custom token type
  */
 public interface Authentication<T> {
-    T generateLoginUserToken(BankUserAccount userAccount, String password) throws AuthenticationException;
-    T generateNewUserToken(BankUserAccount userAccount, String password) throws AuthenticationException;
+    /**
+     * Used for existing user authentication
+     * @param userAccount user to authenticate
+     * @return custom token
+     * @throws AuthenticationException on authentication error
+     */
+    T generateLoginUserToken(BankUserAccount userAccount) throws AuthenticationException;
+
+    /**
+     * Used for new user authentication
+     * @param userAccount user to authenticate
+     * @return custom token
+     * @throws AuthenticationException on authentication error
+     */
+    T generateNewUserToken(BankUserAccount userAccount) throws AuthenticationException;
 }

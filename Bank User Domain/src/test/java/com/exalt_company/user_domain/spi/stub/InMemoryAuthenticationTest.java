@@ -16,60 +16,62 @@ class InMemoryAuthenticationTest {
 
     private BankUserAccount account;
 
-    private final String password = "password";
     private final UUID id = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
         authentication = new InMemoryAuthentication();
 
-        account = new BankUserAccount("", "", "");
+        account = new BankUserAccount("", "", "", "password");
     }
 
     @Test
     void should_generate_token_on_signup() throws AuthenticationException {
         account.setId(id);
 
-        String token = authentication.generateNewUserToken(account, password);
+        String token = authentication.generateNewUserToken(account);
 
         assertThat(token).isEqualTo("stub-token-string");
     }
 
     @Test
     void should_fail_signup_when_no_user_id() {
-        assertThatThrownBy(() -> authentication.generateNewUserToken(account, password))
+        assertThatThrownBy(() -> authentication.generateNewUserToken(account))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessageContaining("Unable to generate token: Account non existent");
     }
 
     @Test
-    void should_generate_token_on_signin() throws AuthenticationException {
+    void should_generate_token_on_sign_in() throws AuthenticationException {
         //Given
         account.setId(id);
-        authentication.generateNewUserToken(account, password);
+        authentication.generateNewUserToken(account);
 
         //Then
-        String token = authentication.generateLoginUserToken(account, password);
+        String token = authentication.generateLoginUserToken(account);
 
         //Expect
         assertThat(token).isEqualTo("stub-token-string");
     }
 
     @Test
-    void should_fail_signin_when_no_user_id() {
-        assertThatThrownBy(() -> authentication.generateLoginUserToken(account, password))
+    void should_fail_sign_in_when_no_user_id() {
+        assertThatThrownBy(() -> authentication.generateLoginUserToken(account))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessageContaining("Unable to generate token: Account non existent");
     }
 
     @Test
-    void should_fail_signin_when_wrong_password() throws AuthenticationException {
+    void should_fail_sign_in_when_wrong_password() throws AuthenticationException {
         //Given
         account.setId(id);
-        authentication.generateNewUserToken(account, password);
+        authentication.generateNewUserToken(account);
+
+        BankUserAccount testAccount = new BankUserAccount("", "", "", "wrong-password");
+        testAccount.setId(id);
 
         //Then Expect
-        assertThatThrownBy(() -> authentication.generateLoginUserToken(account, "wrong password"))
+        assertThatThrownBy(() -> authentication.generateLoginUserToken(testAccount))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessageContaining("Unable to generate token: Wrong Credentials");
     }

@@ -9,25 +9,27 @@ import java.util.Map;
 import java.util.UUID;
 
 public class InMemoryAuthentication implements Authentication<String> {
-    private final Map<UUID, String> userPassword = new HashMap<>();
+    private final Map<UUID, BankUserAccount> bankUserAccounts = new HashMap<>();
 
     @Override
-    public String generateLoginUserToken(BankUserAccount userAccount, String password) throws AuthenticationException {
+    public String generateLoginUserToken(BankUserAccount userAccount) throws AuthenticationException {
         if(userAccount.getId() == null)
             throw new AuthenticationException("Unable to generate token: Account non existent");
 
-        if(!password.equals(userPassword.get(userAccount.getId())))
+        BankUserAccount found = bankUserAccounts.get(userAccount.getId());
+
+        if(!found.getPassword().equals(userAccount.getPassword()))
             throw new AuthenticationException("Unable to generate token: Wrong Credentials");
 
         return "stub-token-string";
     }
 
     @Override
-    public String generateNewUserToken(BankUserAccount userAccount, String password) throws AuthenticationException {
+    public String generateNewUserToken(BankUserAccount userAccount) throws AuthenticationException {
         if(userAccount.getId() == null)
             throw new AuthenticationException("Unable to generate token: Account non existent");
 
-        userPassword.put(userAccount.getId(), password);
+        bankUserAccounts.put(userAccount.getId(), userAccount);
 
         return "stub-token-string";
     }
