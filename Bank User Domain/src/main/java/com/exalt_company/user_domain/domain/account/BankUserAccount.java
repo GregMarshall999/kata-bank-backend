@@ -5,21 +5,50 @@ import com.exalt_company.user_domain.shared.BankRole;
 
 import java.util.UUID;
 
+/**
+ * Represents a bank user account in the domain model.
+ * This class encapsulates all the information related to a bank user,
+ * including their personal details and role within the system.
+ */
 public class BankUserAccount {
     private UUID id;
 
     private String name;
     private String surname;
     private String email;
+    private String password;
 
     private BankRole role;
 
-    public BankUserAccount(String name, String surname, String email) {
+    /**
+     * Constructs a new BankUserAccount with the specified personal details.
+     * The user role is automatically set to CLIENT.
+     *
+     * @param name the first name of the user
+     * @param surname the last name of the user
+     * @param email the email address of the user
+     * @param password the password for the user account
+     */
+    public BankUserAccount(String name, String surname, String email, String password) {
         this.name = name;
         this.surname = surname;
         this.email = email;
+        this.password = password;
 
         role = BankRole.CLIENT;
+    }
+
+    /**
+     * This is used for new instancing when found in collections.
+     * @param copy found account to copy
+     */
+    public BankUserAccount(BankUserAccount copy) {
+        id = copy.id;
+        name = copy.name;
+        surname = copy.surname;
+        email = copy.email;
+        password = copy.password;
+        role = copy.role;
     }
 
     /**
@@ -28,7 +57,7 @@ public class BankUserAccount {
      * @return mapped BankUserAccount object
      */
     public static BankUserAccount fromSignUp(SignUpUser user) {
-        return new BankUserAccount(user.name(), user.surname(), user.email());
+        return new BankUserAccount(user.name(), user.surname(), user.email(), user.password());
     }
 
     public UUID getId() {
@@ -61,6 +90,14 @@ public class BankUserAccount {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public BankRole getRole() {
