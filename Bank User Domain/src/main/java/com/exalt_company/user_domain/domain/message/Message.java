@@ -4,6 +4,17 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Represents a user-facing message exchanged between bank users.
+ * <p>
+ * A message holds metadata such as author, recipient, copy lists, and
+ * optionally attached files. The generic type parameter allows callers to
+ * define the concrete type used for attachments (e.g., a file descriptor or
+ * a storage key).
+ * </p>
+ *
+ * @param <F> the type used to represent an attached file reference
+ */
 public class Message<F> {
     private UUID id;
     private LocalDate date;

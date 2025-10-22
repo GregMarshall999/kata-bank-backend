@@ -13,6 +13,10 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Default Internal Mailer implementation
+ * File type is used to represent an attached file reference
+ */
 public class InternalMailer implements AccountCommunication<File> {
     private final Messages<File> messages;
 
