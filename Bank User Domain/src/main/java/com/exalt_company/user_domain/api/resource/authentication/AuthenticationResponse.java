@@ -1,4 +1,4 @@
-package com.exalt_company.user_domain.api.resource;
+package com.exalt_company.user_domain.api.resource.authentication;
 
 /**
  * This is an output resource for the API port

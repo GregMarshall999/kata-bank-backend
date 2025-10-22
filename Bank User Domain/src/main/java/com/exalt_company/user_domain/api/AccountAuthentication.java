@@ -1,8 +1,8 @@
 package com.exalt_company.user_domain.api;
 
-import com.exalt_company.user_domain.api.resource.AuthenticationResponse;
-import com.exalt_company.user_domain.api.resource.SignInUser;
-import com.exalt_company.user_domain.api.resource.SignUpUser;
+import com.exalt_company.user_domain.api.resource.authentication.AuthenticationResponse;
+import com.exalt_company.user_domain.api.resource.authentication.SignInUser;
+import com.exalt_company.user_domain.api.resource.authentication.SignUpUser;
 import com.exalt_company.user_domain.shared.exception.AuthenticationException;
 
 /**

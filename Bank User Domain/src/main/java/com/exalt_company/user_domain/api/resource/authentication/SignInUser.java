@@ -1,4 +1,4 @@
-package com.exalt_company.user_domain.api.resource;
+package com.exalt_company.user_domain.api.resource.authentication;
 
 /**
  * Simple API port resource to use email and password for login purposes

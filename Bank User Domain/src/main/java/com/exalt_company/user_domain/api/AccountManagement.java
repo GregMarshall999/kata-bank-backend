@@ -1,6 +1,6 @@
 package com.exalt_company.user_domain.api;
 
-import com.exalt_company.user_domain.api.resource.AdminResponse;
+import com.exalt_company.user_domain.api.resource.management.AdminResponse;
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
 import com.exalt_company.user_domain.shared.Page;
 

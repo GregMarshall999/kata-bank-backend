@@ -1,6 +1,6 @@
 package com.exalt_company.user_domain.domain.account;
 
-import com.exalt_company.user_domain.api.resource.SignUpUser;
+import com.exalt_company.user_domain.api.resource.authentication.SignUpUser;
 import com.exalt_company.user_domain.shared.BankRole;
 
 import java.util.UUID;

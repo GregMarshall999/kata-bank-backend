@@ -1,4 +1,4 @@
-package com.exalt_company.user_domain.api.resource;
+package com.exalt_company.user_domain.api.resource.authentication;
 
 /**
  * Simple API resource used for new user generation

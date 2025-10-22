@@ -1,4 +1,4 @@
-package com.exalt_company.user_domain.api.resource;
+package com.exalt_company.user_domain.api.resource.management;
 
 /**
  * Represents an administrative response containing operation results.
