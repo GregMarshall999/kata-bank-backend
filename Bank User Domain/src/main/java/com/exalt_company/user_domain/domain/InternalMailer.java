@@ -1,6 +1,7 @@
 package com.exalt_company.user_domain.domain;
 
 import com.exalt_company.user_domain.api.AccountCommunication;
+import com.exalt_company.user_domain.ddd.UserDomainService;
 import com.exalt_company.user_domain.domain.message.CondensedMessage;
 import com.exalt_company.user_domain.domain.message.Message;
 import com.exalt_company.user_domain.domain.message.MessageStatus;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * Default Internal Mailer implementation
  * File type is used to represent an attached file reference
  */
+@UserDomainService
 public class InternalMailer implements AccountCommunication<File> {
     private final Messages<File> messages;
 

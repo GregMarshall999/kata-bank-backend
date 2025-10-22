@@ -4,6 +4,7 @@ import com.exalt_company.user_domain.api.AccountAuthentication;
 import com.exalt_company.user_domain.api.resource.authentication.AuthenticationResponse;
 import com.exalt_company.user_domain.api.resource.authentication.SignInUser;
 import com.exalt_company.user_domain.api.resource.authentication.SignUpUser;
+import com.exalt_company.user_domain.ddd.UserDomainService;
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
 import com.exalt_company.user_domain.shared.exception.AuthenticationException;
 import com.exalt_company.user_domain.shared.exception.BankUserException;
@@ -14,6 +15,7 @@ import com.exalt_company.user_domain.spi.BankUsers;
  * Default Authentication implementation
  * Token type is String
  */
+@UserDomainService
 public class AccountAuthenticator implements AccountAuthentication<String> {
     private final Authentication<String> authentication;
     private final BankUsers bankUsers;

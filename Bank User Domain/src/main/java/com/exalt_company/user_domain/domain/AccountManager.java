@@ -3,6 +3,7 @@ package com.exalt_company.user_domain.domain;
 import com.exalt_company.user_domain.api.AccountManagement;
 import com.exalt_company.user_domain.api.resource.management.AdminResponse;
 import com.exalt_company.user_domain.api.resource.management.AdminResponseState;
+import com.exalt_company.user_domain.ddd.UserDomainService;
 import com.exalt_company.user_domain.domain.account.BankUserAccount;
 import com.exalt_company.user_domain.shared.Page;
 import com.exalt_company.user_domain.shared.exception.BankUserException;
@@ -13,6 +14,7 @@ import java.util.UUID;
 /**
  * Default Account Management implementation
  */
+@UserDomainService
 public class AccountManager implements AccountManagement {
     private final BankUsers bankUsers;
 
