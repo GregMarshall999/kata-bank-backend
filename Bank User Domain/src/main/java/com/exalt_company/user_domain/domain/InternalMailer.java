@@ -43,12 +43,16 @@ public class InternalMailer implements AccountCommunication<File> {
             Page<Message<File>> messagePage = messages.pageUserMessages(page, size, userMessages);
 
             List<CondensedMessage> condensedMessages = messagePage.content().stream()
-                    .map(message -> new CondensedMessage(
-                            message.getId(),
-                            message.getDate(),
-                            message.getContent().substring(0, 10) + "...",
-                            message.getRecipient()
-                    ))
+                    .map(message -> {
+                        String content = message.getContent();
+                        int endIndex = Math.min(content.length(), 10);
+
+                        return new CondensedMessage(
+                                message.getId(),
+                                message.getDate(),
+                                content.substring(0, endIndex) + "...",
+                                message.getRecipient());
+                    })
                     .toList();
 
             return new Page<>(condensedMessages, messagePage.page(), messagePage.size());
