@@ -9,4 +9,5 @@ import org.springframework.http.ResponseEntity;
 public interface IAuthService {
     ResponseEntity<AuthenticationResponse> register(RegisterRequest request) throws AuthException;
     ResponseEntity<AuthenticationResponse> authenticate(AuthenticationRequest request) throws AuthException;
+    ResponseEntity<Boolean> validate(String token);
 }

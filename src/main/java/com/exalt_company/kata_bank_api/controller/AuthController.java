@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,5 +59,15 @@ public class AuthController {
     public ResponseEntity<AuthenticationResponse> authenticate(
             @Valid @RequestBody AuthenticationRequest request) throws AuthException {
         return service.authenticate(request);
+    }
+
+    @Operation(summary = "Validates token", description = "Checks jwt token and returns the validity state")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token Valid"),
+            @ApiResponse(responseCode = "401", description = "Token Not Valid")
+    })
+    @GetMapping("/validate/{token}")
+    public ResponseEntity<Boolean> validateToken(@PathVariable String token) {
+        return service.validate(token);
     }
 }

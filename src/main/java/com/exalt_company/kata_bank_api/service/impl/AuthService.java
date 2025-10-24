@@ -101,4 +101,11 @@ public class AuthService implements IAuthService {
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @Override
+    public ResponseEntity<Boolean> validate(String token) {
+        boolean tokenExpired = service.isTokenExpired(token);
+
+        return tokenExpired ? ResponseEntity.status(401).body(false) : ResponseEntity.status(200).body(true);
+    }
 }
