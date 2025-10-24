@@ -13,10 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
@@ -26,6 +23,16 @@ public class SavingController extends BaseController<SavingDto, ISavingService> 
     @Autowired
     public SavingController(ISavingService service) {
         super(service);
+    }
+
+    @Operation(summary = "Get user's saving", description = "Fetches the user's saving")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found savings",
+                    content = @Content(schema = @Schema(implementation = SavingDto.class)))
+    })
+    @GetMapping("/getUserSaving/{userId}")
+    public ResponseEntity<SavingDto> getUserSaving(@PathVariable long userId) {
+        return service.getByOwner(userId);
     }
 
     @Operation(summary = "Open savings account", 

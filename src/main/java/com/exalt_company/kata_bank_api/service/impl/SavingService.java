@@ -172,4 +172,15 @@ public class SavingService extends BaseService<SavingDto, Saving, SavingMapper, 
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.WITHDREW);
     }
+
+    @Override
+    public ResponseEntity<SavingDto> getByOwner(long userId) {
+        BankUser bankUser = bankUserRepository.findById(userId).orElseThrow();
+
+        Saving saving = repository.findByOwner(bankUser).orElseThrow();
+
+        SavingDto dto = mapper.toDto(saving);
+
+        return ResponseEntity.ok(dto);
+    }
 }

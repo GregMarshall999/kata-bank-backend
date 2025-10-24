@@ -13,4 +13,6 @@ public interface IFundService extends IBaseService<FundDto> {
 
     ResponseEntity<Banking> requestOverdrawCapabilities(OverdrawDto overdrawDto) throws FundException;
     ResponseEntity<Banking> cancelOverdrawCapabilities(OverdrawDto overdrawDto) throws FundException;
+
+    ResponseEntity<FundDto> getByOwner(long userId);
 }

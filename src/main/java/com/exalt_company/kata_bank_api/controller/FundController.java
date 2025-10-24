@@ -16,11 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 @RestController
@@ -30,6 +26,16 @@ public class FundController extends BaseController<FundDto, IFundService> {
     @Autowired
     public FundController(IFundService service) {
         super(service);
+    }
+
+    @Operation(summary = "Get user's fund", description = "Fetches the user's fund")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found funds",
+                    content = @Content(schema = @Schema(implementation = FundDto.class)))
+    })
+    @GetMapping("/getUserFund/{userId}")
+    public ResponseEntity<FundDto> getUserFund(@PathVariable long userId) {
+        return service.getByOwner(userId);
     }
 
     @Operation(summary = "Deposit funds", description = "Deposits funds into a user's account")

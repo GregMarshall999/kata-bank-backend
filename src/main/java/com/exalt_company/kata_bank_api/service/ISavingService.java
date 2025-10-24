@@ -11,4 +11,6 @@ public interface ISavingService extends IBaseService<SavingDto> {
     ResponseEntity<Banking> closeSavingsAccount(SavingDto dto) throws SavingException;
     ResponseEntity<Banking> deposit(SavingDto dto) throws FundException, SavingException;
     ResponseEntity<Banking> withdraw(SavingDto dto) throws SavingException;
+
+    ResponseEntity<SavingDto> getByOwner(long userId);
 }

@@ -185,4 +185,15 @@ public class FundService extends BaseService<FundDto, Fund, FundMapper, FundRepo
 
         return ResponseEntity.status(HttpStatus.OK).body(Banking.COMPLETED);
     }
+
+    @Override
+    public ResponseEntity<FundDto> getByOwner(long userId) {
+        BankUser bankUser = bankUserRepository.findById(userId).orElseThrow();
+
+        Fund fund = repository.findByOwner(bankUser).orElseThrow();
+
+        FundDto dto = mapper.toDto(fund);
+
+        return ResponseEntity.ok(dto);
+    }
 }
