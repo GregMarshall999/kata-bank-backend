@@ -39,16 +39,29 @@ public class BankUserAccount {
     }
 
     /**
+     * Constructor used for the static copy method
+     * @param id
+     * @param name
+     * @param surname
+     * @param email
+     * @param password
+     * @param role
+     */
+    private BankUserAccount(UUID id, String name, String surname, String email, String password, BankRole role) {
+        this.id = id;
+        this.name = name;
+        this.surname = surname;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
+
+    /**
      * This is used for new instancing when found in collections.
      * @param copy found account to copy
      */
-    public BankUserAccount(BankUserAccount copy) {
-        id = copy.id;
-        name = copy.name;
-        surname = copy.surname;
-        email = copy.email;
-        password = copy.password;
-        role = copy.role;
+    public static BankUserAccount copy(BankUserAccount copy) {
+        return new BankUserAccount(copy.id, copy.name, copy.surname, copy.email, copy.password, copy.role);
     }
 
     /**

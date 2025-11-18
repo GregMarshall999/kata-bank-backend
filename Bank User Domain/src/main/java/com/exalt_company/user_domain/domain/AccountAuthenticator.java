@@ -30,7 +30,7 @@ public class AccountAuthenticator implements AccountAuthentication<String> {
         BankUserAccount account;
 
         try {
-            account = new BankUserAccount(bankUsers.findByEmail(user.email()));
+            account = BankUserAccount.copy(bankUsers.findByEmail(user.email()));
         } catch (BankUserException e) {
             throw new AuthenticationException(e.getMessage());
         }
