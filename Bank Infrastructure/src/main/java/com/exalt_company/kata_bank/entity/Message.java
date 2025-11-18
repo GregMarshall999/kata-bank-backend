@@ -29,7 +29,7 @@ public class Message extends BaseEntity {
     private List<BankUser> hiddenCopies;
 
     @OneToMany
-    private List<BankFile> attachedFilesLocation;
+    private List<MessageBankFile> attachedFilesLocation;
 
     public LocalDate getDate() {
         return date;
@@ -79,11 +79,11 @@ public class Message extends BaseEntity {
         this.hiddenCopies = hiddenCopies;
     }
 
-    public List<BankFile> getAttachedFilesLocation() {
+    public List<MessageBankFile> getAttachedFilesLocation() {
         return attachedFilesLocation;
     }
 
-    public void setAttachedFilesLocation(List<BankFile> attachedFilesLocation) {
+    public void setAttachedFilesLocation(List<MessageBankFile> attachedFilesLocation) {
         this.attachedFilesLocation = attachedFilesLocation;
     }
 }

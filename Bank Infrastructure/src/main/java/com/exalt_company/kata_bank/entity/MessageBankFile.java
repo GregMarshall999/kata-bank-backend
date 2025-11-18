@@ -4,7 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class BankFile extends BaseEntity {
+public class MessageBankFile extends BaseEntity {
     @NotNull
     private String fileLocation;
 
