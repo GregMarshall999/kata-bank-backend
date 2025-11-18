@@ -9,6 +9,7 @@ import com.exalt_company.user_domain.shared.exception.BankUserException;
 import com.exalt_company.user_domain.spi.BankUsers;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -17,16 +18,21 @@ import java.util.UUID;
 public class UsersJpaAdapter implements BankUsers {
     private final BankUserRepository repository;
     private final BankUserMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsersJpaAdapter(BankUserRepository repository, BankUserMapper mapper) {
+    public UsersJpaAdapter(BankUserRepository repository, BankUserMapper mapper, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.mapper = mapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public BankUserAccount createAccount(BankUserAccount userAccount) throws BankUserException {
         try {
-            BankUser saved = repository.save(mapper.fromDomain(userAccount));
+            BankUser user = mapper.fromDomain(userAccount);
+            // Hash password before saving
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            BankUser saved = repository.save(user);
             return mapper.toDomain(saved);
         } catch (IllegalArgumentException | OptimisticLockingFailureException e) {
             throw new BankUserException("Could not create account: " + e.getMessage());
