@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank.entity;
 
 import com.exalt_company.user_domain.shared.BankRole;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -29,7 +30,7 @@ public class BankUser extends BaseEntity implements UserDetails {
     private String password;
 
     @NotNull
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private BankRole role;
 
     public BankUser() {}
