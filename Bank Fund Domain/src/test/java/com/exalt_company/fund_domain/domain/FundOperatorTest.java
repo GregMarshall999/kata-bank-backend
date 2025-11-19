@@ -33,7 +33,7 @@ class FundOperatorTest {
         Fund fund = fund(ownerId, fundId, 100.0);
         fundsSpy.seedFund(fund);
 
-        FundStatus status = fundOperator.deposit(new Deposit(ownerId, fundId, 50.0));
+        FundStatus status = fundOperator.deposit(new Deposit(fundId, ownerId, 50.0));
 
         assertThat(status).isEqualTo(FundStatus.SUCCESS);
         assertThat(fundsSpy.updateFundId).isEqualTo(fundId);
@@ -42,7 +42,7 @@ class FundOperatorTest {
 
     @Test
     void shouldCreateFundWhenDepositingForNewOwner() throws FundException {
-        FundStatus status = fundOperator.deposit(new Deposit(ownerId, fundId, 40.0));
+        FundStatus status = fundOperator.deposit(new Deposit(fundId, ownerId, 40.0));
 
         assertThat(status).isEqualTo(FundStatus.CREATED);
         assertThat(fundsSpy.createFundOwnerId).isEqualTo(ownerId);
@@ -54,7 +54,7 @@ class FundOperatorTest {
         Fund fund = fund(ownerId, fundId, 200.0);
         fundsSpy.seedFund(fund);
 
-        FundStatus status = fundOperator.withdraw(new Withdraw(ownerId, fundId, 80.0));
+        FundStatus status = fundOperator.withdraw(new Withdraw(fundId, ownerId, 80.0));
 
         assertThat(status).isEqualTo(FundStatus.SUCCESS);
         assertThat(fundsSpy.updatedFund.getBalance()).isEqualTo(120.0);
@@ -65,21 +65,21 @@ class FundOperatorTest {
         Fund fund = fund(ownerId, fundId, 60.0);
         fundsSpy.seedFund(fund);
 
-        assertThatThrownBy(() -> fundOperator.withdraw(new Withdraw(ownerId, fundId, 80.0)))
+        assertThatThrownBy(() -> fundOperator.withdraw(new Withdraw(fundId, ownerId, 80.0)))
                 .isInstanceOf(FundException.class)
                 .hasMessageContaining("Balance overdrawn!");
     }
 
     @Test
     void shouldRejectDepositWithNonPositiveAmount() {
-        assertThatThrownBy(() -> fundOperator.deposit(new Deposit(ownerId, fundId, 0)))
+        assertThatThrownBy(() -> fundOperator.deposit(new Deposit(fundId, ownerId, 0)))
                 .isInstanceOf(FundException.class)
                 .hasMessageContaining("Deposits amounts must be positive!");
     }
 
     @Test
     void shouldRejectDepositWithoutFundId() {
-        assertThatThrownBy(() -> fundOperator.deposit(new Deposit(ownerId, null, 10)))
+        assertThatThrownBy(() -> fundOperator.deposit(new Deposit(null, ownerId, 10)))
                 .isInstanceOf(FundException.class)
                 .hasMessageContaining("Funds are required for deposits!");
     }
