@@ -12,7 +12,9 @@ import com.exalt_company.user_domain.spi.BankUsers;
 import java.util.UUID;
 
 /**
- * Default Account Management implementation
+ * Default implementation of the AccountManagement interface.
+ * Provides administrative operations for managing bank user accounts,
+ * including CRUD operations and account listing.
  */
 @UserDomainService
 public class AccountManager implements AccountManagement {
@@ -22,6 +24,13 @@ public class AccountManager implements AccountManagement {
         this.bankUsers = bankUsers;
     }
 
+    /**
+     * Creates a custom account with optional password generation.
+     * If no password is provided, a default password is generated.
+     *
+     * @param user the bank user account to create
+     * @return an AdminResponse containing the created account or error state
+     */
     public AdminResponse<BankUserAccount> createCustomAccount(BankUserAccount user) {
         AdminResponse<BankUserAccount> response;
 

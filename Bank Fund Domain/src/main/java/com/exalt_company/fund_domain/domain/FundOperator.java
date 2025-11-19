@@ -11,10 +11,20 @@ import com.exalt_company.fund_domain.spi.Funds;
 
 import java.math.BigDecimal;
 
+/**
+ * Domain service implementation for fund operations.
+ * Handles business logic for deposits and withdrawals, including validation
+ * and fund creation when necessary.
+ */
 @FundDomainService
 public class FundOperator implements FundAction {
     private final Funds funds;
 
+    /**
+     * Constructs a new FundOperator with the specified Funds repository.
+     *
+     * @param funds the repository for fund persistence operations
+     */
     public FundOperator(Funds funds) {
         this.funds = funds;
     }

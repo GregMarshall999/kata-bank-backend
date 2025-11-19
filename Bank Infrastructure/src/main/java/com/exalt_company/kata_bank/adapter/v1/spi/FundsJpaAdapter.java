@@ -13,6 +13,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+/**
+ * JPA adapter implementation of the Funds SPI.
+ * Provides persistence operations for fund accounts using JPA repositories.
+ */
 @Component
 public class FundsJpaAdapter implements Funds {
     private final BankFundRepository repository;

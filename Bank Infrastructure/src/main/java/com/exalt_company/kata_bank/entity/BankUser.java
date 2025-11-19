@@ -14,6 +14,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a bank user account.
+ * Implements Spring Security's UserDetails interface for authentication and authorization.
+ * Each user has a role (ADMIN, CLIENT, or COUNSELOR) that determines their permissions.
+ */
 @Entity
 public class BankUser extends BaseEntity implements UserDetails {
     @NotNull

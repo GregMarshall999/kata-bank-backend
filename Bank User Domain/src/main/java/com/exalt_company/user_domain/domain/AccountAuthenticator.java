@@ -12,8 +12,12 @@ import com.exalt_company.user_domain.spi.Authentication;
 import com.exalt_company.user_domain.spi.BankUsers;
 
 /**
- * Default Authentication implementation
- * Token type is String
+ * Default implementation of the AccountAuthentication interface.
+ * Handles user sign-in and sign-up operations, generating JWT tokens
+ * for authenticated users.
+ * <p>
+ * Token type is String (JWT token).
+ * </p>
  */
 @UserDomainService
 public class AccountAuthenticator implements AccountAuthentication<String> {

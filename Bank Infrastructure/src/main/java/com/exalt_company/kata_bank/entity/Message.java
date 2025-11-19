@@ -9,6 +9,10 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * JPA entity representing a message exchanged between bank users.
+ * Messages can have recipients, copies, hidden copies, and attached files.
+ */
 @Entity
 public class Message extends BaseEntity {
     @NotNull

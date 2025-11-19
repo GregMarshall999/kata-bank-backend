@@ -14,6 +14,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+/**
+ * JPA adapter implementation of the BankUsers SPI.
+ * Provides persistence operations for bank user accounts using JPA repositories.
+ * Handles password encoding before persisting user accounts.
+ */
 @Component
 public class UsersJpaAdapter implements BankUsers {
     private final BankUserRepository repository;

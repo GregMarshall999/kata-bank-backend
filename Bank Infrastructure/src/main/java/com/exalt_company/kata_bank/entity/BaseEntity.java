@@ -8,6 +8,10 @@ import jakarta.persistence.Version;
 
 import java.util.UUID;
 
+/**
+ * Base entity class providing common fields for all JPA entities.
+ * Includes UUID-based primary key and optimistic locking version field.
+ */
 @MappedSuperclass
 public class BaseEntity {
     @Id

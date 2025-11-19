@@ -3,6 +3,10 @@ package com.exalt_company.fund_domain.domain;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Represents a fund account in the banking system.
+ * A fund is associated with an owner and maintains a balance.
+ */
 public class Fund {
     private UUID id;
     private BigDecimal balance;

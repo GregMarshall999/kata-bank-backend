@@ -14,6 +14,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Spring Security configuration class.
+ * Configures JWT-based authentication, password encoding, and security filter chains.
+ * Public endpoints include authentication endpoints and Swagger documentation.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -23,6 +28,15 @@ public class SecurityConfig {
         this.authFilter = authFilter;
     }
 
+    /**
+     * Configures the security filter chain with JWT authentication.
+     * Public endpoints include authentication and Swagger documentation.
+     * All other endpoints require authentication.
+     *
+     * @param http the HttpSecurity to configure
+     * @return the configured SecurityFilterChain
+     * @throws Exception if configuration fails
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -48,11 +62,24 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configures the password encoder bean.
+     * Uses BCrypt for password hashing.
+     *
+     * @return a BCryptPasswordEncoder instance
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Configures the authentication manager bean.
+     *
+     * @param config the authentication configuration
+     * @return the AuthenticationManager instance
+     * @throws Exception if configuration fails
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

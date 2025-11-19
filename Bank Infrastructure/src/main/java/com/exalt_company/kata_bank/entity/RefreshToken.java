@@ -6,11 +6,17 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 
+/**
+ * JPA entity representing a refresh token.
+ * Refresh tokens are used to obtain new access tokens without requiring
+ * the user to re-authenticate. Each token is associated with a user and has an expiration date.
+ */
 @Entity
 public class RefreshToken extends BaseEntity {
     @NotNull
     private String token;
 
+    //TODO: test with switch to LocalDate
     @NotNull
     private Instant expiryDate;
 

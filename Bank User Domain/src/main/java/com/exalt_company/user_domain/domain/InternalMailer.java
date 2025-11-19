@@ -15,8 +15,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Default Internal Mailer implementation
- * File type is used to represent an attached file reference
+ * Default implementation of the AccountCommunication interface.
+ * Handles internal messaging between bank users, including message consultation,
+ * listing, and sending.
+ * <p>
+ * File type is used to represent an attached file reference.
+ * </p>
  */
 @UserDomainService
 public class InternalMailer implements AccountCommunication<File> {

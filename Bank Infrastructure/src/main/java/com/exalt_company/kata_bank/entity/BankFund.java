@@ -6,6 +6,10 @@ import jakarta.persistence.OneToOne;
 
 import java.math.BigDecimal;
 
+/**
+ * JPA entity representing a bank fund account.
+ * Each fund is associated with a single bank user (owner) and maintains a balance.
+ */
 @Entity
 public class BankFund extends BaseEntity {
     @Column(precision = 19, scale = 2)
