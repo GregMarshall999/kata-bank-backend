@@ -21,7 +21,12 @@ public class FundOperator implements FundAction {
     public FundStatus deposit(Deposit deposit) throws FundException {
         validateResource(deposit, "deposits");
 
-        Fund ownerFund = funds.getByOwnerId(deposit.getFundOwnerId());
+        Fund ownerFund;
+        try {
+            ownerFund = funds.getByOwnerId(deposit.getFundOwnerId());
+        } catch (FundException e) {
+            ownerFund = funds.createFund(deposit.getFundOwnerId());
+        }
 
         double balance = ownerFund.getBalance();
         ownerFund.setBalance(balance + deposit.getAmount());

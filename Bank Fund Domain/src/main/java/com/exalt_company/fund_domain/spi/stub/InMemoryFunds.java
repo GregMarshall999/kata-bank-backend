@@ -14,6 +14,25 @@ public class InMemoryFunds implements Funds {
     private final Map<UUID, Fund> funds = new HashMap<>();
 
     @Override
+    public Fund createFund(UUID ownerId) throws FundException {
+        List<Fund> existingFunds = funds.values()
+                .stream()
+                .filter(fund -> fund.getOwnerId().equals(ownerId)).toList();
+
+        if(!existingFunds.isEmpty())
+            throw new FundException("Unable to create more than 1 fund per owner!", FundStatus.FAILED);
+
+        UUID uuid = UUID.randomUUID();
+        while (funds.containsKey(uuid))
+            uuid = UUID.randomUUID();
+
+        Fund fund = new Fund(uuid, ownerId);
+        funds.put(uuid, fund);
+
+        return fund;
+    }
+
+    @Override
     public Fund getByOwnerId(UUID ownerId) throws FundException {
         List<Fund> found = funds.values()
                 .stream()
@@ -39,18 +58,5 @@ public class InMemoryFunds implements Funds {
         found.setOwnerId(fundToUpdate.getOwnerId());
 
         return FundStatus.SUCCESS;
-    }
-
-    public void createFund(Fund fund) {
-        UUID uuid = UUID.randomUUID();
-        while (funds.containsKey(uuid))
-            uuid = UUID.randomUUID();
-
-        fund.setId(uuid);
-        funds.put(uuid, fund);
-    }
-
-    public void resetFunds() {
-        funds.clear();
     }
 }

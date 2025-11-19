@@ -23,13 +23,12 @@ class InMemoryFundsTest {
     @Test
     void shouldGetFundByOwnerId() throws FundException {
         UUID ownerId = UUID.randomUUID();
-        Fund fund = fund(ownerId, 150.0);
-
-        inMemoryFunds.createFund(fund);
+        Fund created = inMemoryFunds.createFund(ownerId);
+        created.setBalance(150.0);
 
         Fund found = inMemoryFunds.getByOwnerId(ownerId);
 
-        assertThat(found).isSameAs(fund);
+        assertThat(found).isSameAs(created);
         assertThat(found.getBalance()).isEqualTo(150.0);
     }
 
@@ -43,11 +42,14 @@ class InMemoryFundsTest {
     }
 
     @Test
-    void shouldThrowWhenMultipleFundsExistForSameOwner() {
+    void shouldThrowWhenMultipleFundsExistForSameOwner() throws FundException {
         UUID ownerId = UUID.randomUUID();
+        UUID anotherOwner = UUID.randomUUID();
 
-        inMemoryFunds.createFund(fund(ownerId, 250.0));
-        inMemoryFunds.createFund(fund(ownerId, 500.0));
+        inMemoryFunds.createFund(ownerId);
+        Fund toUpdate = inMemoryFunds.createFund(anotherOwner);
+
+        inMemoryFunds.updateFund(toUpdate.getId(), fund(ownerId, 200.0));
 
         assertThatThrownBy(() -> inMemoryFunds.getByOwnerId(ownerId))
                 .isInstanceOf(FundException.class)
@@ -57,8 +59,8 @@ class InMemoryFundsTest {
     @Test
     void shouldUpdateFund() throws FundException {
         UUID initialOwner = UUID.randomUUID();
-        inMemoryFunds.createFund(fund(initialOwner, 100.0));
-        Fund persisted = inMemoryFunds.getByOwnerId(initialOwner);
+        Fund persisted = inMemoryFunds.createFund(initialOwner);
+        persisted.setBalance(100.0);
 
         UUID newOwner = UUID.randomUUID();
         Fund updatedData = fund(newOwner, 600.0);
@@ -81,12 +83,19 @@ class InMemoryFundsTest {
     }
 
     @Test
-    void shouldAssignIdentifierWhenCreatingFund() {
-        Fund fund = fund(UUID.randomUUID(), 75.0);
-
-        inMemoryFunds.createFund(fund);
-
+    void shouldAssignIdentifierWhenCreatingFund() throws FundException {
+        Fund fund = inMemoryFunds.createFund(UUID.randomUUID());
         assertThat(fund.getId()).isNotNull();
+    }
+
+    @Test
+    void shouldThrowWhenCreatingSecondFundForOwner() throws FundException {
+        UUID ownerId = UUID.randomUUID();
+        inMemoryFunds.createFund(ownerId);
+
+        assertThatThrownBy(() -> inMemoryFunds.createFund(ownerId))
+                .isInstanceOf(FundException.class)
+                .hasMessageContaining("Unable to create more than 1 fund per owner!");
     }
 
     private Fund fund(UUID ownerId, double balance) {
