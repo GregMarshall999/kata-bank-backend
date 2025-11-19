@@ -1,11 +1,15 @@
 package com.exalt_company.kata_bank.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToOne;
 
+import java.math.BigDecimal;
+
 @Entity
 public class BankFund extends BaseEntity {
-    private double balance;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal balance;
 
     @OneToOne(optional = false)
     private BankUser owner;
@@ -16,11 +20,11 @@ public class BankFund extends BaseEntity {
         this.owner = owner;
     }
 
-    public double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 

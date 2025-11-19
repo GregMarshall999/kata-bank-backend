@@ -9,6 +9,8 @@ import com.exalt_company.fund_domain.shared.FundException;
 import com.exalt_company.fund_domain.shared.FundStatus;
 import com.exalt_company.fund_domain.spi.Funds;
 
+import java.math.BigDecimal;
+
 @FundDomainService
 public class FundOperator implements FundAction {
     private final Funds funds;
@@ -30,8 +32,11 @@ public class FundOperator implements FundAction {
             wasCreated = true;
         }
 
-        double balance = ownerFund.getBalance();
-        ownerFund.setBalance(balance + deposit.getAmount());
+        BigDecimal balance = ownerFund.getBalance();
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
+        }
+        ownerFund.setBalance(balance.add(deposit.getAmount()));
         FundStatus status = funds.updateFund(wasCreated ? ownerFund.getId() : deposit.getFundId(), ownerFund);
 
         return wasCreated ? FundStatus.CREATED : status;
@@ -43,10 +48,13 @@ public class FundOperator implements FundAction {
 
         Fund ownerFund = funds.getByOwnerId(withdraw.getFundOwnerId());
 
-        double balance = ownerFund.getBalance();
-        balance = balance - withdraw.getAmount();
+        BigDecimal balance = ownerFund.getBalance();
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
+        }
+        balance = balance.subtract(withdraw.getAmount());
 
-        if(balance < 0)
+        if(balance.compareTo(BigDecimal.ZERO) < 0)
             throw new FundException("Balance overdrawn!", FundStatus.REFUSED);
 
         ownerFund.setBalance(balance);
@@ -61,7 +69,7 @@ public class FundOperator implements FundAction {
             throw new FundException(
                     "The funds owner is required for " + resourceType + "!" , FundStatus.UNSUPPORTED_OPERATION
             );
-        if(resource.getAmount() <= 0)
+        if(resource.getAmount() == null || resource.getAmount().compareTo(BigDecimal.ZERO) <= 0)
             throw new FundException(
                     resourceType.toUpperCase().charAt(0) +
                             resourceType.substring(1) +

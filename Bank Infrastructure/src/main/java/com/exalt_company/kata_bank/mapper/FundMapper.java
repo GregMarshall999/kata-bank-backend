@@ -7,6 +7,7 @@ import com.exalt_company.kata_bank.entity.BankFund;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class FundMapper {
@@ -15,7 +16,7 @@ public class FundMapper {
     public static <F extends FundResource> F toDomain(FundRequest request, Class<F> fundResourceType)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
-        Constructor<F> constructor = fundResourceType.getDeclaredConstructor(UUID.class, UUID.class, double.class);
+        Constructor<F> constructor = fundResourceType.getDeclaredConstructor(UUID.class, UUID.class, BigDecimal.class);
         return constructor.newInstance(request.fundId(), request.fundOwnerId(), request.amount());
     }
 

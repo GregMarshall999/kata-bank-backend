@@ -1,13 +1,14 @@
 package com.exalt_company.fund_domain.api.resource;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public abstract class FundResource {
     private final UUID fundId;
     private final UUID fundOwnerId;
-    private final double amount;
+    private final BigDecimal amount;
 
-    protected FundResource(UUID fundId, UUID fundOwnerId, double amount) {
+    protected FundResource(UUID fundId, UUID fundOwnerId, BigDecimal amount) {
         this.fundId = fundId;
         this.fundOwnerId = fundOwnerId;
         this.amount = amount;
@@ -21,7 +22,7 @@ public abstract class FundResource {
         return fundId;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 }

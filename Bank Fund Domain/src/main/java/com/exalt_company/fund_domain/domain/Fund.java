@@ -1,10 +1,11 @@
 package com.exalt_company.fund_domain.domain;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class Fund {
     private UUID id;
-    private double balance;
+    private BigDecimal balance;
     private UUID ownerId;
 
     public Fund() {
@@ -15,7 +16,7 @@ public class Fund {
         this.ownerId = ownerId;
     }
 
-    public Fund(UUID id, double balance, UUID ownerId) {
+    public Fund(UUID id, BigDecimal balance, UUID ownerId) {
         this(id, ownerId);
         this.balance = balance;
     }
@@ -28,11 +29,11 @@ public class Fund {
         this.id = id;
     }
 
-    public double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 

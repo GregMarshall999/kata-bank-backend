@@ -6,6 +6,7 @@ import com.exalt_company.fund_domain.shared.FundStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,12 +25,12 @@ class InMemoryFundsTest {
     void shouldGetFundByOwnerId() throws FundException {
         UUID ownerId = UUID.randomUUID();
         Fund created = inMemoryFunds.createFund(ownerId);
-        created.setBalance(150.0);
+        created.setBalance(new BigDecimal("150.0"));
 
         Fund found = inMemoryFunds.getByOwnerId(ownerId);
 
         assertThat(found).isSameAs(created);
-        assertThat(found.getBalance()).isEqualTo(150.0);
+        assertThat(found.getBalance()).isEqualByComparingTo(new BigDecimal("150.0"));
     }
 
     @Test
@@ -49,7 +50,7 @@ class InMemoryFundsTest {
         inMemoryFunds.createFund(ownerId);
         Fund toUpdate = inMemoryFunds.createFund(anotherOwner);
 
-        inMemoryFunds.updateFund(toUpdate.getId(), fund(ownerId, 200.0));
+        inMemoryFunds.updateFund(toUpdate.getId(), fund(ownerId, new BigDecimal("200.0")));
 
         assertThatThrownBy(() -> inMemoryFunds.getByOwnerId(ownerId))
                 .isInstanceOf(FundException.class)
@@ -60,22 +61,22 @@ class InMemoryFundsTest {
     void shouldUpdateFund() throws FundException {
         UUID initialOwner = UUID.randomUUID();
         Fund persisted = inMemoryFunds.createFund(initialOwner);
-        persisted.setBalance(100.0);
+        persisted.setBalance(new BigDecimal("100.0"));
 
         UUID newOwner = UUID.randomUUID();
-        Fund updatedData = fund(newOwner, 600.0);
+        Fund updatedData = fund(newOwner, new BigDecimal("600.0"));
 
         FundStatus status = inMemoryFunds.updateFund(persisted.getId(), updatedData);
 
         assertThat(status).isEqualTo(FundStatus.SUCCESS);
         Fund updatedFund = inMemoryFunds.getByOwnerId(newOwner);
-        assertThat(updatedFund.getBalance()).isEqualTo(600.0);
+        assertThat(updatedFund.getBalance()).isEqualByComparingTo(new BigDecimal("600.0"));
         assertThat(updatedFund.getOwnerId()).isEqualTo(newOwner);
     }
 
     @Test
     void shouldThrowWhenUpdatingNonExistingFund() {
-        Fund updatedData = fund(UUID.randomUUID(), 200.0);
+        Fund updatedData = fund(UUID.randomUUID(), new BigDecimal("200.0"));
 
         assertThatThrownBy(() -> inMemoryFunds.updateFund(UUID.randomUUID(), updatedData))
                 .isInstanceOf(FundException.class)
@@ -98,7 +99,7 @@ class InMemoryFundsTest {
                 .hasMessageContaining("Unable to create more than 1 fund per owner!");
     }
 
-    private Fund fund(UUID ownerId, double balance) {
+    private Fund fund(UUID ownerId, BigDecimal balance) {
         Fund fund = new Fund();
         fund.setOwnerId(ownerId);
         fund.setBalance(balance);
