@@ -32,7 +32,7 @@ public class FundOperator implements FundAction {
 
         double balance = ownerFund.getBalance();
         ownerFund.setBalance(balance + deposit.getAmount());
-        FundStatus status = funds.updateFund(deposit.getFundId(), ownerFund);
+        FundStatus status = funds.updateFund(wasCreated ? ownerFund.getId() : deposit.getFundId(), ownerFund);
 
         return wasCreated ? FundStatus.CREATED : status;
     }
@@ -55,7 +55,7 @@ public class FundOperator implements FundAction {
     }
 
     private <R extends FundResource> void validateResource(R resource, String resourceType) throws FundException {
-        if(resource.getFundId() == null)
+        if(!(resource instanceof Deposit) && resource.getFundId() == null)
             throw new FundException("Funds are required for " + resourceType + "!", FundStatus.UNSUPPORTED_OPERATION);
         if(resource.getFundOwnerId() == null)
             throw new FundException(
