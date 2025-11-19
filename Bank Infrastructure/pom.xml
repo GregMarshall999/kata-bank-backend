@@ -17,6 +17,7 @@
     <artifactId>bank-infrastructure</artifactId>
 
     <properties>
+        <h2.version>2.3.232</h2.version>
         <jjwt.version>0.13.0</jjwt.version>
         <mysql.version>9.4.0</mysql.version>
         <postgresql.version>42.7.8</postgresql.version>
@@ -99,6 +100,12 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <version>${spring.security.test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
             <scope>test</scope>
         </dependency>
 
