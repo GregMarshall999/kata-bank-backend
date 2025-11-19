@@ -22,20 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AccountAuthentication<String> authentication;
-    private final AuthMapper mapper;
     private final BankUserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
     public AuthController(
             AccountAuthentication<String> authentication,
-            AuthMapper mapper,
             BankUserRepository userRepository,
             JwtService jwtService,
             RefreshTokenService refreshTokenService
     ) {
         this.authentication = authentication;
-        this.mapper = mapper;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
@@ -43,7 +40,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> authenticate(@RequestBody AuthRequest request) throws AuthenticationException {
-        authentication.signInRequest(mapper.toDomain(request));
+        authentication.signInRequest(AuthMapper.toDomain(request));
 
         BankUser user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new AuthenticationException("User not found"));
@@ -56,7 +53,7 @@ public class AuthController {
 
     @PostMapping("/signUp")
     public ResponseEntity<TokenResponse> signUp(@RequestBody SignUpRequest request) throws AuthenticationException {
-        authentication.signUpRequest(mapper.toDomain(request));
+        authentication.signUpRequest(AuthMapper.toDomain(request));
         
         BankUser user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new AuthenticationException("User not found"));

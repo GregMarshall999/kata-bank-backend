@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 public class BankUser extends BaseEntity implements UserDetails {
@@ -30,6 +31,18 @@ public class BankUser extends BaseEntity implements UserDetails {
     @NotNull
     @Enumerated
     private BankRole role;
+
+    public BankUser() {}
+
+    public BankUser(UUID id, String name, String surname, String email, String password, BankRole role) {
+        super(id);
+
+        this.name = name;
+        this.surname = surname;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
 
     public String getName() {
         return name;

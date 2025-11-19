@@ -16,7 +16,13 @@ public class BaseEntity {
 
     @Version
     private int version;
-    
+
+    public BaseEntity() {}
+
+    public BaseEntity(UUID id) {
+        this.id = id;
+    }
+
     public UUID getId() {
         return id;
     }

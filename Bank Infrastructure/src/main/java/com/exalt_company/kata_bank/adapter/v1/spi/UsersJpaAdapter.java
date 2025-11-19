@@ -17,23 +17,21 @@ import java.util.UUID;
 @Component
 public class UsersJpaAdapter implements BankUsers {
     private final BankUserRepository repository;
-    private final BankUserMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UsersJpaAdapter(BankUserRepository repository, BankUserMapper mapper, PasswordEncoder passwordEncoder) {
+    public UsersJpaAdapter(BankUserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
-        this.mapper = mapper;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public BankUserAccount createAccount(BankUserAccount userAccount) throws BankUserException {
         try {
-            BankUser user = mapper.fromDomain(userAccount);
+            BankUser user = BankUserMapper.fromDomain(userAccount);
             // Hash password before saving
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             BankUser saved = repository.save(user);
-            return mapper.toDomain(saved);
+            return BankUserMapper.toDomain(saved);
         } catch (IllegalArgumentException | OptimisticLockingFailureException e) {
             throw new BankUserException("Could not create account: " + e.getMessage());
         }
@@ -59,8 +57,8 @@ public class UsersJpaAdapter implements BankUsers {
         userAccount.setId(userId);
 
         try {
-            BankUser edited = repository.save(mapper.fromDomain(userAccount));
-            return mapper.toDomain(edited);
+            BankUser edited = repository.save(BankUserMapper.fromDomain(userAccount));
+            return BankUserMapper.toDomain(edited);
         } catch (IllegalArgumentException | OptimisticLockingFailureException e) {
             throw new BankUserException("Could not edit account: " + e.getMessage());
         }
@@ -68,14 +66,14 @@ public class UsersJpaAdapter implements BankUsers {
 
     @Override
     public BankUserAccount findByEmail(String email) throws BankUserException {
-        return mapper.toDomain(
+        return BankUserMapper.toDomain(
                 repository.findByEmail(email).orElseThrow(() -> new BankUserException("User not found"))
         );
     }
 
     @Override
     public BankUserAccount findById(UUID userId) throws BankUserException {
-        return mapper.toDomain(
+        return BankUserMapper.toDomain(
                 repository.findById(userId).orElseThrow(() -> new BankUserException("User not found"))
         );
     }
@@ -86,6 +84,6 @@ public class UsersJpaAdapter implements BankUsers {
 
         org.springframework.data.domain.Page<BankUser> all = repository.findAll(PageRequest.of(page, size));
 
-        return new Page<>(mapper.toDomain(all.getContent()), all.getNumber(), all.getSize());
+        return new Page<>(BankUserMapper.toDomain(all.getContent()), all.getNumber(), all.getSize());
     }
 }
