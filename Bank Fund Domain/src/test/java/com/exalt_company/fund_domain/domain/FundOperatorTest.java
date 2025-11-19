@@ -41,6 +41,15 @@ class FundOperatorTest {
     }
 
     @Test
+    void shouldCreateFundWhenDepositingForNewOwner() throws FundException {
+        FundStatus status = fundOperator.deposit(new Deposit(ownerId, fundId, 40.0));
+
+        assertThat(status).isEqualTo(FundStatus.SUCCESS);
+        assertThat(fundsSpy.createFundOwnerId).isEqualTo(ownerId);
+        assertThat(fundsSpy.updatedFund.getBalance()).isEqualTo(40.0);
+    }
+
+    @Test
     void shouldWithdrawDecreaseBalanceAndPersist() throws FundException {
         Fund fund = fund(ownerId, fundId, 200.0);
         fundsSpy.seedFund(fund);
@@ -87,9 +96,20 @@ class FundOperatorTest {
         private Fund storedFund;
         private UUID updateFundId;
         private Fund updatedFund;
+        private UUID createFundOwnerId;
 
         void seedFund(Fund fund) {
             storedFund = fund;
+        }
+
+        @Override
+        public Fund createFund(UUID ownerId) {
+            createFundOwnerId = ownerId;
+            storedFund = new Fund();
+            storedFund.setOwnerId(ownerId);
+            storedFund.setId(UUID.randomUUID());
+            storedFund.setBalance(0.0);
+            return storedFund;
         }
 
         @Override

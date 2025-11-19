@@ -7,6 +7,14 @@ public class Fund {
     private double balance;
     private UUID ownerId;
 
+    public Fund() {
+    }
+
+    public Fund(UUID id, UUID ownerId) {
+        this.id = id;
+        this.ownerId = ownerId;
+    }
+
     public UUID getId() {
         return id;
     }
