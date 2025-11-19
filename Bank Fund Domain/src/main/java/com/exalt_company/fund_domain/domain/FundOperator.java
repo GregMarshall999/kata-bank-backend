@@ -22,16 +22,19 @@ public class FundOperator implements FundAction {
         validateResource(deposit, "deposits");
 
         Fund ownerFund;
+        boolean wasCreated = false;
         try {
             ownerFund = funds.getByOwnerId(deposit.getFundOwnerId());
         } catch (FundException e) {
             ownerFund = funds.createFund(deposit.getFundOwnerId());
+            wasCreated = true;
         }
 
         double balance = ownerFund.getBalance();
         ownerFund.setBalance(balance + deposit.getAmount());
+        FundStatus status = funds.updateFund(deposit.getFundId(), ownerFund);
 
-        return funds.updateFund(deposit.getFundId(), ownerFund);
+        return wasCreated ? FundStatus.CREATED : status;
     }
 
     @Override

@@ -44,7 +44,7 @@ class FundOperatorTest {
     void shouldCreateFundWhenDepositingForNewOwner() throws FundException {
         FundStatus status = fundOperator.deposit(new Deposit(ownerId, fundId, 40.0));
 
-        assertThat(status).isEqualTo(FundStatus.SUCCESS);
+        assertThat(status).isEqualTo(FundStatus.CREATED);
         assertThat(fundsSpy.createFundOwnerId).isEqualTo(ownerId);
         assertThat(fundsSpy.updatedFund.getBalance()).isEqualTo(40.0);
     }
