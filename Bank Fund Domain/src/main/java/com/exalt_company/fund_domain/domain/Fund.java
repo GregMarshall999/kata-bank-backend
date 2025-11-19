@@ -15,6 +15,11 @@ public class Fund {
         this.ownerId = ownerId;
     }
 
+    public Fund(UUID id, double balance, UUID ownerId) {
+        this(id, ownerId);
+        this.balance = balance;
+    }
+
     public UUID getId() {
         return id;
     }
