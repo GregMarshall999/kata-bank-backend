@@ -107,9 +107,16 @@
             <version>${spring.security.test.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.exalt-company</groupId>
             <artifactId>bank-user-domain</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exalt-company</groupId>
+            <artifactId>bank-fund-domain</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

@@ -15,6 +15,7 @@
     <modules>
         <module>Bank User Domain</module>
         <module>Bank Infrastructure</module>
+        <module>Bank Fund Domain</module>
     </modules>
 
     <name>Kata Bank</name>
