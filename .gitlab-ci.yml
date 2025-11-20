@@ -1,168 +1,47 @@
-#Pipeline includes: build, test, security scan, and deployment stages
 stages:
-  - validate
-  - build
-  - test
-  - security
-  - deploy
+  - verify
+  - docker
 
 variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
-  JAVA_VERSION: "17"
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "/certs"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MVN_CMD: "mvn -B -ntp"
 
 cache:
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - .m2/repository/
+    - .m2/repository
 
-validate:
-  stage: validate
-  image: maven:3.9.6-eclipse-temurin-17
+verify:
+  stage: verify
+  image: maven:3.9.9-eclipse-temurin-17
   script:
-    - echo "Validating Maven project structure..."
-    - mvn $MAVEN_CLI_OPTS validate
-    - echo "Checking for dependency vulnerabilities..."
-    - mvn $MAVEN_CLI_OPTS dependency:check
-    - echo "Validating code style..."
-    - mvn $MAVEN_CLI_OPTS checkstyle:check || echo "Checkstyle not configured, skipping..."
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_BRANCH =~ /^feature\/.*$/
-    - if: $CI_COMMIT_BRANCH =~ /^hotfix\/.*$/
-
-build:
-  stage: build
-  image: maven:3.9.6-eclipse-temurin-17
-  script:
-    - echo "Building application..."
-    - mvn $MAVEN_CLI_OPTS clean compile
-    - echo "Running tests..."
-    - mvn $MAVEN_CLI_OPTS test
-    - echo "Creating JAR package..."
-    - mvn $MAVEN_CLI_OPTS package -DskipTests
-    - echo "Build completed successfully"
+    - $MVN_CMD verify
   artifacts:
-    paths:
-      - target/*.jar
+    when: always
     reports:
-      junit: target/surefire-reports/TEST-*.xml
-    expire_in: 1 week
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_BRANCH =~ /^feature\/.*$/
-    - if: $CI_COMMIT_BRANCH =~ /^hotfix\/.*$/
+      junit:
+        - "Bank Infrastructure/target/surefire-reports/TEST-*.xml"
+        - "Bank User Domain/target/surefire-reports/TEST-*.xml"
+        - "Bank Fund Domain/target/surefire-reports/TEST-*.xml"
 
-integration-tests:
-  stage: test
-  image: maven:3.9.6-eclipse-temurin-17
+docker-build:
+  stage: docker
+  image: docker:27.3.1
   services:
-    - mysql:8.0
+    - docker:27.3.1-dind
   variables:
-    MYSQL_ROOT_PASSWORD: "testpassword"
-    MYSQL_DATABASE: "kata_bank_test"
-    DATABASE_URL: "jdbc:mysql://mysql:3306/kata_bank_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-    DATABASE_USERNAME: "root"
-    DATABASE_PASSWORD: "testpassword"
-    JWT_SECRET: "dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlEb05vdFVzZUluUHJvZHVjdGlvbg=="
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+  needs:
+    - verify
   script:
-    - echo "Waiting for MySQL to be ready..."
-    - while ! mysqladmin ping -h"mysql" -P"3306" --silent; do sleep 1; done
-    - echo "Running integration tests..."
-    - mvn $MAVEN_CLI_OPTS test -Dspring.profiles.active=test
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - docker build --build-arg SPRING_PROFILES_ACTIVE=prod -t "$IMAGE_TAG" .
+    - |
+      if [ -n "$CI_REGISTRY" ] && [ -n "$CI_REGISTRY_USER" ] && [ -n "$CI_REGISTRY_PASSWORD" ]; then
+        echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+        docker push "$IMAGE_TAG"
+      else
+        echo "Registry credentials not provided, skipping docker push step."
+      fi
 
-security-scan:
-  stage: security
-  image: maven:3.9.6-eclipse-temurin-17
-  script:
-    - echo "Running OWASP dependency check..."
-    - mvn $MAVEN_CLI_OPTS org.owasp:dependency-check-maven:check
-    - echo "Security scan completed"
-  artifacts:
-    reports:
-      dependency_scanning: target/dependency-check-report.xml
-    paths:
-      - target/dependency-check-report.html
-    expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-sonarqube:
-  stage: security
-  image: maven:3.9.6-eclipse-temurin-17
-  script:
-    - echo "Running SonarQube analysis..."
-    - mvn $MAVEN_CLI_OPTS sonar:sonar
-      -Dsonar.host.url=$SONAR_HOST_URL
-      -Dsonar.login=$SONAR_TOKEN
-      -Dsonar.projectKey=$CI_PROJECT_PATH_SLUG
-      -Dsonar.projectName="$CI_PROJECT_NAME"
-      -Dsonar.projectVersion=$CI_COMMIT_SHA
-      -Dsonar.sources=src/main/java
-      -Dsonar.tests=src/test/java
-      -Dsonar.java.binaries=target/classes
-      -Dsonar.java.test.binaries=target/test-classes
-      -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-build-docker:
-  stage: build
-  image: docker:24.0.5
-  services:
-    - docker:24.0.5-dind
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-  script:
-    - echo "Building Docker image..."
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
-    - docker build -t $CI_REGISTRY_IMAGE:latest .
-    - echo "Pushing Docker image to registry..."
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-    - docker push $CI_REGISTRY_IMAGE:latest
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-deploy-staging:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache curl
-  script:
-    - echo "Deploying to staging environment..."
-    - echo "Staging deployment completed"
-  environment:
-    name: staging
-    url: https://staging-kata-bank-api.example.com
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-
-deploy-production:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache curl
-  script:
-    - echo "Deploying to production environment..."
-    - echo "Production deployment completed"
-  environment:
-    name: production
-    url: https://kata-bank-api.example.com
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-  dependencies:
-    - deploy-staging

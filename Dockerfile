@@ -1,34 +1,34 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+WORKDIR /workspace
 
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Copy the complete Maven project. The .dockerignore file keeps build output out
+# of the build context so that the image stays small.
+COPY . .
 
-COPY src ./src
+# Build only the infrastructure module (which wires the other modules) to save time.
+RUN mvn -B -ntp -pl "Bank Infrastructure" -am package -DskipTests
 
-RUN mvn clean package -DskipTests
+# Normalise the output jar path (the module folder contains spaces).
+RUN set -eux; \
+    JAR_FILE="$(find 'Bank Infrastructure/target' -maxdepth 1 -type f -name '*.jar' \
+        ! -name '*-sources.jar' \
+        ! -name '*-javadoc.jar' \
+        ! -name '*-tests.jar' \
+        ! -name '*-plain.jar' \
+        | head -n 1)"; \
+    test -n "$JAR_FILE" || { echo "Could not locate the packaged application jar" >&2; exit 1; }; \
+    cp "$JAR_FILE" /workspace/app.jar
 
 FROM eclipse-temurin:17-jre-alpine
-
-RUN addgroup -g 1001 -S appuser && adduser -S appuser -G appuser
-
 WORKDIR /app
 
-RUN apk add --no-cache curl
+ENV SPRING_PROFILES_ACTIVE=prod
 
-COPY --from=build /app/target/*.jar app.jar
-
-RUN mkdir -p /app/logs && \
-    chown -R appuser:appuser /app
-
-USER appuser
+COPY --from=build /workspace/app.jar ./app.jar
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+ENTRYPOINT ["java","-jar","/app/app.jar"]
 
-ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport"
-
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

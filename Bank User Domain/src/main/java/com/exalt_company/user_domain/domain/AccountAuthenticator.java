@@ -1,0 +1,60 @@
+package com.exalt_company.user_domain.domain;
+
+import com.exalt_company.user_domain.api.AccountAuthentication;
+import com.exalt_company.user_domain.api.resource.authentication.AuthenticationResponse;
+import com.exalt_company.user_domain.api.resource.authentication.SignInUser;
+import com.exalt_company.user_domain.api.resource.authentication.SignUpUser;
+import com.exalt_company.user_domain.ddd.UserDomainService;
+import com.exalt_company.user_domain.domain.account.BankUserAccount;
+import com.exalt_company.user_domain.shared.exception.AuthenticationException;
+import com.exalt_company.user_domain.shared.exception.BankUserException;
+import com.exalt_company.user_domain.spi.Authentication;
+import com.exalt_company.user_domain.spi.BankUsers;
+
+/**
+ * Default implementation of the AccountAuthentication interface.
+ * Handles user sign-in and sign-up operations, generating JWT tokens
+ * for authenticated users.
+ * <p>
+ * Token type is String (JWT token).
+ * </p>
+ */
+@UserDomainService
+public class AccountAuthenticator implements AccountAuthentication<String> {
+    private final Authentication<String> authentication;
+    private final BankUsers bankUsers;
+
+    public AccountAuthenticator(Authentication<String> authentication, BankUsers bankUsers) {
+        this.authentication = authentication;
+        this.bankUsers = bankUsers;
+    }
+
+    @Override
+    public AuthenticationResponse<String> signInRequest(SignInUser user) throws AuthenticationException {
+        BankUserAccount account;
+
+        try {
+            account = BankUserAccount.copy(bankUsers.findByEmail(user.email()));
+        } catch (BankUserException e) {
+            throw new AuthenticationException(e.getMessage());
+        }
+
+        account.setEmail(user.email());
+        account.setPassword(user.password());
+
+        return new AuthenticationResponse<>(authentication.generateLoginUserToken(account));
+    }
+
+    @Override
+    public AuthenticationResponse<String> signUpRequest(SignUpUser user) throws AuthenticationException {
+        BankUserAccount account = BankUserAccount.fromSignUp(user);
+
+        try {
+            account = bankUsers.createAccount(account);
+        } catch (BankUserException e) {
+            throw new AuthenticationException(e.getMessage());
+        }
+
+        return new AuthenticationResponse<>(authentication.generateNewUserToken(account));
+    }
+}

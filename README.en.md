@@ -3,6 +3,10 @@
 🌐 Available in :  
 [🇫🇷 Français](README.md) | [🇬🇧 English](README.en.md)
 
+[Modifications](CHANGELOG.fr.md) | [Changelog](CHANGELOG.md)
+
+[ENV variables](./Bank%20Infrastructure/ENV_VARIABLES.md)
+
 # Subject
 
 This kata is a [hexagonal architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) challenge
