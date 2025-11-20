@@ -8,6 +8,7 @@ import com.exalt_company.user_domain.shared.exception.AuthenticationException;
 import com.exalt_company.user_domain.shared.exception.BankUserException;
 import com.exalt_company.user_domain.shared.exception.MessageException;
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.servlet.ServletException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -131,6 +134,27 @@ public class GlobalExceptionHandler {
         );
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Handles authentication/authorization failures raised by Spring Security
+     * when the user is missing valid credentials for a protected resource.
+     * Returns 401 Unauthorized instead of the default 403 to align with API expectations.
+     */
+    @ExceptionHandler({
+            AccessDeniedException.class,
+            AuthenticationCredentialsNotFoundException.class
+    })
+    public ResponseEntity<ErrorResponse> handleSecurityAuthenticationExceptions(RuntimeException ex) {
+        logger.warn("Unauthorized access attempt: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Authentication required",
+                "Please provide valid credentials to access this resource"
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
     /**
