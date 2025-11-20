@@ -9,7 +9,7 @@
     <parent>
         <groupId>com.exalt-company</groupId>
         <artifactId>kata-bank</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <name>Bank Infrastructure</name>
@@ -112,13 +112,13 @@
         <dependency>
             <groupId>com.exalt-company</groupId>
             <artifactId>bank-user-domain</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.exalt-company</groupId>
             <artifactId>bank-fund-domain</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
