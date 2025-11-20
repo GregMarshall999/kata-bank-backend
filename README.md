@@ -2,6 +2,8 @@
 🌐 Disponible en :  
 [🇫🇷 Français](README.md) | [🇬🇧 English](README.en.md)
 
+[Modifications](CHANGELOG.fr.md) | [Changelog](CHANGELOG.md)
+
 # Sujet
 
 Ce kata est un challenge d'[architecture hexagonale](https://fr.wikipedia.org/wiki/Architecture_hexagonale) autour du domaine de la banque.
