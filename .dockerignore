@@ -1,0 +1,15 @@
+target/
+**/target/
+.git/
+.gitlab/
+.idea/
+.vscode/
+*.iml
+*.log
+**/node_modules/
+tmp/
+*.class
+*.jar
+Dockerfile
+!.github/workflows/
+
