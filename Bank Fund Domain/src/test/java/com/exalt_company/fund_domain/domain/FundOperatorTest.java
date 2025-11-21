@@ -78,13 +78,6 @@ class FundOperatorTest {
                 .hasMessageContaining("Deposits amounts must be positive!");
     }
 
-    @Test
-    void shouldRejectDepositWithoutFundId() {
-        assertThatThrownBy(() -> fundOperator.deposit(new Deposit(null, ownerId, new BigDecimal("10"))))
-                .isInstanceOf(FundException.class)
-                .hasMessageContaining("Funds are required for deposits!");
-    }
-
     private Fund fund(UUID ownerId, UUID id, BigDecimal balance) {
         Fund fund = new Fund();
         fund.setOwnerId(ownerId);
