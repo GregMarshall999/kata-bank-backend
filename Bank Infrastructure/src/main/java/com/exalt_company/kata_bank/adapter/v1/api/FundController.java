@@ -6,6 +6,7 @@ import com.exalt_company.fund_domain.api.resource.Withdraw;
 import com.exalt_company.fund_domain.shared.FundException;
 import com.exalt_company.fund_domain.shared.FundStatus;
 import com.exalt_company.kata_bank.adapter.v1.resource.FundRequest;
+import com.exalt_company.fund_domain.api.resource.FundResponse;
 import com.exalt_company.kata_bank.config.SwaggerConfig;
 import com.exalt_company.kata_bank.mapper.FundMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,12 +17,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/fund")
@@ -67,5 +66,12 @@ public class FundController {
         FundStatus withdrawalStatus = fundAction.withdraw(FundMapper.toDomain(request, Withdraw.class));
 
         return ResponseEntity.status(HttpStatus.OK).body(withdrawalStatus);
+    }
+
+    @GetMapping("/{ownerId}")
+    public ResponseEntity<FundResponse> getByOwnerId(@PathVariable String ownerId) throws FundException {
+        FundResponse fundResponse = fundAction.getByOwnerId(UUID.fromString(ownerId));
+
+        return ResponseEntity.status(HttpStatus.OK).body(fundResponse);
     }
 }

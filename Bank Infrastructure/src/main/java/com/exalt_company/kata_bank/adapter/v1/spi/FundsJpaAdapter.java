@@ -11,6 +11,7 @@ import com.exalt_company.kata_bank.repository.BankUserRepository;
 import com.exalt_company.kata_bank.repository.BankFundRepository;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -32,7 +33,7 @@ public class FundsJpaAdapter implements Funds {
         BankUser owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new FundException("Owner not found!", FundStatus.FAILED));
 
-        BankFund ownerFund = new BankFund(owner);
+        BankFund ownerFund = new BankFund(BigDecimal.ZERO, owner);
         BankFund savedFund = repository.save(ownerFund);
 
         return FundMapper.toDomain(savedFund);

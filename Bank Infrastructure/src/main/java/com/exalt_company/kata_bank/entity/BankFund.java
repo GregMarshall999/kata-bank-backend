@@ -12,7 +12,7 @@ import java.math.BigDecimal;
  */
 @Entity
 public class BankFund extends BaseEntity {
-    @Column(precision = 19, scale = 2)
+    @Column(precision = 19, scale = 2, nullable = false)
     private BigDecimal balance;
 
     @OneToOne(optional = false)
@@ -20,7 +20,8 @@ public class BankFund extends BaseEntity {
 
     public BankFund() {}
 
-    public BankFund(BankUser owner) {
+    public BankFund(BigDecimal balance, BankUser owner) {
+        this.balance = balance;
         this.owner = owner;
     }
 

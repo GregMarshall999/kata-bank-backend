@@ -3,6 +3,7 @@ package com.exalt_company.fund_domain.domain;
 import com.exalt_company.fund_domain.api.FundAction;
 import com.exalt_company.fund_domain.api.resource.Deposit;
 import com.exalt_company.fund_domain.api.resource.FundResource;
+import com.exalt_company.fund_domain.api.resource.FundResponse;
 import com.exalt_company.fund_domain.api.resource.Withdraw;
 import com.exalt_company.fund_domain.ddd.FundDomainService;
 import com.exalt_company.fund_domain.shared.FundException;
@@ -10,6 +11,7 @@ import com.exalt_company.fund_domain.shared.FundStatus;
 import com.exalt_company.fund_domain.spi.Funds;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * Domain service implementation for fund operations.
@@ -70,6 +72,18 @@ public class FundOperator implements FundAction {
         ownerFund.setBalance(balance);
 
         return funds.updateFund(withdraw.getFundId(), ownerFund);
+    }
+
+    @Override
+    public FundResponse getByOwnerId(UUID ownerId) throws FundException {
+        Fund ownerFund = funds.getByOwnerId(ownerId);
+
+        return new FundResponse(ownerFund.getId(), ownerFund.getBalance());
+    }
+
+    @Override
+    public void createUserFund(UUID ownerId) throws FundException {
+        funds.createFund(ownerId);
     }
 
     private <R extends FundResource> void validateResource(R resource, String resourceType) throws FundException {

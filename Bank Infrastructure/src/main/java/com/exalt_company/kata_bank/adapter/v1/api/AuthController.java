@@ -1,5 +1,8 @@
 package com.exalt_company.kata_bank.adapter.v1.api;
 
+import com.exalt_company.fund_domain.api.FundAction;
+import com.exalt_company.fund_domain.api.resource.Deposit;
+import com.exalt_company.fund_domain.shared.FundException;
 import com.exalt_company.kata_bank.adapter.v1.resource.AuthRequest;
 import com.exalt_company.kata_bank.adapter.v1.resource.RefreshTokenRequest;
 import com.exalt_company.kata_bank.adapter.v1.resource.SignUpRequest;
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "Operations for user authentication and token management")
@@ -31,17 +36,20 @@ public class AuthController {
     private final BankUserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final FundAction fundAction;
 
     public AuthController(
             AccountAuthentication<String> authentication,
             BankUserRepository userRepository,
             JwtService jwtService,
-            RefreshTokenService refreshTokenService
+            RefreshTokenService refreshTokenService,
+            FundAction fundAction
     ) {
         this.authentication = authentication;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.fundAction = fundAction;
     }
 
     @PostMapping("/login")
@@ -62,7 +70,7 @@ public class AuthController {
         String accessToken = jwtService.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         
-        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken.getToken()));
+        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken.getToken(), user.getId().toString()));
     }
 
     @PostMapping("/signUp")
@@ -74,16 +82,19 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = TokenResponse.class)))
     @ApiResponse(responseCode = "400", description = "Invalid data supplied",
             content = @Content(schema = @Schema(implementation = Void.class)))
-    public ResponseEntity<TokenResponse> signUp(@RequestBody SignUpRequest request) throws AuthenticationException {
+    public ResponseEntity<TokenResponse> signUp(@RequestBody SignUpRequest request)
+            throws AuthenticationException, FundException {
         authentication.signUpRequest(AuthMapper.toDomain(request));
         
         BankUser user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new AuthenticationException("User not found"));
-        
+
+        fundAction.createUserFund(user.getId());
+
         String accessToken = jwtService.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         
-        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken.getToken()));
+        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken.getToken(), user.getId().toString()));
     }
 
     @PostMapping("/refresh")
@@ -108,6 +119,6 @@ public class AuthController {
         refreshTokenService.deleteRefreshToken(refreshToken);
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
         
-        return ResponseEntity.ok(new TokenResponse(accessToken, newRefreshToken.getToken()));
+        return ResponseEntity.ok(new TokenResponse(accessToken, newRefreshToken.getToken(), user.getId().toString()));
     }
 }
