@@ -59,7 +59,7 @@ public class InternalMailer implements AccountCommunication<File> {
                     })
                     .toList();
 
-            return new Page<>(condensedMessages, messagePage.page(), messagePage.size());
+            return new Page<>(condensedMessages, messagePage.page(), messagePage.totalPages(), messagePage.totalElements());
         } catch (MessageException e) {
             throw new AccountComunicationException("Failed to list messages: " + e.getMessage());
         }

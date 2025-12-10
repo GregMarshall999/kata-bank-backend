@@ -57,4 +57,6 @@ public interface BankUsers {
      * @return a page containing user accounts
      */
     Page<BankUserAccount> pageAccounts(int page, int size) throws BankUserException;
+
+    Page<BankUserAccount> searchAccountsByEmail(String email, int page, int size) throws BankUserException;
 }

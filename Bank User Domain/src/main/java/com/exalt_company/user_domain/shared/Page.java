@@ -12,6 +12,5 @@ import java.util.List;
  * @param <T> the type of elements contained in the page
  * @param content the list of elements in this page
  * @param page the current page number (zero-based or one-based depending on implementation)
- * @param size the maximum number of elements per page
  */
-public record Page<T> (List<T> content, int page, int size) {}
+public record Page<T> (List<T> content, int page, int totalPages, long totalElements) {}

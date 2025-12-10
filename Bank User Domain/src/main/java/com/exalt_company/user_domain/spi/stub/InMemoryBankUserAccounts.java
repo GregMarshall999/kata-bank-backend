@@ -80,7 +80,12 @@ public class InMemoryBankUserAccounts implements BankUsers {
             content.add(bankUserAccounts.get(uuids[i]));
         }
 
-        return new Page<>(content, page, size);
+        return new Page<>(content, page, uuids.length / size, uuids.length);
+    }
+
+    @Override
+    public Page<BankUserAccount> searchAccountsByEmail(String email, int page, int size) throws BankUserException {
+        return null; //TODO implement for tests
     }
 
     private BankUserAccount find(String email) {

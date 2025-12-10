@@ -54,7 +54,7 @@ public class InMemoryMessages implements Messages<File> {
                 content.add(userMessages.get(i));
             }
 
-            return new Page<>(content, page, size);
+            return new Page<>(content, page, userMessages.size() / size, userMessages.size());
         } catch (BankUserException e) {
             throw new MessageException("Could not fetch messages: " + e.getMessage());
         }

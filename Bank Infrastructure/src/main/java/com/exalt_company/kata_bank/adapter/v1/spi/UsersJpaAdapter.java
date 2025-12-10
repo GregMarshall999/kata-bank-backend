@@ -89,6 +89,26 @@ public class UsersJpaAdapter implements BankUsers {
 
         org.springframework.data.domain.Page<BankUser> all = repository.findAll(PageRequest.of(page, size));
 
-        return new Page<>(BankUserMapper.toDomain(all.getContent()), all.getNumber(), all.getSize());
+        return new Page<>(
+                BankUserMapper.toDomain(all.getContent()),
+                all.getNumber(),
+                all.getTotalPages(),
+                all.getTotalElements()
+        );
+    }
+
+    @Override
+    public Page<BankUserAccount> searchAccountsByEmail(String email, int page, int size) throws BankUserException {
+        if(page < 0 || size < 1) throw new BankUserException("Wrong parameter values");
+
+        org.springframework.data.domain.Page<BankUser> similarContacts =
+                repository.findByEmailContainingIgnoreCase(email, PageRequest.of(page, size));
+
+        return new Page<>(
+                BankUserMapper.toDomain(similarContacts.getContent()),
+                similarContacts.getNumber(),
+                similarContacts.getTotalPages(),
+                similarContacts.getTotalElements()
+        );
     }
 }
