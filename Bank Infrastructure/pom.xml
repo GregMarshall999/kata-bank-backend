@@ -111,13 +111,19 @@
 
         <dependency>
             <groupId>com.exalt-company</groupId>
-            <artifactId>bank-user-domain</artifactId>
+            <artifactId>bank-fund-domain</artifactId>
             <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.exalt-company</groupId>
-            <artifactId>bank-fund-domain</artifactId>
+            <artifactId>bank-contact-domain</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exalt-company</groupId>
+            <artifactId>bank-user-domain</artifactId>
             <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>

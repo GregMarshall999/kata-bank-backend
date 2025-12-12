@@ -4,6 +4,7 @@ import com.exalt_company.user_domain.shared.BankRole;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,6 +38,9 @@ public class BankUser extends BaseEntity implements UserDetails {
     @NotNull
     @Enumerated(EnumType.STRING)
     private BankRole role;
+
+    @OneToMany
+    private List<BankContact> contacts;
 
     public BankUser() {}
 
@@ -98,6 +102,14 @@ public class BankUser extends BaseEntity implements UserDetails {
 
     public void setRole(BankRole role) {
         this.role = role;
+    }
+
+    public List<BankContact> getContacts() {
+        return contacts;
+    }
+
+    public void setContacts(List<BankContact> contacts) {
+        this.contacts = contacts;
     }
 
     @Override
