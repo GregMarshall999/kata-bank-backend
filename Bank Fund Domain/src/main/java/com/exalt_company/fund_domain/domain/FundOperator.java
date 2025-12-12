@@ -60,6 +60,9 @@ public class FundOperator implements FundAction {
 
         Fund ownerFund = funds.getByOwnerId(withdraw.getFundOwnerId());
 
+        if(!ownerFund.getId().equals(withdraw.getFundId()))
+            throw new FundException("Owner fund mismatch!", FundStatus.REFUSED);
+
         BigDecimal balance = ownerFund.getBalance();
         if (balance == null) {
             balance = BigDecimal.ZERO;
