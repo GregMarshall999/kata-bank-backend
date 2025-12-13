@@ -123,6 +123,12 @@
         </dependency>
         <dependency>
             <groupId>com.exalt-company</groupId>
+            <artifactId>bank-transaction-domain</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exalt-company</groupId>
             <artifactId>bank-user-domain</artifactId>
             <version>1.0.0</version>
             <scope>compile</scope>

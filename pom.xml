@@ -17,6 +17,7 @@
         <module>Bank Infrastructure</module>
         <module>Bank Fund Domain</module>
         <module>Bank Contact Domain</module>
+        <module>Bank Transaction Domain</module>
     </modules>
 
     <name>Kata Bank</name>

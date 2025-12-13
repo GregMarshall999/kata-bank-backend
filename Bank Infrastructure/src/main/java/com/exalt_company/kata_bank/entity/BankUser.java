@@ -42,6 +42,9 @@ public class BankUser extends BaseEntity implements UserDetails {
     @OneToMany
     private List<BankContact> contacts;
 
+    @OneToMany
+    private List<BankTransaction> transactions;
+
     public BankUser() {}
 
     public BankUser(UUID id, String name, String surname, String email, String password, BankRole role) {
@@ -110,6 +113,14 @@ public class BankUser extends BaseEntity implements UserDetails {
 
     public void setContacts(List<BankContact> contacts) {
         this.contacts = contacts;
+    }
+
+    public List<BankTransaction> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<BankTransaction> transactions) {
+        this.transactions = transactions;
     }
 
     @Override

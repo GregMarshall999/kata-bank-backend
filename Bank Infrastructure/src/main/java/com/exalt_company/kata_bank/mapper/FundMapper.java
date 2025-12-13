@@ -14,9 +14,7 @@ import java.util.UUID;
  * Mapper utility class for converting between fund-related objects.
  * Handles mapping between API resources, domain objects, and JPA entities.
  */
-public class FundMapper {
-    private FundMapper() {}
-
+public interface FundMapper {
     /**
      * Converts a FundRequest to a domain FundResource using reflection.
      *
@@ -29,7 +27,7 @@ public class FundMapper {
      * @throws InstantiationException if the class cannot be instantiated
      * @throws IllegalAccessException if the constructor is not accessible
      */
-    public static <F extends FundResource> F toDomain(FundRequest request, Class<F> fundResourceType)
+    static <F extends FundResource> F toDomain(FundRequest request, Class<F> fundResourceType)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
 
         Constructor<F> constructor = fundResourceType.getDeclaredConstructor(UUID.class, UUID.class, BigDecimal.class);
@@ -42,7 +40,7 @@ public class FundMapper {
      * @param bankFund the JPA entity to convert
      * @return a domain Fund object
      */
-    public static Fund toDomain(BankFund bankFund) {
+    static Fund toDomain(BankFund bankFund) {
         return new Fund(bankFund.getId(), bankFund.getBalance(), bankFund.getOwner().getId());
     }
 }
