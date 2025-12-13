@@ -16,7 +16,7 @@ public class BankTransaction extends BaseEntity {
     private BigDecimal amount;
 
     @NotNull
-    private LocalDate date;
+    private LocalDate date; //TODO: change to LocalDateTime (for hours)
 
     @NotNull
     private TransactionHistoryType type;

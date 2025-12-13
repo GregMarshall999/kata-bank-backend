@@ -7,6 +7,7 @@ import com.exalt_company.transaction_domain.shared.TransactionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +24,7 @@ public class TransactionController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<TransactionHistory>> getUserTransactions(UUID userId) throws TransactionException {
+    public ResponseEntity<List<TransactionHistory>> getUserTransactions(@PathVariable UUID userId) throws TransactionException {
         List<TransactionHistory> transactions = TransactionMapper
                 .fromDomain(transactionReport.getUserTransactionHistory(userId));
 
