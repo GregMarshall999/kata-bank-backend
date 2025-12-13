@@ -7,7 +7,7 @@ import com.exalt_company.kata_bank.entity.BankTransaction;
 import com.exalt_company.transaction_domain.domain.Transaction;
 import com.exalt_company.transaction_domain.domain.TransactionType;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TransactionMapper {
@@ -53,6 +53,6 @@ public interface TransactionMapper {
     }
 
     static Transaction toDomain(FundRequest request, TransactionType type) {
-        return new Transaction(request.operationDescription(), request.amount(), LocalDate.now(), type);
+        return new Transaction(request.operationDescription(), request.amount(), LocalDateTime.now(), type);
     }
 }

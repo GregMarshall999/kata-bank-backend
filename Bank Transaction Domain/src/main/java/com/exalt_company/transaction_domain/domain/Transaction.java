@@ -1,15 +1,15 @@
 package com.exalt_company.transaction_domain.domain;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Transaction {
     private String name;
     private BigDecimal amount;
-    private LocalDate date;
+    private LocalDateTime date;
     private TransactionType type;
 
-    public Transaction(String name, BigDecimal amount, LocalDate date, TransactionType type) {
+    public Transaction(String name, BigDecimal amount, LocalDateTime date, TransactionType type) {
         this.name = name;
         this.amount = amount;
         this.date = date;
@@ -32,11 +32,11 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 

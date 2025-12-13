@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class BankTransaction extends BaseEntity {
@@ -16,7 +16,7 @@ public class BankTransaction extends BaseEntity {
     private BigDecimal amount;
 
     @NotNull
-    private LocalDate date; //TODO: change to LocalDateTime (for hours)
+    private LocalDateTime date;
 
     @NotNull
     private TransactionHistoryType type;
@@ -24,7 +24,7 @@ public class BankTransaction extends BaseEntity {
     public BankTransaction() {
     }
 
-    public BankTransaction(String name, BigDecimal amount, LocalDate date, TransactionHistoryType type) {
+    public BankTransaction(String name, BigDecimal amount, LocalDateTime date, TransactionHistoryType type) {
         this.name = name;
         this.amount = amount;
         this.date = date;
@@ -47,11 +47,11 @@ public class BankTransaction extends BaseEntity {
         this.amount = amount;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
