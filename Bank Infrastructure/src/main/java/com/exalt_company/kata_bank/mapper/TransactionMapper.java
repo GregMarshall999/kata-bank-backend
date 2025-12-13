@@ -14,6 +14,7 @@ public interface TransactionMapper {
     static List<TransactionHistory> fromDomain(List<Transaction> userTransactionHistory) {
         return userTransactionHistory.stream().map(transaction -> new TransactionHistory(
                 transaction.getName(),
+                transaction.getSource(),
                 transaction.getAmount(),
                 transaction.getDate(),
                 parseType(transaction.getType())
@@ -23,6 +24,7 @@ public interface TransactionMapper {
     static BankTransaction fromDomain(Transaction transaction) {
         return new BankTransaction(
                 transaction.getName(),
+                transaction.getSource(),
                 transaction.getAmount(),
                 transaction.getDate(),
                 parseType(transaction.getType())
@@ -38,6 +40,7 @@ public interface TransactionMapper {
 
         return new Transaction(
                 fetchedTransaction.getName(),
+                fetchedTransaction.getSource(),
                 fetchedTransaction.getAmount(),
                 fetchedTransaction.getDate(),
                 type
@@ -53,6 +56,6 @@ public interface TransactionMapper {
     }
 
     static Transaction toDomain(FundRequest request, TransactionType type) {
-        return new Transaction(request.operationDescription(), request.amount(), LocalDateTime.now(), type);
+        return new Transaction(request.operationDescription(), "", request.amount(), LocalDateTime.now(), type);
     }
 }

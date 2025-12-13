@@ -5,12 +5,14 @@ import java.time.LocalDateTime;
 
 public class Transaction {
     private String name;
+    private String source;
     private BigDecimal amount;
     private LocalDateTime date;
     private TransactionType type;
 
-    public Transaction(String name, BigDecimal amount, LocalDateTime date, TransactionType type) {
+    public Transaction(String name, String source, BigDecimal amount, LocalDateTime date, TransactionType type) {
         this.name = name;
+        this.source = source;
         this.amount = amount;
         this.date = date;
         this.type = type;
@@ -22,6 +24,14 @@ public class Transaction {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public BigDecimal getAmount() {

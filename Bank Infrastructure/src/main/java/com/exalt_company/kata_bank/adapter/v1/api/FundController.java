@@ -60,6 +60,7 @@ public class FundController {
 
         transactionReport.reportTransaction(
                 TransactionMapper.toDomain(request, TransactionType.DEPOSIT),
+                request.fundOwnerId(),
                 request.fundOwnerId()
         );
 
@@ -83,6 +84,7 @@ public class FundController {
 
         transactionReport.reportTransaction(
                 TransactionMapper.toDomain(request, TransactionType.WITHDRAW),
+                request.fundOwnerId(),
                 request.fundOwnerId()
         );
 

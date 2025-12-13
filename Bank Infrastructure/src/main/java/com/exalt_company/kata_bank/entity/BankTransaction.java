@@ -13,6 +13,9 @@ public class BankTransaction extends BaseEntity {
     private String name;
 
     @NotNull
+    private String source;
+
+    @NotNull
     private BigDecimal amount;
 
     @NotNull
@@ -21,11 +24,11 @@ public class BankTransaction extends BaseEntity {
     @NotNull
     private TransactionHistoryType type;
 
-    public BankTransaction() {
-    }
+    public BankTransaction() {}
 
-    public BankTransaction(String name, BigDecimal amount, LocalDateTime date, TransactionHistoryType type) {
+    public BankTransaction(String name, String source, BigDecimal amount, LocalDateTime date, TransactionHistoryType type) {
         this.name = name;
+        this.source = source;
         this.amount = amount;
         this.date = date;
         this.type = type;
@@ -37,6 +40,14 @@ public class BankTransaction extends BaseEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public BigDecimal getAmount() {

@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface Transactions {
     List<Transaction> getTransactionsByUserId(UUID userId) throws TransactionException;
-    void createTransactionReport(Transaction transaction, UUID transactionOwner) throws TransactionException;
+    void createTransactionReport(Transaction transaction, UUID transactionOwnerID, UUID transactionSourceId) throws TransactionException;
 }

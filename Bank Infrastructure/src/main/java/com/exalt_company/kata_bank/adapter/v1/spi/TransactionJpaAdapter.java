@@ -10,6 +10,8 @@ import com.exalt_company.transaction_domain.shared.TransactionException;
 import com.exalt_company.transaction_domain.spi.Transactions;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,21 +32,29 @@ public class TransactionJpaAdapter implements Transactions {
 
         if(user.getTransactions().isEmpty()) return List.of();
 
-        return user.getTransactions().stream().map(bankTransaction -> {
-            BankTransaction fetched = repository.findById(bankTransaction.getId()).orElse(null);
+        List<Transaction> transactions = new ArrayList<>(
+                user.getTransactions().stream().map(bankTransaction -> {
+                    BankTransaction fetched = repository.findById(bankTransaction.getId()).orElse(null);
+                    if (fetched == null) return null;
+                    return TransactionMapper.toDomain(fetched);
+                }).toList()
+        );
+        transactions.sort(Comparator.comparing(Transaction::getDate));
 
-            if(fetched == null) return null;
-
-            return TransactionMapper.toDomain(fetched);
-        }).toList();
+        return transactions;
     }
 
     @Override
-    public void createTransactionReport(Transaction transaction, UUID transactionOwner) throws TransactionException {
-        BankUser user = userRepository.findById(transactionOwner)
+    public void createTransactionReport(Transaction transaction, UUID transactionOwnerID, UUID transactionSourceId)
+            throws TransactionException {
+        BankUser user = userRepository.findById(transactionOwnerID)
                 .orElseThrow(() -> new TransactionException("Transaction user does not exist!"));
 
+        BankUser source = userRepository.findById(transactionSourceId)
+                .orElseThrow(() -> new TransactionException("Transaction source user does not exist!"));
+
         BankTransaction bT = TransactionMapper.fromDomain(transaction);
+        bT.setSource(source.getName() + " " + source.getSurname());
         BankTransaction savedTransaction = repository.save(bT);
 
         user.getTransactions().add(savedTransaction);

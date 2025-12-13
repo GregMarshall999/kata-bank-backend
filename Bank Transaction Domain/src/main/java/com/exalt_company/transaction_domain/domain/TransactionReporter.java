@@ -22,7 +22,7 @@ public class TransactionReporter implements TransactionReport {
     }
 
     @Override
-    public void reportTransaction(Transaction transaction, UUID transactionOwner) throws TransactionException {
-        transactions.createTransactionReport(transaction, transactionOwner);
+    public void reportTransaction(Transaction transaction, UUID transactionOwnerId, UUID transactionSourceId) throws TransactionException {
+        transactions.createTransactionReport(transaction, transactionOwnerId, transactionSourceId);
     }
 }
