@@ -48,6 +48,14 @@ public class FundsJpaAdapter implements Funds {
     }
 
     @Override
+    public Fund getById(UUID fundId) throws FundException {
+        BankFund bankFund = repository.findById(fundId)
+                .orElseThrow(() -> new FundException("No funds found!", FundStatus.FAILED));
+
+        return FundMapper.toDomain(bankFund);
+    }
+
+    @Override
     public FundStatus updateFund(UUID fundId, Fund fundToUpdate) throws FundException {
         BankFund bankFund = repository.findById(fundId)
                 .orElseThrow(() -> new FundException("Funds not found!", FundStatus.FAILED));

@@ -25,4 +25,10 @@ public class TransactionReporter implements TransactionReport {
     public void reportTransaction(Transaction transaction, UUID transactionOwnerId, UUID transactionSourceId) throws TransactionException {
         transactions.createTransactionReport(transaction, transactionOwnerId, transactionSourceId);
     }
+
+    @Override
+    public void reportExternalTransaction(UUID senderId, Transaction senderTransaction, UUID receiverId, Transaction receiverTransaction) throws TransactionException {
+        transactions.createTransactionReport(senderTransaction, senderId, senderId);
+        transactions.createTransactionReport(receiverTransaction, receiverId, senderId);
+    }
 }

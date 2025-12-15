@@ -4,6 +4,7 @@ import com.exalt_company.fund_domain.api.FundAction;
 import com.exalt_company.fund_domain.api.resource.Deposit;
 import com.exalt_company.fund_domain.api.resource.FundResource;
 import com.exalt_company.fund_domain.api.resource.FundResponse;
+import com.exalt_company.fund_domain.api.resource.Transfer;
 import com.exalt_company.fund_domain.api.resource.Withdraw;
 import com.exalt_company.fund_domain.ddd.FundDomainService;
 import com.exalt_company.fund_domain.shared.FundException;
@@ -75,6 +76,27 @@ public class FundOperator implements FundAction {
         ownerFund.setBalance(balance);
 
         return funds.updateFund(withdraw.getFundId(), ownerFund);
+    }
+
+    @Override
+    public UUID sendTo(Transfer transfer) throws FundException {
+        validateResource(transfer, "transfers");
+
+        Fund receiverFunds = funds.getById(transfer.getFundId());
+        Fund senderFunds = funds.getByOwnerId(transfer.getFundOwnerId());
+
+        BigDecimal subtracted = senderFunds.getBalance().subtract(transfer.getAmount());
+        if(subtracted.compareTo(BigDecimal.ZERO) < 0)
+            throw new FundException("Balance overdrawn!", FundStatus.REFUSED);
+        senderFunds.setBalance(subtracted);
+
+        BigDecimal added = receiverFunds.getBalance().add(transfer.getAmount());
+        receiverFunds.setBalance(added);
+
+        funds.updateFund(receiverFunds.getId(), receiverFunds);
+        funds.updateFund(senderFunds.getId(), senderFunds);
+
+        return receiverFunds.getOwnerId();
     }
 
     @Override

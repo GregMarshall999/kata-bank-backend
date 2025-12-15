@@ -1,8 +1,10 @@
 package com.exalt_company.kata_bank.mapper;
 
 import com.exalt_company.fund_domain.api.resource.FundResource;
+import com.exalt_company.fund_domain.api.resource.Transfer;
 import com.exalt_company.fund_domain.domain.Fund;
 import com.exalt_company.kata_bank.adapter.v1.resource.FundRequest;
+import com.exalt_company.kata_bank.adapter.v1.resource.FundSendRequest;
 import com.exalt_company.kata_bank.entity.BankFund;
 
 import java.lang.reflect.Constructor;
@@ -42,5 +44,9 @@ public interface FundMapper {
      */
     static Fund toDomain(BankFund bankFund) {
         return new Fund(bankFund.getId(), bankFund.getBalance(), bankFund.getOwner().getId());
+    }
+
+    static Transfer toDomain(FundSendRequest request) {
+        return new Transfer(request.contactFundId(), request.senderId(), request.amount());
     }
 }

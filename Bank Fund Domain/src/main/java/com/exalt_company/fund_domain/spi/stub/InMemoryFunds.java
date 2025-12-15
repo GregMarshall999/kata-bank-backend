@@ -59,4 +59,9 @@ public class InMemoryFunds implements Funds {
 
         return FundStatus.SUCCESS;
     }
+
+    @Override
+    public Fund getById(UUID fundId) throws FundException {
+        return null;
+    }
 }

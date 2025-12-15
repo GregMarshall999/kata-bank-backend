@@ -9,4 +9,10 @@ import java.util.UUID;
 public interface TransactionReport {
     List<Transaction> getUserTransactionHistory(UUID userId) throws TransactionException;
     void reportTransaction(Transaction transaction, UUID transactionOwnerId, UUID transactionSourceId) throws TransactionException;
+    void reportExternalTransaction(
+            UUID senderId,
+            Transaction senderTransaction,
+            UUID receiverId,
+            Transaction receiverTransaction
+    ) throws TransactionException;
 }

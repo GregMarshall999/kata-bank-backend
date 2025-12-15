@@ -2,6 +2,7 @@ package com.exalt_company.kata_bank.entity;
 
 import com.exalt_company.kata_bank.adapter.v1.resource.TransactionHistoryType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -22,6 +23,7 @@ public class BankTransaction extends BaseEntity {
     private LocalDateTime date;
 
     @NotNull
+    @Enumerated
     private TransactionHistoryType type;
 
     public BankTransaction() {}

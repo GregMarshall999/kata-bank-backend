@@ -1,6 +1,7 @@
 package com.exalt_company.kata_bank.mapper;
 
 import com.exalt_company.kata_bank.adapter.v1.resource.FundRequest;
+import com.exalt_company.kata_bank.adapter.v1.resource.FundSendRequest;
 import com.exalt_company.kata_bank.adapter.v1.resource.TransactionHistory;
 import com.exalt_company.kata_bank.adapter.v1.resource.TransactionHistoryType;
 import com.exalt_company.kata_bank.entity.BankTransaction;
@@ -35,7 +36,8 @@ public interface TransactionMapper {
         TransactionType type = switch (fetchedTransaction.getType()) {
             case DEPOSIT -> TransactionType.DEPOSIT;
             case WITHDRAW -> TransactionType.WITHDRAW;
-            case TRANSFER -> TransactionType.TRANSFER;
+            case SENT -> TransactionType.SENT;
+            case RECEIVED -> TransactionType.RECEIVED;
         };
 
         return new Transaction(
@@ -47,15 +49,22 @@ public interface TransactionMapper {
         );
     }
 
+    //TODO transactionhistorytype
+    static Transaction toDomain(FundRequest request, TransactionType type) {
+        return new Transaction(request.operationDescription(), "", request.amount(), LocalDateTime.now(), type);
+    }
+
+    //TODO transactionhistorytype
+    static Transaction toDomain(FundSendRequest request, TransactionType type) {
+        return new Transaction(request.operationDescription(), "", request.amount(), LocalDateTime.now(), type);
+    }
+
     private static TransactionHistoryType parseType(TransactionType type) {
         return switch (type) {
             case DEPOSIT -> TransactionHistoryType.DEPOSIT;
             case WITHDRAW -> TransactionHistoryType.WITHDRAW;
-            case TRANSFER -> TransactionHistoryType.TRANSFER;
+            case SENT -> TransactionHistoryType.SENT;
+            case RECEIVED -> TransactionHistoryType.RECEIVED;
         };
-    }
-
-    static Transaction toDomain(FundRequest request, TransactionType type) {
-        return new Transaction(request.operationDescription(), "", request.amount(), LocalDateTime.now(), type);
     }
 }

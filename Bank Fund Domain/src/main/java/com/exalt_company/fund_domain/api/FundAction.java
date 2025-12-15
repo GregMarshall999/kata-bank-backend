@@ -2,6 +2,7 @@ package com.exalt_company.fund_domain.api;
 
 import com.exalt_company.fund_domain.api.resource.Deposit;
 import com.exalt_company.fund_domain.api.resource.FundResponse;
+import com.exalt_company.fund_domain.api.resource.Transfer;
 import com.exalt_company.fund_domain.api.resource.Withdraw;
 import com.exalt_company.fund_domain.shared.FundException;
 import com.exalt_company.fund_domain.shared.FundStatus;
@@ -29,6 +30,8 @@ public interface FundAction {
      * @throws FundException if the withdrawal operation fails (e.g., insufficient funds)
      */
     FundStatus withdraw(Withdraw withdraw) throws FundException;
+
+    UUID sendTo(Transfer transfer) throws FundException;
 
     FundResponse getByOwnerId(UUID ownerId) throws FundException;
 

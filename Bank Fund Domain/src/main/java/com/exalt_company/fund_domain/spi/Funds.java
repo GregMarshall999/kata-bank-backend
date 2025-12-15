@@ -38,4 +38,6 @@ public interface Funds {
      * @throws FundException if the update operation fails
      */
     FundStatus updateFund(UUID fundId, Fund fundToUpdate) throws FundException;
+
+    Fund getById(UUID fundId) throws FundException;
 }

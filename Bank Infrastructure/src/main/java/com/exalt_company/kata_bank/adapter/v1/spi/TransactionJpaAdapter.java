@@ -11,7 +11,6 @@ import com.exalt_company.transaction_domain.spi.Transactions;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,7 +38,8 @@ public class TransactionJpaAdapter implements Transactions {
                     return TransactionMapper.toDomain(fetched);
                 }).toList()
         );
-        transactions.sort(Comparator.comparing(Transaction::getDate));
+
+        transactions.sort((o1, o2) -> -o1.getDate().compareTo(o2.getDate()));
 
         return transactions;
     }

@@ -7,6 +7,7 @@ import com.exalt_company.fund_domain.shared.FundException;
 import com.exalt_company.fund_domain.shared.FundStatus;
 import com.exalt_company.kata_bank.adapter.v1.resource.FundRequest;
 import com.exalt_company.fund_domain.api.resource.FundResponse;
+import com.exalt_company.kata_bank.adapter.v1.resource.FundSendRequest;
 import com.exalt_company.kata_bank.config.SwaggerConfig;
 import com.exalt_company.kata_bank.mapper.FundMapper;
 import com.exalt_company.kata_bank.mapper.TransactionMapper;
@@ -89,6 +90,20 @@ public class FundController {
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(withdrawalStatus);
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<FundStatus> sendFundsTo(@RequestBody FundSendRequest request) throws FundException, TransactionException {
+        UUID receiverId = fundAction.sendTo(FundMapper.toDomain(request));
+
+        transactionReport.reportExternalTransaction(
+                request.senderId(),
+                TransactionMapper.toDomain(request, TransactionType.SENT),
+                receiverId,
+                TransactionMapper.toDomain(request, TransactionType.RECEIVED)
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(FundStatus.SUCCESS);
     }
 
     @GetMapping("/{ownerId}")
