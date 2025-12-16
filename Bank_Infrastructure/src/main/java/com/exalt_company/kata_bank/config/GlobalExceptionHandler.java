@@ -8,7 +8,6 @@ import com.exalt_company.user_domain.shared.exception.AuthenticationException;
 import com.exalt_company.user_domain.shared.exception.BankUserException;
 import com.exalt_company.user_domain.shared.exception.MessageException;
 import io.swagger.v3.oas.annotations.Hidden;
-import jakarta.servlet.ServletException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

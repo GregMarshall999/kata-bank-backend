@@ -96,7 +96,6 @@ class InMemoryMessagesTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.page()).isZero();
-        assertThat(result.size()).isEqualTo(2);
         assertThat(result.content()).hasSize(2);
         
         // Verify that only messages involving the test user are returned
@@ -152,7 +151,6 @@ class InMemoryMessagesTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.page()).isEqualTo(1);
-        assertThat(result.size()).isEqualTo(2);
         assertThat(result.content()).hasSize(2);
     }
 
@@ -209,7 +207,6 @@ class InMemoryMessagesTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.page()).isZero();
-        assertThat(result.size()).isEqualTo(10);
         assertThat(result.content()).isEmpty();
     }
 
@@ -232,7 +229,6 @@ class InMemoryMessagesTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.page()).isZero();
-        assertThat(result.size()).isEqualTo(5);
         assertThat(result.content()).hasSize(3);
     }
 

@@ -1,7 +1,6 @@
 package com.exalt_company.kata_bank.adapter.v1.api;
 
 import com.exalt_company.fund_domain.api.FundAction;
-import com.exalt_company.fund_domain.api.resource.Deposit;
 import com.exalt_company.fund_domain.shared.FundException;
 import com.exalt_company.kata_bank.adapter.v1.resource.AuthRequest;
 import com.exalt_company.kata_bank.adapter.v1.resource.RefreshTokenRequest;
@@ -25,8 +24,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/auth")

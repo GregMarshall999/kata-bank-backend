@@ -147,7 +147,6 @@ class InMemoryBankUserAccountsTest {
         assertThat(page).isNotNull();
         assertThat(page.content()).hasSize(3);
         assertThat(page.page()).isZero();
-        assertThat(page.size()).isEqualTo(3);
     }
 
     @Test

@@ -267,7 +267,6 @@ class AccountManagerTest {
         assertThat(response.content()).isNotNull();
         assertThat(response.content().content()).hasSize(3);
         assertThat(response.content().page()).isZero();
-        assertThat(response.content().size()).isEqualTo(10);
         assertThat(response.errorMessage()).isNull();
     }
 

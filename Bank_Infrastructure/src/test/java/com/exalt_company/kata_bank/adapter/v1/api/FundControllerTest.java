@@ -87,7 +87,8 @@ class FundControllerTest {
         return new FundRequest(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
-                BigDecimal.valueOf(150.50)
+                BigDecimal.valueOf(150.50),
+                ""
         );
     }
 }

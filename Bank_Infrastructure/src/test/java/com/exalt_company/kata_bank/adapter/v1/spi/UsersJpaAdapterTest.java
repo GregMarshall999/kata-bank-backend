@@ -305,7 +305,6 @@ class UsersJpaAdapterTest {
         assertThat(result).isNotNull();
         assertThat(result.content()).hasSize(1);
         assertThat(result.page()).isEqualTo(page);
-        assertThat(result.size()).isEqualTo(size);
         verify(repository).findAll(PageRequest.of(page, size));
     }
 
@@ -356,7 +355,6 @@ class UsersJpaAdapterTest {
         //Then
         assertThat(result).isNotNull();
         assertThat(result.page()).isEqualTo(page);
-        assertThat(result.size()).isEqualTo(size);
         verify(repository).findAll(PageRequest.of(page, size));
     }
 }
