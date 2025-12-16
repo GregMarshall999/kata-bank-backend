@@ -19,9 +19,8 @@ RUN mvn -q dependency:go-offline
 # Copy source code
 COPY . ./
 
-# Build only the infrastructure module which contains the Spring Boot app
-# Using artifactId to avoid space issues
-RUN mvn -q -DskipTests package -pl bank-infrastructure -am
+# Build all modules (infrastructure module depends on other domain modules)
+RUN mvn -q -DskipTests package
 
 # ---- Runtime stage ----
 FROM eclipse-temurin:21-jre
