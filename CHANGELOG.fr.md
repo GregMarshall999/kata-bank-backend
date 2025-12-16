@@ -1,14 +1,16 @@
-## Journal des modifications
+# Journal des modifications
 
-Tous les changements notables de ce projet sont documentés dans ce fichier.
+Tous les changements notables de ce projet seront documentés dans ce fichier.
 
-Le format s’inspire de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et ce projet suit la [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) et ce projet suit les principes du [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [1.0.0] - 20/11/2025
-#### Ajouté
-- Publication initiale du backend Java Spring Boot en architecture hexagonale.
-- Parcours d’authentification des utilisateurs avec jetons JWT d’accès et de rafraîchissement.
-- Capacités principales du domaine des fonds avec ports et adaptateurs de type CRUD.
-- Opérations sur les fonds des utilisateurs : dépôt et retrait, avec la validation métier associée.
+## [1.0.0] - 16/12/2025
 
-
+### Ajouté
+- Implémentation initiale en architecture hexagonale (ports et adaptateurs).
+- API supportant une application front-end pour les opérations bancaires.
+- Inscription des utilisateurs à l'application.
+- Possibilité pour les utilisateurs de consulter leurs fonds.
+- Partage d'identifiants de contacts entre utilisateurs.
+- Dépôt, retrait et envoi de fonds aux contacts des utilisateurs.
+- Consultation de l'historique des transactions des utilisateurs.
