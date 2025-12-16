@@ -27,8 +27,9 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# Copy Spring Boot fat JAR from build stage
-COPY --from=build "/app/Bank Infrastructure/target/bank-infrastructure-*.jar" app.jar
+# Copy target directory from build stage, then extract JAR
+COPY --from=build ["/app/Bank Infrastructure/target", "/tmp/target"]
+RUN cp /tmp/target/bank-infrastructure-*.jar /app/app.jar && rm -rf /tmp/target
 
 # Expose application port (overridable by SERVER_PORT env var)
 EXPOSE 8801
