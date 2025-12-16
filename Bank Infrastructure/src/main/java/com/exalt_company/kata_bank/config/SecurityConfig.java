@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Spring Security configuration class.
  * Configures JWT-based authentication, password encoding, and security filter chains.
- * Public endpoints include authentication endpoints and Swagger documentation.
+ * Public endpoints include authentication endpoints, Swagger documentation, and Actuator health endpoints.
  */
 @Configuration
 @EnableWebSecurity
@@ -42,7 +42,7 @@ public class SecurityConfig {
 
     /**
      * Configures the security filter chain with JWT authentication.
-     * Public endpoints include authentication and Swagger documentation.
+     * Public endpoints include authentication, Swagger documentation, and Actuator health endpoints.
      * All other endpoints require authentication.
      *
      * @param http the HttpSecurity to configure
@@ -75,7 +75,9 @@ public class SecurityConfig {
                         "/v3/api-docs.yaml",
                         "/swagger-resources/**",
                         "/webjars/**",
-                        "/error"
+                        "/error",
+                        "/actuator/health",
+                        "/actuator/health/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
