@@ -36,5 +36,5 @@ services:
       - traefik.http.services.kata-bank-api.loadbalancer.server.port=8801
 
 networks:
-  web:
+  docker_web:
     external: true
