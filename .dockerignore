@@ -7,21 +7,17 @@
 .idea
 *.iml
 .vscode
-.settings
-.classpath
-.project
 *.swp
 *.swo
 *~
 
-# Build artifacts
+# Build outputs
 target/
 **/target/
 *.class
 *.jar
 *.war
 *.ear
-*.log
 
 # Maven
 .mvn/
@@ -29,36 +25,21 @@ mvnw
 mvnw.cmd
 
 # Documentation
-README.md
-README.en.md
-README.fr.md
-CHANGELOG.md
-CHANGELOG.fr.md
 *.md
-
-# Docker files
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# Assets (not needed for build)
+!README.md
+CHANGELOG*.md
 assets/
+
+# Test files
+**/test/
+**/*Test.java
+**/*Tests.java
 
 # OS files
 .DS_Store
 Thumbs.db
-*.tmp
 
 # Environment files
 .env
 .env.local
-.env.*.local
-
-# Test coverage
-.nyc_output
-coverage/
-
-# Temporary files
-*.tmp
-*.bak
-*.cache
+*.log

@@ -1,40 +1,53 @@
-# Multi-stage Dockerfile for Kata Bank backend
+# Multi-stage build for Spring Boot application
 
-# ---- Build stage ----
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+# Stage 1: Build stage
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copy Maven descriptor files first for better layer caching
-COPY pom.xml ./
-COPY Bank_Infrastructure/pom.xml Bank_Infrastructure/pom.xml
-COPY Bank_User_Domain/pom.xml Bank_User_Domain/pom.xml
-COPY Bank_Fund_Domain/pom.xml Bank_Fund_Domain/pom.xml
-COPY Bank_Contact_Domain/pom.xml Bank_Contact_Domain/pom.xml
-COPY Bank_Transaction_Domain/pom.xml Bank_Transaction_Domain/pom.xml
+# Copy pom.xml files first for better layer caching
+COPY pom.xml .
+COPY Bank_User_Domain/pom.xml ./Bank_User_Domain/
+COPY Bank_Infrastructure/pom.xml ./Bank_Infrastructure/
+COPY Bank_Fund_Domain/pom.xml ./Bank_Fund_Domain/
+COPY Bank_Contact_Domain/pom.xml ./Bank_Contact_Domain/
+COPY Bank_Transaction_Domain/pom.xml ./Bank_Transaction_Domain/
 
-# Download dependencies
-RUN mvn dependency:go-offline
+# Download dependencies (this layer will be cached if pom.xml doesn't change)
+RUN mvn dependency:go-offline -B
 
 # Copy source code
-COPY . ./
+COPY Bank_User_Domain/src ./Bank_User_Domain/src
+COPY Bank_Infrastructure/src ./Bank_Infrastructure/src
+COPY Bank_Fund_Domain/src ./Bank_Fund_Domain/src
+COPY Bank_Contact_Domain/src ./Bank_Contact_Domain/src
+COPY Bank_Transaction_Domain/src ./Bank_Transaction_Domain/src
 
-# Build all modules (infrastructure module depends on other domain modules)
-RUN mvn -DskipTests package
+# Build the application (skip tests for faster builds, remove -DskipTests if you want to run tests)
+RUN mvn clean package -DskipTests -B
 
-# ---- Runtime stage ----
-FROM eclipse-temurin:21-jre
+# Stage 2: Runtime stage
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-# Copy target directory from build stage, then extract JAR
-COPY --from=build /app/Bank_Infrastructure/target/bank-infrastructure-*.jar app.jar
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Expose application port (overridable by SERVER_PORT env var)
-EXPOSE 8801
+# Create a non-root user for security
+RUN groupadd -r spring && useradd -r -g spring spring
+USER spring:spring
 
-# Use prod profile by default (can be overridden)
-ENV SPRING_PROFILES_ACTIVE=prod
+# Copy the JAR file from build stage
+COPY --from=build /app/Bank_Infrastructure/target/*.jar app.jar
 
-# Start the application
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+# Expose the application port (default Spring Boot port)
+EXPOSE 8080
+
+# Health check (using curl which is available in jammy)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
