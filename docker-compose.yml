@@ -27,7 +27,7 @@ services:
       - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=when-authorized
       - MANAGEMENT_HEALTH_DEFAULTS_ENABLED=true
     networks:
-      - web
+      - docker_web
     labels:
       - traefik.enable=true
       - traefik.http.routers.kata-bank-api.rule=Host(`simubank-api.greg-labs.com`)
@@ -36,5 +36,5 @@ services:
       - traefik.http.services.kata-bank-api.loadbalancer.server.port=8801
 
 networks:
-  web:
+  docker_web:
     external: true
