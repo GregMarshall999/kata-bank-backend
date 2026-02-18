@@ -1,0 +1,42 @@
+name: Deploy simubank API
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t greglabs/simubank-api:latest .
+
+      - name: Save Docker image
+        run: docker save greglabs/simubank-api:latest | gzip > simubank-api.tar.gz
+
+      - name: Upload image to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: simubank-api.tar.gz
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker load < simubank-api.tar.gz
+            docker compose up -d
+            docker image prune -f
